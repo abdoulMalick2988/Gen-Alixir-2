@@ -7,6 +7,7 @@ import prisma from '@/lib/prisma';
 import { verifyPin, generateToken } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
+export const fetchCache = 'force-no-store';
 
 // Schéma de validation
 const loginSchema = z.object({
