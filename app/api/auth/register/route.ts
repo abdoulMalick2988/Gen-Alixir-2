@@ -6,6 +6,8 @@ import { z } from 'zod';
 import prisma from '@/lib/prisma';
 import { generatePin, hashPin } from '@/lib/auth';
 
+export const dynamic = 'force-dynamic';
+
 // Schéma de validation
 const registerSchema = z.object({
   email: z.string().email('Email invalide'),
