@@ -11,8 +11,8 @@ import { AVAILABLE_SKILLS, AVAILABLE_AURA } from '@/types';
 const updateProfileSchema = z.object({
   full_name: z.string().min(2).optional(),
   country: z.string().min(2).optional(),
-  skills: z.array(z.enum(AVAILABLE_SKILLS as [string, ...string[]])).max(3).optional(),
-  aura: z.array(z.enum(AVAILABLE_AURA as [string, ...string[]])).max(3).optional(),
+  skills: z.array(z.enum(AVAILABLE_SKILLS as unknown as [string, ...string[]])).max(3).optional(),
+  aura: z.array(z.enum(AVAILABLE_AURA as unknown as [string, ...string[]])).max(3).optional(),
 });
 
 export async function GET(request: NextRequest) {
