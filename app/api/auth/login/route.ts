@@ -16,6 +16,9 @@ const loginSchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
+  if (process.env.NEXT_PHASE === 'phase-production-build') {
+    return NextResponse.json({ message: "Build phase" });
+  }
   try {
     const body = await request.json();
     
