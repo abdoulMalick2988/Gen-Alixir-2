@@ -7,6 +7,8 @@ import prisma from '@/lib/prisma';
 import { extractToken, verifyToken } from '@/lib/auth';
 import { AVAILABLE_SKILLS, AVAILABLE_AURA } from '@/types';
 
+export const dynamic = 'force-dynamic';
+
 // Schéma de validation pour la mise à jour du profil
 const updateProfileSchema = z.object({
   full_name: z.string().min(2).optional(),
