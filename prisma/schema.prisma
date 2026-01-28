@@ -1,0 +1,112 @@
+// GEN ALIXIR - Phase 2 - Schéma Base de Données Mis à Jour
+// Ce fichier REMPLACE complètement prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// =====================================================
+// PHASE 1 - Tables Existantes (Inchangées)
+// =====================================================
+
+enum Role {
+  MEMBER
+  PROJECT_LEAD
+  FOUNDER
+  MODERATOR
+}
+
+model User {
+  id         String   @id @default(uuid())
+  email      String   @unique
+  pin_hash   String
+  role       Role     @default(MEMBER)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  
+  // Relations Phase 1
+  profile    Profile?
+  
+  // Relations Phase 2 - Projets
+  owned_projects    Project[]       @relation("ProjectOwner")
+  project_memberships ProjectMember[]
+  
+  @@map("users")
+}
+
+model Profile {
+  id             String   @id @default(uuid())
+  user_id        String   @unique
+  full_name      String
+  country        String
+  pco            Int      @default(0)
+  aura           String[] @default([])
+  aura_verified  Boolean  @default(false)
+  skills         String[] @default([])
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+  
+  user           User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  
+  @@map("profiles")
+}
+
+// =====================================================
+// PHASE 2 - Nouvelles Tables PROJETS
+// =====================================================
+
+enum ProjectStatus {
+  PLANNING    // Planification
+  ACTIVE      // En cours
+  COMPLETED   // Terminé
+  ARCHIVED    // Archivé
+}
+
+model Project {
+  id              String        @id @default(uuid())
+  name            String
+  description     String
+  status          ProjectStatus @default(PLANNING)
+  owner_id        String        // Chef du projet
+  max_members     Int           @default(10)
+  skills_required String[]      @default([])
+  created_at      DateTime      @default(now())
+  updated_at      DateTime      @updatedAt
+  completed_at    DateTime?
+  
+  // Relations
+  owner           User          @relation("ProjectOwner", fields: [owner_id], references: [id])
+  members         ProjectMember[]
+  
+  @@map("projects")
+}
+
+model ProjectMember {
+  id         String   @id @default(uuid())
+  project_id String
+  user_id    String
+  role       String   @default("MEMBER") // MEMBER ou CO_LEAD
+  joined_at  DateTime @default(now())
+  
+  // Relations
+  project    Project  @relation(fields: [project_id], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  
+  // Un utilisateur ne peut rejoindre un projet qu'une seule fois
+  @@unique([project_id, user_id])
+  @@map("project_members")
+}
+
+// =====================================================
+// NOTES POUR FUTURES PHASES
+// =====================================================
+
+// Phase 2 - Sprint 2 : Tables TASKS (à ajouter plus tard)
+// Phase 2 - Sprint 3 : Tables PCO_HISTORY (à ajouter plus tard)
+// Phase 2 - Sprint 4 : Tables NOTIFICATIONS (à ajouter plus tard)
+// Phase 2 - Sprint 5 : Tables AURA_VERIFICATIONS (à ajouter plus tard)
