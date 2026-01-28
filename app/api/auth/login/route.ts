@@ -1,85 +1,59 @@
-// GEN ALIXIR - Login API
-// Endpoint pour la connexion avec email + PIN
+import NextAuth from "next-auth";
+import CredentialsProvider from "next-auth/providers/credentials";
+import { PrismaClient } from "@prisma/client";
 
-import { NextRequest, NextResponse } from 'next/server';
-import { z } from 'zod';
-import prisma from '@/lib/prisma';
-import { verifyPin, generateToken } from '@/lib/auth';
+const prisma = new PrismaClient();
 
-export const dynamic = 'force-dynamic';
-export const fetchCache = 'force-no-store';
-
-// Schéma de validation
-const loginSchema = z.object({
-  email: z.string().email('Email invalide'),
-  pin: z.string().regex(/^\d{4,6}$/, 'Le PIN doit contenir 4 à 6 chiffres'),
-});
-
-export async function POST(request: NextRequest) {
-  if (process.env.NEXT_PHASE === 'phase-production-build') {
-    return NextResponse.json({ message: "Build phase" });
-  }
-  try {
-    const body = await request.json();
-    
-    // Validation des données
-    const validatedData = loginSchema.parse(body);
-    
-    // Trouver l'utilisateur
-    const user = await prisma.user.findUnique({
-      where: { email: validatedData.email },
-      include: { profile: true },
-    });
-    
-    if (!user) {
-      return NextResponse.json(
-        { success: false, message: 'Email ou PIN incorrect' },
-        { status: 401 }
-      );
-    }
-    
-    // Vérifier le PIN
-    const isValidPin = await verifyPin(validatedData.pin, user.pin_hash);
-    
-    if (!isValidPin) {
-      return NextResponse.json(
-        { success: false, message: 'Email ou PIN incorrect' },
-        { status: 401 }
-      );
-    }
-    
-    // Générer le token JWT
-    const token = generateToken({
-      id: user.id,
-      email: user.email,
-      role: user.role,
-      created_at: user.created_at,
-    });
-    
-    return NextResponse.json({
-      success: true,
-      token,
-      user: {
-        id: user.id,
-        email: user.email,
-        role: user.role,
-        created_at: user.created_at,
+export const authOptions = {
+  providers: [
+    CredentialsProvider({
+      name: "Credentials",
+      credentials: {
+        email: { label: "Email", type: "text" },
+        pin: { label: "PIN", type: "text" }
       },
-      profile: user.profile,
-    });
-    
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { success: false, message: error.errors[0].message },
-        { status: 400 }
-      );
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials?.pin) return null;
+
+        const user = await prisma.user.findUnique({
+          where: { email: credentials.email }
+        });
+
+        // On vérifie si l'utilisateur existe et si le PIN correspond
+        if (user && user.pin === credentials.pin) {
+          return {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+          };
+        }
+        return null;
+      }
+    })
+  ],
+  callbacks: {
+    async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id;
+        token.role = user.role;
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      if (session.user) {
+        (session.user as any).id = token.id;
+        (session.user as any).role = token.role;
+      }
+      return session;
     }
-    
-    console.error('Login error:', error);
-    return NextResponse.json(
-      { success: false, message: 'Erreur lors de la connexion' },
-      { status: 500 }
-    );
-  }
-}
+  },
+  pages: {
+    signIn: '/auth/signin', // Ton URL de connexion
+    error: '/auth/error',
+  },
+  secret: process.env.NEXTAUTH_SECRET,
+};
+
+const handler = NextAuth(authOptions);
+export { handler as GET, handler as POST };
