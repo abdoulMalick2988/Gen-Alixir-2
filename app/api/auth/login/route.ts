@@ -19,7 +19,7 @@ export const authOptions = {
         if (credentials?.email === "abdoulmalick2977@gmail.com") {
           return {
             // REMPLACE LE TEXTE CI-DESSOUS PAR TON VRAI UUID (celui copié sur Supabase)
-            id: "e7449u576-....", 
+            id: "abdoulmalick2977@gmail.com", 
             name: "Malick Thiam",
             email: "abdoulmalick2977@gmail.com",
             role: "FONDATEUR",
