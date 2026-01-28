@@ -22,7 +22,7 @@ export async function POST(request: Request) {
         name: body.name,
         description: body.description,
         max_members: Number(body.max_members) || 10,
-        owner_id: session.user.id, // Utilise ton ID de session réel
+        owner_id: abdoulmalick2977@gmail.com, // Utilise ton ID de session réel
         status: 'PLANNING',
       },
     });
