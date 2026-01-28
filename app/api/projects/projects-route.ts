@@ -7,30 +7,38 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     
-    // On cherche ton compte directement par ton email
+    // 1. Test de recherche utilisateur (On vérifie si l'email marche)
     const user = await prisma.user.findUnique({
       where: { email: "abdoulmalick2977@gmail.com" }
     });
 
     if (!user) {
-      return NextResponse.json({ error: "Utilisateur non trouvé" }, { status: 404 });
+      return NextResponse.json({ 
+        error: "Utilisateur introuvable", 
+        details: "Aucun user avec l'email abdoulmalick2977@gmail.com dans la table User" 
+      }, { status: 404 });
     }
 
-    // On crée le projet avec ton ID trouvé
+    // 2. Tentative de création avec logs détaillés
     const project = await prisma.project.create({
       data: {
         name: body.name,
         description: body.description,
         max_members: 10,
-        owner_id: user.id, // Ton ID réel récupéré proprement
+        owner_id: user.id, 
         status: 'PLANNING',
       },
     });
 
     return NextResponse.json(project);
-  } catch (error) {
-    console.error(error);
-    return NextResponse.json({ error: "Erreur base de données" }, { status: 500 });
+
+  } catch (error: any) {
+    // ON RENVOIE L'ERREUR EXACTE A L'ECRAN
+    console.error("ERREUR PRISMA:", error);
+    return NextResponse.json({ 
+      error: "Echec écriture DB", 
+      details: error.message || String(error) 
+    }, { status: 500 });
   }
 }
 
