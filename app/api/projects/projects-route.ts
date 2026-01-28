@@ -80,26 +80,39 @@ export async function GET(request: NextRequest) {
 }
 
 // POST /api/projects - Créer un nouveau projet
-export async function POST(request: NextRequest) {
+import { NextResponse } from 'next/server';
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
+
+export async function POST(request: Request) {
   try {
-    // Vérifier l'authentification
-    const authHeader = request.headers.get('authorization');
-    const token = extractToken(authHeader);
+    const body = await request.json();
     
-    if (!token) {
-      return NextResponse.json(
-        { success: false, message: 'Non authentifié' },
-        { status: 401 }
-      );
-    }
-    
-    const payload = verifyToken(token);
-    if (!payload) {
-      return NextResponse.json(
-        { success: false, message: 'Token invalide' },
-        { status: 401 }
-      );
-    }
+    const project = await prisma.project.create({
+      data: {
+        name: body.name,
+        description: body.description,
+        max_members: Number(body.max_members) || 10,
+        // REMPLACE LE TEXTE CI-DESSOUS PAR TON ID COPIÉ DANS SUPABASE
+        owner_id: "TON_ID_SUPABASE_ICI", 
+        status: 'PLANNING',
+      },
+    });
+
+    return NextResponse.json(project);
+  } catch (error) {
+    console.error(error);
+    return NextResponse.json({ error: "Erreur creation" }, { status: 500 });
+  }
+}
+
+export async function GET() {
+  const projects = await prisma.project.findMany({
+    orderBy: { created_at: 'desc' }
+  });
+  return NextResponse.json(projects);
+}
 
     // Vérifier que l'utilisateur a le droit de créer des projets
     const user = await prisma.user.findUnique({
