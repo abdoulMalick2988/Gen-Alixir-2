@@ -1,6 +1,3 @@
-// GEN ALIXIR - Register API
-// Endpoint pour l'inscription de nouveaux membres
-
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import prisma from '@/lib/prisma';
@@ -8,7 +5,6 @@ import { generatePin, hashPin } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
-// Schéma de validation
 const registerSchema = z.object({
   email: z.string().email('Email invalide'),
   full_name: z.string().min(2, 'Le nom doit contenir au moins 2 caractères'),
@@ -18,27 +14,32 @@ const registerSchema = z.object({
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    
-    // Validation des données
     const validatedData = registerSchema.parse(body);
-    
-    // Vérifier si l'email existe déjà
+
+    // TEST 1: Vérifier si Prisma répond
+    console.log("Tentative de vérification d'utilisateur...");
     const existingUser = await prisma.user.findUnique({
       where: { email: validatedData.email },
+    }).catch(err => {
+      throw new Error("Erreur Connexion Prisma: " + err.message);
     });
-    
+
     if (existingUser) {
-      return NextResponse.json(
-        { success: false, message: 'Cet email est déjà utilisé' },
-        { status: 400 }
-      );
+      return NextResponse.json({ success: false, message: 'Cet email est déjà utilisé' }, { status: 400 });
     }
-    
-    // Générer un PIN aléatoire
+
+    // TEST 2: Vérifier le Hachage
+    console.log("Tentative de hachage du PIN...");
     const pin = generatePin();
-    const pin_hash = await hashPin(pin);
-    
-    // Créer l'utilisateur et son profil
+    let pin_hash;
+    try {
+      pin_hash = await hashPin(pin);
+    } catch (err) {
+      throw new Error("Erreur Hachage PIN: " + err.message);
+    }
+
+    // TEST 3: Création
+    console.log("Tentative de création dans la DB...");
     const user = await prisma.user.create({
       data: {
         email: validatedData.email,
@@ -48,43 +49,27 @@ export async function POST(request: NextRequest) {
           create: {
             full_name: validatedData.full_name,
             country: validatedData.country,
-            pco: 0,
-            aura: [],
-            aura_verified: false,
-            skills: [],
           },
         },
       },
-      include: {
-        profile: true,
-      },
     });
-    
-    // En production, envoyer le PIN par email
-    // Pour l'instant, on le retourne dans la réponse (développement uniquement)
-    
+
     return NextResponse.json({
       success: true,
-      message: 'Inscription réussie ! Votre PIN a été généré.',
-      pin: pin, // ⚠️ À supprimer en production, envoyer par email
-      user: {
-        id: user.id,
-        email: user.email,
-        role: user.role,
-      },
+      message: 'Inscription réussie !',
+      pin: pin,
+      user: { id: user.id, email: user.email },
     });
-    
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { success: false, message: error.errors[0].message },
-        { status: 400 }
-      );
-    }
-    
-    console.error('Registration error:', error);
+
+  } catch (error: any) {
+    // ICI : On renvoie l'erreur RÉELLE au lieu du message générique
+    console.error('DETAILED ERROR:', error);
     return NextResponse.json(
-      { success: false, message: 'Erreur lors de l\'inscription' },
+      { 
+        success: false, 
+        message: 'DEBUG: ' + (error.message || 'Erreur inconnue'),
+        details: error.stack 
+      },
       { status: 500 }
     );
   }
