@@ -55,11 +55,13 @@ export default function Header() {
           <div className="flex items-center space-x-4">
             {isAuthenticated ? (
               <>
-                <Link href="/dashboard">
-                  <Button variant="outline" size="sm">
-                    Dashboard
-                  </Button>
-                </Link>
+                <Link 
+  href="/dashboard/projects" 
+  className="flex items-center gap-2 bg-gradient-to-r from-cyan-600 to-blue-600 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-lg transition-all hover:scale-105 active:scale-95"
+>
+  <span className="text-lg">🚀</span>
+  <span>Projets</span>
+</Link>
               </>
             ) : (
               <>
