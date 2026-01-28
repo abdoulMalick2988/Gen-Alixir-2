@@ -20,17 +20,24 @@ export default function ProjectsPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const res = await fetch("/api/projects", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(formData),
-    });
+    try {
+      const res = await fetch("/api/projects", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
 
-    if (res.ok) {
-      setIsModalOpen(false);
-      window.location.reload(); // Recharge pour voir le nouveau projet
-    } else {
-      alert("Erreur lors de la création du projet");
+      const data = await res.json(); // On lit la réponse du serveur
+
+      if (res.ok) {
+        setIsModalOpen(false);
+        window.location.reload();
+      } else {
+        // C'est ICI qu'on va voir la vraie erreur
+        alert("ERREUR TECHNIQUE : " + JSON.stringify(data));
+      }
+    } catch (err) {
+      alert("Erreur réseau : " + err);
     }
   };
 
