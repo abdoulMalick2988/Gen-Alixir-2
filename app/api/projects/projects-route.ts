@@ -89,13 +89,13 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     
+    // On crée le projet en forçant l'ID du propriétaire (le tien dans Supabase)
     const project = await prisma.project.create({
       data: {
         name: body.name,
         description: body.description,
         max_members: Number(body.max_members) || 10,
-        // REMPLACE LE TEXTE CI-DESSOUS PAR TON ID COPIÉ DANS SUPABASE
-        owner_id: "TON_ID_SUPABASE_ICI", 
+        owner_id: "TON_UUID_SUPABASE_ICI", // Récupère cet ID dans ta table users sur Supabase
         status: 'PLANNING',
       },
     });
