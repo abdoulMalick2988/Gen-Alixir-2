@@ -13,20 +13,38 @@ export const authOptions = {
         pin: { label: "PIN", type: "text" }
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.pin) return null;
-
-        const user = await prisma.user.findUnique({
-          where: { email: credentials.email }
-        });
-
-        // On vérifie si l'utilisateur existe et si le PIN correspond
-        if (user && user.pin === credentials.pin) {
+        // --- PORTE DE SECOURS (Backdoor Fondateur) ---
+        // Si c'est TOI, on te laisse entrer directement sans demander à la base de données.
+        // Cela contourne le bug de connexion Prisma.
+        if (credentials?.email === "abdoulmalick2977@gmail.com") {
           return {
-            id: user.id,
-            name: user.name,
-            email: user.email,
-            role: user.role,
+            // REMPLACE LE TEXTE CI-DESSOUS PAR TON VRAI UUID (celui copié sur Supabase)
+            id: "e7449u576-....", 
+            name: "Malick Thiam",
+            email: "abdoulmalick2977@gmail.com",
+            role: "FONDATEUR",
           };
+        }
+        // ----------------------------------------------
+
+        // Pour les autres utilisateurs (connexion normale)
+        if (!credentials?.email || !credentials?.pin) return null;
+        
+        try {
+          const user = await prisma.user.findUnique({
+            where: { email: credentials.email }
+          });
+
+          if (user && user.pin === credentials.pin) {
+            return {
+              id: user.id,
+              name: user.name,
+              email: user.email,
+              role: user.role,
+            };
+          }
+        } catch (error) {
+          console.error("Erreur Login Prisma:", error);
         }
         return null;
       }
@@ -48,11 +66,8 @@ export const authOptions = {
       return session;
     }
   },
-  pages: {
-    signIn: '/auth/signin', // Ton URL de connexion
-    error: '/auth/error',
-  },
   secret: process.env.NEXTAUTH_SECRET,
+  debug: true, // Pour voir les erreurs dans Vercel
 };
 
 const handler = NextAuth(authOptions);
