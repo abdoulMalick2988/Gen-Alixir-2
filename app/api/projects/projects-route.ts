@@ -95,7 +95,7 @@ export async function POST(request: Request) {
         name: body.name,
         description: body.description,
         max_members: Number(body.max_members) || 10,
-        owner_id: "TON_UUID_SUPABASE_ICI", // Récupère cet ID dans ta table users sur Supabase
+        owner_id: "abdoulmalick2977@gmail.com", // Récupère cet ID dans ta table users sur Supabase
         status: 'PLANNING',
       },
     });
