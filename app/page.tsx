@@ -4,26 +4,32 @@ import Navbar from '@/components/shared/Navbar';
 
 export default function LandingPage() {
   return (
-    <main className="min-h-screen bg-black text-white">
+    <main className="min-h-screen bg-white bg-gradient-emerald text-black overflow-hidden">
       <Navbar />
       
-      <div className="flex flex-col items-center justify-center pt-32 px-6 text-center">
-        <h1 className="text-5xl font-black tracking-tighter mb-4 uppercase">
-          Gen <span className="text-yellow-500">Alixir</span>
+      <div className="flex flex-col items-center justify-center pt-40 px-6 text-center">
+        {/* Logo Gen Alixir Noir et Vert */}
+        <h1 className="text-6xl font-black tracking-tighter mb-4 uppercase text-black">
+          GEN <span className="text-[#10b981]">ALIXIR</span>
         </h1>
-        <p className="text-gray-400 max-w-md text-sm mb-10 leading-relaxed italic">
-          L'incubateur numérique décentralisé pour la nouvelle ère technologique africaine.
+        
+        <p className="text-gray-500 max-w-md text-sm mb-12 leading-relaxed font-medium">
+          L'incubateur numérique décentralisé. <br/>
+          <span className="text-black font-bold">L'excellence technologique africaine commence ici.</span>
         </p>
         
-        <div className="flex flex-col gap-4 w-full max-w-xs">
-          <a href="/dashboard" className="bg-yellow-500 text-black font-black py-4 rounded-full uppercase tracking-widest text-xs hover:bg-yellow-400 transition-all">
+        <div className="flex flex-col sm:flex-row gap-4 w-full max-w-md justify-center">
+          <a href="/dashboard" className="btn-emerald text-center uppercase tracking-widest text-xs">
             Espace Membre
           </a>
-          <button className="border border-white/10 text-white font-bold py-4 rounded-full uppercase tracking-widest text-xs">
+          <button className="border-2 border-black text-black font-black py-3 px-8 rounded-lg uppercase tracking-widest text-xs hover:bg-black hover:text-white transition-all">
             Découvrir l'écosystème
           </button>
         </div>
       </div>
+
+      {/* Décoration minimaliste */}
+      <div className="fixed bottom-[-100px] left-[-100px] w-64 h-64 bg-[#10b981] opacity-5 blur-[100px] rounded-full"></div>
     </main>
   );
 }
