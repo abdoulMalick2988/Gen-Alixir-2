@@ -2,24 +2,19 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --emerald-main: #10b981;
-  --emerald-dark: #059669;
-}
-
 body {
   background-color: #ffffff;
   color: #000000;
-  font-family: 'Inter', sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* Le gradient doux en arrière-plan */
+/* Effet de gradient émeraude très léger pour le fond */
 .bg-gradient-emerald {
-  background: radial-gradient(circle at top right, rgba(16, 185, 129, 0.08), transparent),
-              radial-gradient(circle at bottom left, rgba(16, 185, 129, 0.05), transparent);
+  background: radial-gradient(circle at top right, rgba(16, 185, 129, 0.05), transparent 400px),
+              radial-gradient(circle at bottom left, rgba(16, 185, 129, 0.03), transparent 400px);
 }
 
-/* Boutons personnalisés */
-.btn-emerald {
-  @apply bg-[#10b981] text-white font-bold py-3 px-8 rounded-lg hover:bg-[#059669] transition-all shadow-lg shadow-emerald-500/20;
+/* Transition douce pour la navbar au défilement */
+nav {
+  transition: background-color 0.3s ease, backdrop-filter 0.3s ease;
 }
