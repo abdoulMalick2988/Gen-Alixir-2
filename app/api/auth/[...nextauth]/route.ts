@@ -1,10 +1,8 @@
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
 
-const prisma = new PrismaClient();
-
-export const authOptions = {
+const authOptions = {
   providers: [
     CredentialsProvider({
       name: "Credentials",
@@ -14,11 +12,9 @@ export const authOptions = {
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.pin) return null;
-
         const user = await prisma.user.findUnique({
           where: { email: credentials.email }
         });
-
         if (user && user.pin === credentials.pin) {
           return {
             id: user.id,
@@ -34,21 +30,19 @@ export const authOptions = {
     })
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user }: any) {
       if (user) {
-        token.id = user.id;
-        token.role = (user as any).role;
-        token.pco = (user as any).pco;
-        token.aura = (user as any).aura;
+        token.role = user.role;
+        token.pco = user.pco;
+        token.aura = user.aura;
       }
       return token;
     },
-    async session({ session, token }) {
+    async session({ session, token }: any) {
       if (session.user) {
-        (session.user as any).id = token.id;
-        (session.user as any).role = token.role;
-        (session.user as any).pco = token.pco;
-        (session.user as any).aura = token.aura;
+        session.user.role = token.role;
+        session.user.pco = token.pco;
+        session.user.aura = token.aura;
       }
       return session;
     }
