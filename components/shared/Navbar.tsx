@@ -1,24 +1,19 @@
-import Link from 'next/link';
-import Image from 'next/image';
+"use client";
+import React from 'react';
 
 export default function Navbar() {
   return (
-    <nav className="fixed top-0 w-full z-50 border-b border-white/10 bg-black/50 backdrop-blur-md px-6 py-4 flex justify-between items-center">
-      <div className="flex items-center gap-2">
-        <div className="w-10 h-10 relative">
-          {/* Ton logo doré ici */}
-          <div className="absolute inset-0 bg-yellow-500 blur-lg opacity-20"></div>
-          <img src="/logo-gen-alixir.png" alt="Logo" className="relative z-10" />
-        </div>
-        <span className="text-xl font-bold tracking-tighter text-white">GEN <span className="text-yellow-500">ALIXIR</span></span>
+    <nav className="fixed top-0 w-full z-50 p-6 flex justify-between items-center bg-white/80 backdrop-blur-md border-b border-gray-100">
+      <div className="font-black text-2xl tracking-tighter text-black">
+        GEN <span className="text-[#10b981]">ALIXIR</span>
       </div>
-
-      <Link 
-        href="/auth/register" 
-        className="bg-gradient-to-r from-yellow-600 to-yellow-400 text-black px-6 py-2 rounded-full font-bold hover:scale-105 transition-all shadow-[0_0_15px_rgba(212,175,55,0.4)]"
-      >
-        ESPACE MEMBRE
-      </Link>
+      
+      <div className="flex items-center gap-4">
+        <div className="hidden md:block text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+          Système Opérationnel
+        </div>
+        <div className="w-2 h-2 bg-[#10b981] rounded-full shadow-[0_0_8px_#10b981]"></div>
+      </div>
     </nav>
   );
 }
