@@ -1,28 +1,29 @@
-export default function HomePage() {
+"use client";
+import React from 'react';
+import Navbar from '@/components/shared/Navbar';
+
+export default function LandingPage() {
   return (
-    <main className="bg-black text-white min-h-screen">
+    <main className="min-h-screen bg-black text-white">
       <Navbar />
       
-      {/* Hero Section */}
-      <section className="pt-32 pb-20 px-6 text-center">
-        <h1 className="text-5xl md:text-7xl font-extrabold mb-6 bg-gradient-to-b from-white to-gray-500 bg-clip-text text-transparent">
-          L'Économie de Demain <br/> <span className="text-yellow-500 text-4xl md:text-6xl italic">Commence Ici.</span>
+      <div className="flex flex-col items-center justify-center pt-32 px-6 text-center">
+        <h1 className="text-5xl font-black tracking-tighter mb-4 uppercase">
+          Gen <span className="text-yellow-500">Alixir</span>
         </h1>
-        <p className="max-w-2xl mx-auto text-gray-400 text-lg mb-10">
-          Gen Alixir est l'incubateur numérique décentralisé d'ECODREUM. Nous transformons le talent de la jeunesse africaine en impact économique réel.
+        <p className="text-gray-400 max-w-md text-sm mb-10 leading-relaxed italic">
+          L'incubateur numérique décentralisé pour la nouvelle ère technologique africaine.
         </p>
-      </section>
-
-      {/* Section ECODREUM */}
-      <section className="py-20 bg-gradient-to-b from-black to-zinc-900 px-6">
-        <div className="max-w-4xl mx-auto border border-yellow-500/20 p-8 rounded-3xl bg-white/5 backdrop-blur-sm">
-          <h2 className="text-2xl font-bold text-yellow-500 mb-4 text-center underline decoration-yellow-500/30">Pourquoi Gen Alixir ?</h2>
-          <p className="text-gray-300 leading-relaxed text-center">
-            Parce que l'Afrique ne manque pas d'idées, elle manque d'espaces où ces idées comptent. 
-            En lien direct avec <strong>ECODREUM</strong>, chaque projet validé devient une part réelle de notre réseau économique continental.
-          </p>
+        
+        <div className="flex flex-col gap-4 w-full max-w-xs">
+          <a href="/dashboard" className="bg-yellow-500 text-black font-black py-4 rounded-full uppercase tracking-widest text-xs hover:bg-yellow-400 transition-all">
+            Espace Membre
+          </a>
+          <button className="border border-white/10 text-white font-bold py-4 rounded-full uppercase tracking-widest text-xs">
+            Découvrir l'écosystème
+          </button>
         </div>
-      </section>
+      </div>
     </main>
   );
 }
