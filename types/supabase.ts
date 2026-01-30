@@ -13,7 +13,7 @@ export interface Database {
         Row: {
           id: string
           gen_alixir_id: string
-          user_id: string
+          user_id: string | null
           nom: string
           prenom: string
           email: string
@@ -23,6 +23,7 @@ export interface Database {
           pole_competence: string
           skills: string[]
           aura_dominante: string
+          statut: string
           pco_total: number
           projets_rejoints: number
           projets_crees: number
@@ -32,7 +33,7 @@ export interface Database {
         Insert: {
           id?: string
           gen_alixir_id: string
-          user_id: string
+          user_id?: string | null
           nom: string
           prenom: string
           email: string
@@ -42,6 +43,7 @@ export interface Database {
           pole_competence: string
           skills?: string[]
           aura_dominante: string
+          statut?: string
           pco_total?: number
           projets_rejoints?: number
           projets_crees?: number
@@ -51,7 +53,7 @@ export interface Database {
         Update: {
           id?: string
           gen_alixir_id?: string
-          user_id?: string
+          user_id?: string | null
           nom?: string
           prenom?: string
           email?: string
@@ -61,9 +63,60 @@ export interface Database {
           pole_competence?: string
           skills?: string[]
           aura_dominante?: string
+          statut?: string
           pco_total?: number
           projets_rejoints?: number
           projets_crees?: number
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      adhesion_requests: {
+        Row: {
+          id: string
+          nom: string
+          prenom: string
+          email: string
+          pays: string
+          pole_competence: string
+          skills: string[]
+          aura_dominante: string
+          statut: string
+          valide_par: string | null
+          date_validation: string | null
+          motif_rejet: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          nom: string
+          prenom: string
+          email: string
+          pays: string
+          pole_competence: string
+          skills?: string[]
+          aura_dominante: string
+          statut?: string
+          valide_par?: string | null
+          date_validation?: string | null
+          motif_rejet?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          nom?: string
+          prenom?: string
+          email?: string
+          pays?: string
+          pole_competence?: string
+          skills?: string[]
+          aura_dominante?: string
+          statut?: string
+          valide_par?: string | null
+          date_validation?: string | null
+          motif_rejet?: string | null
           created_at?: string
           updated_at?: string
         }
