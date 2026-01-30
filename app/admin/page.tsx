@@ -42,7 +42,7 @@ export default function AdminPage() {
   } | null>(null)
 
   // Simple authentification admin (à améliorer en production)
-  const ADMIN_PASSWORD = 'GenAlixir2024!' // À changer et à sécuriser !
+  const ADMIN_PASSWORD = 'GenAlixir777' // À changer et à sécuriser !
 
   useEffect(() => {
     const savedAuth = localStorage.getItem('admin_authenticated')
