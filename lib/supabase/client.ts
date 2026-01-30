@@ -9,123 +9,109 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey)
 
 // ========================================
-// FONCTIONS D'AUTHENTIFICATION
+// FONCTIONS D'ADHÉSION
 // ========================================
 
-export async function signUp(email: string, password: string, userData: {
+export async function submitAdhesionRequest(data: {
   nom: string
   prenom: string
+  email: string
   pays: string
   pole_competence: string
   skills: string[]
   aura_dominante: string
 }) {
   try {
-    // 1. Créer l'utilisateur dans Auth
-    const { data: authData, error: authError } = await supabase.auth.signUp({
-      email,
-      password,
-    })
-
-    if (authError) throw authError
-    if (!authData.user) throw new Error('Erreur lors de la création du compte')
-
-    // 2. Générer GEN ID et PIN
-    const { data: genId } = await supabase.rpc('generate_gen_alixir_id')
-    const { data: pinCode } = await supabase.rpc('generate_pin_code')
-
-    // 3. Créer le profil membre
-    const { data: profile, error: profileError } = await supabase
-      .from('members_profiles')
+    const { data: adhesion, error } = await supabase
+      .from('adhesion_requests')
       .insert({
-        user_id: authData.user.id,
-        gen_alixir_id: genId,
-        pin_code: pinCode,
-        email,
-        nom: userData.nom,
-        prenom: userData.prenom,
-        pays: userData.pays,
-        pole_competence: userData.pole_competence,
-        skills: userData.skills,
-        aura_dominante: userData.aura_dominante,
+        nom: data.nom,
+        prenom: data.prenom,
+        email: data.email,
+        pays: data.pays,
+        pole_competence: data.pole_competence,
+        skills: data.skills,
+        aura_dominante: data.aura_dominante,
+        statut: 'en_attente',
       })
       .select()
       .single()
 
-    if (profileError) throw profileError
-
-    return { user: authData.user, profile, genId, pinCode }
-  } catch (error) {
-    console.error('Erreur signUp:', error)
-    throw error
-  }
-}
-
-export async function signInWithEmail(email: string, password: string) {
-  try {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
-
     if (error) throw error
-    return data
-  } catch (error) {
-    console.error('Erreur signInWithEmail:', error)
+    return adhesion
+  } catch (error: any) {
+    // Vérifier si l'email existe déjà
+    if (error.code === '23505') {
+      throw new Error('Une demande avec cet email existe déjà')
+    }
+    console.error('Erreur submitAdhesionRequest:', error)
     throw error
   }
 }
 
-export async function signInWithPin(genAlixirId: string, pinCode: string) {
+// ========================================
+// FONCTIONS D'AUTHENTIFICATION
+// ========================================
+
+export async function signInWithEmailAndPin(email: string, pinCode: string) {
   try {
-    // 1. Trouver l'utilisateur avec GEN ID et PIN
+    // Vérifier que le membre existe et est validé
     const { data: profile, error: profileError } = await supabase
       .from('members_profiles')
-      .select('*, user_id')
-      .eq('gen_alixir_id', genAlixirId)
+      .select('*')
+      .eq('email', email)
       .eq('pin_code', pinCode)
+      .eq('statut', 'valide')
       .single()
 
     if (profileError || !profile) {
-      throw new Error('ID GEN ALIXIR ou Code PIN incorrect')
+      throw new Error('Email ou Code PIN incorrect, ou compte non validé')
     }
 
-    // 2. Récupérer l'email de l'utilisateur
-    const { data: userData, error: userError } = await supabase.auth.admin.getUserById(profile.user_id)
-    
-    if (userError || !userData) {
-      throw new Error('Utilisateur introuvable')
+    // Stocker les infos dans localStorage pour la session
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('gen_alixir_session', JSON.stringify({
+        profile_id: profile.id,
+        email: profile.email,
+        gen_alixir_id: profile.gen_alixir_id,
+        logged_in_at: new Date().toISOString(),
+      }))
     }
 
-    // Note: La connexion par PIN nécessite une approche différente
-    // Pour l'instant, on retourne le profil pour affichage
     return { profile }
   } catch (error) {
-    console.error('Erreur signInWithPin:', error)
+    console.error('Erreur signInWithEmailAndPin:', error)
     throw error
   }
 }
 
 export async function signOut() {
-  const { error } = await supabase.auth.signOut()
-  if (error) throw error
+  if (typeof window !== 'undefined') {
+    localStorage.removeItem('gen_alixir_session')
+  }
 }
 
-export async function getCurrentUser() {
-  const { data: { user } } = await supabase.auth.getUser()
-  return user
+export async function getCurrentSession() {
+  if (typeof window !== 'undefined') {
+    const sessionData = localStorage.getItem('gen_alixir_session')
+    if (sessionData) {
+      return JSON.parse(sessionData)
+    }
+  }
+  return null
 }
 
 // ========================================
 // FONCTIONS PROFIL MEMBRE
 // ========================================
 
-export async function getMemberProfile(userId: string) {
+export async function getMemberProfile(profileId: string) {
   try {
     const { data, error } = await supabase
       .from('members_profiles')
       .select('*')
-      .eq('user_id', userId)
+      .eq('id', profileId)
+      .eq('statut', 'valide')
       .single()
 
     if (error) throw error
@@ -136,27 +122,39 @@ export async function getMemberProfile(userId: string) {
   }
 }
 
-export async function updateMemberProfile(userId: string, updates: Partial<{
-  nom: string
-  prenom: string
-  pays: string
-  pole_competence: string
-  skills: string[]
-  aura_dominante: string
-  photo_url: string
-}>) {
+export async function getMemberProfileByEmail(email: string) {
   try {
     const { data, error } = await supabase
       .from('members_profiles')
-      .update(updates)
-      .eq('user_id', userId)
-      .select()
+      .select('*')
+      .eq('email', email)
+      .eq('statut', 'valide')
       .single()
 
     if (error) throw error
     return data
   } catch (error) {
-    console.error('Erreur updateMemberProfile:', error)
-    throw error
+    console.error('Erreur getMemberProfileByEmail:', error)
+    return null
+  }
+}
+
+// ========================================
+// FONCTIONS ADMIN (pour validation)
+// ========================================
+
+export async function getPendingAdhesions() {
+  try {
+    const { data, error } = await supabase
+      .from('adhesion_requests')
+      .select('*')
+      .eq('statut', 'en_attente')
+      .order('created_at', { ascending: false })
+
+    if (error) throw error
+    return data
+  } catch (error) {
+    console.error('Erreur getPendingAdhesions:', error)
+    return []
   }
 }
