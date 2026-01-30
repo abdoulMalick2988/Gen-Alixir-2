@@ -126,11 +126,17 @@ export default function AdminPage() {
     }
 
     // 2. Générer GEN ID et PIN
-    const { data: genIdData } = await supabase.rpc('generate_gen_alixir_id')
-    const { data: pinData } = await supabase.rpc('generate_pin_code')
+    const { data: genIdData, error: idError } = await supabase.rpc('generate_gen_alixir_id')
+    const { data: pinData, error: pinError } = await supabase.rpc('generate_pin_code')
 
-    const newGenId = genIdData as string
-    const newPin = pinData as string
+    // VÉRIFICATION DE SÉCURITÉ AJOUTÉE
+    if (idError || pinError || !genIdData || !pinData) {
+      throw new Error('Erreur technique : Impossible de générer le GEN ID ou le PIN.')
+    }
+
+    // Maintenant on est sûr que ce n'est pas null, on peut convertir
+    const newGenId = String(genIdData)
+    const newPin = String(pinData)
 
     // 3. Créer le profil membre
     const { data: newProfile, error: profileError } = await supabase
