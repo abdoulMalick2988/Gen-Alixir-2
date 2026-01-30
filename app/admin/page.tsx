@@ -102,53 +102,83 @@ export default function AdminPage() {
   }, [filter, isAuthenticated])
 
   const handleValidate = async (adhesionId: string, email: string) => {
-    if (!adminEmail) {
-      alert('Veuillez entrer votre email admin')
-      return
-    }
-
-    if (!confirm('Êtes-vous sûr de vouloir valider cette demande ?')) {
-      return
-    }
-
-    setProcessingId(adhesionId)
-    try {
-      // Appeler la fonction SQL pour créer le membre
-      const { data, error } = await supabase.rpc('create_member_from_adhesion', {
-        adhesion_id: adhesionId,
-        validated_by: adminEmail
-      }) as { data: string | null; error: any }
-
-      if (error) throw error
-
-      if (!data) {
-        throw new Error('Aucune donnée retournée de la fonction')
-      }
-
-      // Récupérer les infos du nouveau membre (GEN ID + PIN)
-      const { data: memberData, error: memberError } = await supabase
-        .from('members_profiles')
-        .select('gen_alixir_id, pin_code, email')
-        .eq('id', data)
-        .single()
-
-      if (memberError) throw memberError
-
-      // Afficher les infos pour l'envoi de l'email
-      setValidationResult({
-        genId: memberData.gen_alixir_id,
-        pin: memberData.pin_code,
-        email: memberData.email
-      })
-
-      // Recharger la liste
-      loadAdhesions()
-    } catch (error: any) {
-      alert('Erreur lors de la validation: ' + error.message)
-    } finally {
-      setProcessingId(null)
-    }
+  if (!adminEmail) {
+    alert('Veuillez entrer votre email admin')
+    return
   }
+
+  if (!confirm('Êtes-vous sûr de vouloir valider cette demande ?')) {
+    return
+  }
+
+  setProcessingId(adhesionId)
+  try {
+    // 1. Récupérer la demande d'adhésion
+    const { data: adhesion, error: adhesionError } = await supabase
+      .from('adhesion_requests')
+      .select('*')
+      .eq('id', adhesionId)
+      .eq('statut', 'en_attente')
+      .single()
+
+    if (adhesionError || !adhesion) {
+      throw new Error('Demande d\'adhésion introuvable ou déjà traitée')
+    }
+
+    // 2. Générer GEN ID et PIN
+    const { data: genIdData } = await supabase.rpc('generate_gen_alixir_id')
+    const { data: pinData } = await supabase.rpc('generate_pin_code')
+
+    const newGenId = genIdData as string
+    const newPin = pinData as string
+
+    // 3. Créer le profil membre
+    const { data: newProfile, error: profileError } = await supabase
+      .from('members_profiles')
+      .insert({
+        gen_alixir_id: newGenId,
+        email: adhesion.email,
+        nom: adhesion.nom,
+        prenom: adhesion.prenom,
+        pays: adhesion.pays,
+        pole_competence: adhesion.pole_competence,
+        skills: adhesion.skills,
+        aura_dominante: adhesion.aura_dominante,
+        pin_code: newPin,
+        statut: 'valide'
+      })
+      .select('id, gen_alixir_id, pin_code, email')
+      .single()
+
+    if (profileError) throw profileError
+
+    // 4. Mettre à jour la demande d'adhésion
+    const { error: updateError } = await supabase
+      .from('adhesion_requests')
+      .update({
+        statut: 'valide',
+        valide_par: adminEmail,
+        date_validation: new Date().toISOString()
+      })
+      .eq('id', adhesionId)
+
+    if (updateError) throw updateError
+
+    // Afficher les infos pour l'envoi de l'email
+    setValidationResult({
+      genId: newProfile.gen_alixir_id,
+      pin: newProfile.pin_code || '',
+      email: newProfile.email
+    })
+
+    // Recharger la liste
+    loadAdhesions()
+  } catch (error: any) {
+    alert('Erreur lors de la validation: ' + error.message)
+  } finally {
+    setProcessingId(null)
+  }
+}
 
   const handleReject = async (adhesionId: string) => {
     const motif = prompt('Motif du rejet (optionnel):')
