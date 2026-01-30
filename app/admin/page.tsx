@@ -42,7 +42,7 @@ export default function AdminPage() {
   } | null>(null)
 
   // Simple authentification admin (à améliorer en production)
-  const ADMIN_PASSWORD = 'GenAlixir777' // À changer et à sécuriser !
+  const ADMIN_PASSWORD = 'GenAlixir2024!' // À changer et à sécuriser !
 
   useEffect(() => {
     const savedAuth = localStorage.getItem('admin_authenticated')
@@ -117,9 +117,13 @@ export default function AdminPage() {
       const { data, error } = await supabase.rpc('create_member_from_adhesion', {
         adhesion_id: adhesionId,
         validated_by: adminEmail
-      })
+      }) as { data: string | null; error: any }
 
       if (error) throw error
+
+      if (!data) {
+        throw new Error('Aucune donnée retournée de la fonction')
+      }
 
       // Récupérer les infos du nouveau membre (GEN ID + PIN)
       const { data: memberData, error: memberError } = await supabase
@@ -192,7 +196,7 @@ Voici vos identifiants de connexion :
 - ID GEN ALIXIR : ${result.genId}
 - Code PIN : ${result.pin}
 
-Vous pouvez vous connecter sur : ${window.location.origin}/login
+Vous pouvez vous connecter sur : ${typeof window !== 'undefined' ? window.location.origin : ''}/login
 
 ⚠️ Important :
 - Conservez précieusement votre Code PIN
