@@ -11,7 +11,7 @@ export default function AboutPage() {
             À propos de <span className="text-emerald-400">GEN ALIXIR</span>
           </h1>
           <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-            Une plateforme communautaire révolutionnaire d'incubation de projets
+            Une plateforme communautaire révolutionnaire d'incubation de projets reliés à ECODREUM
           </p>
         </div>
         
