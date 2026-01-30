@@ -1,21 +1,24 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import Section from '@/components/ui/Section'
 import Card from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
 import { POLES_COMPETENCE, SKILLS_OPTIONS, AURA_TYPES, PAYS_OPTIONS } from '@/lib/constants'
-import { submitAdhesionRequest } from '@/lib/supabase/client'
+import { signUp } from '@/lib/supabase/client'
 
 export default function JoinPage() {
+  const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [success, setSuccess] = useState(false)
+  const [success, setSuccess] = useState<{ genId: string; pin: string } | null>(null)
   
   const [formData, setFormData] = useState({
     nom: '',
     prenom: '',
     email: '',
+    password: '',
     pays: '',
     pole_competence: '',
     skills: [] as string[],
@@ -38,7 +41,7 @@ export default function JoinPage() {
     
     try {
       // Validation
-      if (!formData.nom || !formData.prenom || !formData.email) {
+      if (!formData.nom || !formData.prenom || !formData.email || !formData.password) {
         throw new Error('Veuillez remplir tous les champs obligatoires')
       }
       
@@ -50,10 +53,30 @@ export default function JoinPage() {
         throw new Error('Veuillez sélectionner au moins une compétence')
       }
       
-      // Soumettre la demande
-      await submitAdhesionRequest(formData)
+      if (formData.password.length < 6) {
+        throw new Error('Le mot de passe doit contenir au moins 6 caractères')
+      }
       
-      setSuccess(true)
+      // Inscription
+      const result = await signUp(formData.email, formData.password, {
+        nom: formData.nom,
+        prenom: formData.prenom,
+        pays: formData.pays,
+        pole_competence: formData.pole_competence,
+        skills: formData.skills,
+        aura_dominante: formData.aura_dominante,
+      })
+      
+      // Afficher les identifiants
+      setSuccess({
+        genId: result.genId,
+        pin: result.pinCode,
+      })
+      
+      // Rediriger après 10 secondes
+      setTimeout(() => {
+        router.push('/dashboard')
+      }, 10000)
       
     } catch (err: any) {
       setError(err.message || 'Une erreur est survenue')
@@ -67,48 +90,34 @@ export default function JoinPage() {
     return (
       <Section containerSize="md" className="min-h-screen py-20 flex items-center">
         <Card glow className="max-w-2xl mx-auto text-center">
-          <div className="text-6xl mb-6">✅</div>
+          <div className="text-6xl mb-6">🎉</div>
           <h1 className="text-4xl font-bold text-white mb-4">
-            Demande d'adhésion <span className="text-emerald-400">envoyée</span> !
+            Bienvenue dans <span className="text-emerald-400">GEN ALIXIR</span> !
           </h1>
           
           <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-lg p-6 my-8">
-            <p className="text-gray-300 text-lg leading-relaxed">
-              Votre demande d'adhésion à <strong>GEN ALIXIR</strong> a bien été enregistrée.
-            </p>
+            <p className="text-gray-300 mb-4">Conservez précieusement ces identifiants :</p>
+            
+            <div className="space-y-4">
+              <div>
+                <div className="text-sm text-gray-400 mb-1">Votre ID GEN ALIXIR</div>
+                <div className="text-3xl font-bold text-emerald-400">{success.genId}</div>
+              </div>
+              
+              <div>
+                <div className="text-sm text-gray-400 mb-1">Votre Code PIN</div>
+                <div className="text-3xl font-bold text-emerald-400">{success.pin}</div>
+              </div>
+            </div>
           </div>
           
-          <div className="space-y-4 text-left">
-            <h3 className="text-xl font-bold text-white">📋 Prochaines étapes :</h3>
-            <ol className="space-y-3 text-gray-300">
-              <li className="flex items-start">
-                <span className="text-emerald-400 mr-3 font-bold">1.</span>
-                <span>Notre équipe va examiner votre demande sous 48-72h</span>
-              </li>
-              <li className="flex items-start">
-                <span className="text-emerald-400 mr-3 font-bold">2.</span>
-                <span>Si votre profil est validé, vous recevrez un <strong>email de confirmation</strong> contenant votre <strong>Code PIN personnel</strong></span>
-              </li>
-              <li className="flex items-start">
-                <span className="text-emerald-400 mr-3 font-bold">3.</span>
-                <span>Vous pourrez alors vous connecter avec votre <strong>email</strong> et votre <strong>Code PIN</strong></span>
-              </li>
-            </ol>
-          </div>
+          <p className="text-gray-400 mb-6">
+            Vous pouvez vous connecter avec votre email/mot de passe OU avec votre ID GEN ALIXIR + Code PIN
+          </p>
           
-          <div className="mt-8 pt-6 border-t border-white/10">
-            <p className="text-gray-400 text-sm">
-              📧 Vérifiez votre boîte email (et vos spams) dans les prochains jours
-            </p>
-          </div>
-          
-          <Button 
-            variant="outline" 
-            className="mt-6"
-            onClick={() => window.location.href = '/'}
-          >
-            Retour à l'accueil
-          </Button>
+          <p className="text-sm text-gray-500">
+            Redirection automatique vers votre dashboard dans 10 secondes...
+          </p>
         </Card>
       </Section>
     )
@@ -121,10 +130,7 @@ export default function JoinPage() {
           Rejoindre <span className="text-emerald-400">GEN ALIXIR</span>
         </h1>
         <p className="text-xl text-gray-300 max-w-2xl mx-auto">
-          Remplissez le formulaire d'adhésion pour rejoindre notre incubateur
-        </p>
-        <p className="text-sm text-gray-400 mt-2">
-          Votre demande sera examinée par notre équipe sous 48-72h
+          Devenez membre de la communauté et commencez à créer des projets innovants
         </p>
       </div>
       
@@ -183,7 +189,24 @@ export default function JoinPage() {
               placeholder="jean.dupont@email.com"
               required
             />
-            <p className="text-xs text-gray-500 mt-1">Vous recevrez votre Code PIN à cette adresse après validation</p>
+          </div>
+          
+          {/* Mot de passe */}
+          <div>
+            <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
+              Mot de passe <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="password"
+              id="password"
+              value={formData.password}
+              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              placeholder="••••••••"
+              minLength={6}
+              required
+            />
+            <p className="text-xs text-gray-500 mt-1">Minimum 6 caractères</p>
           </div>
           
           {/* Pays */}
@@ -279,7 +302,7 @@ export default function JoinPage() {
             type="submit"
             disabled={loading}
           >
-            {loading ? 'Envoi en cours...' : 'Soumettre ma demande d\'adhésion'}
+            {loading ? 'Création en cours...' : 'Rejoindre la communauté'}
           </Button>
         </form>
       </Card>
