@@ -139,7 +139,7 @@ export default function AdminPage() {
     const newPin = String(pinData)
 
     // 3. Créer le profil membre
-    // @ts-ignore: Force le build malgré le décalage des types Supabase
+    // @ts-ignore
     const { data: newProfile, error: profileError } = await supabase
       .from('members_profiles')
       .insert({
@@ -153,8 +153,8 @@ export default function AdminPage() {
         aura_dominante: adhesion.aura_dominante,
         pin_code: newPin,
         statut: 'valide'
-      } as any)
-      .select('id, gen_alixir_id, pin_code, email')
+      } as any) // <--- C'est ce "as any" ici qui est crucial
+      .select()
       .single();
 
     // 4. Mettre à jour la demande d'adhésion
