@@ -20,7 +20,7 @@ export default function AboutPage() {
           <h2 className="text-3xl font-bold text-white mb-4">Notre Vision</h2>
           <p className="text-gray-300 text-lg leading-relaxed">
             GEN ALIXIR transforme la création et la validation de projets en une expérience 
-            visuelle et collaborative inspirée du football. Chaque projet devient un match, 
+            visuelle et collaborative inspirée du football, le BRAINBALL. Chaque projet devient un match, 
             chaque étape une phase de jeu, chaque validation un but marqué.
           </p>
         </Card>
