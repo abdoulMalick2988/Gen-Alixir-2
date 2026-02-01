@@ -5,16 +5,16 @@ import LoyaltyChart from "../components/LoyaltyChart";
 import LockedOverlay from "../components/LockedOverlay";
 
 export default function Home() {
-  // --- CONFIGURATION DE PHASE 4 ---
-  // Ligne 11 : Change 'Business' par 'Elite' pour déverrouiller tout le site
-  const currentPartnerLevel = 'Business'; 
+  // --- MODIFICATION ICI (Ligne 11) ---
+  // On ajoute "as string" pour que TypeScript accepte la comparaison plus bas
+  const currentPartnerLevel = 'Business' as string; 
 
   return (
-    <div className="flex h-screen bg-black overflow-hidden font-sans">
+    <div className="flex h-screen bg-black overflow-hidden font-sans text-white">
       <Sidebar />
       
       <main className="flex-1 p-8 overflow-y-auto">
-        {/* HEADER AVEC CADRE DORÉ FLUORESCENT (Phase 1) */}
+        {/* HEADER AVEC CADRE DORÉ FLUORESCENT */}
         <div className="gold-border-glow glass-card p-8 mb-10 flex flex-col md:flex-row justify-between items-center relative overflow-hidden">
           <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-400/10 blur-[100px] -z-10"></div>
           <div>
@@ -27,7 +27,7 @@ export default function Home() {
           </div>
         </div>
 
-        {/* GRILLE DES KPIs (Phase 2) */}
+        {/* GRILLE DES KPIs */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
           <StatCard title="Total eCo Générés" value="1.24M" change="+12%" />
           <StatCard title="eCoLixir Accumulé" value="3,500" change="+25%" />
@@ -35,10 +35,10 @@ export default function Home() {
           <StatCard title="Revenue (XAF)" value="45.2M" change="+8%" />
         </div>
 
-        {/* ZONE ANALYTIQUE (Phase 3 & 4) */}
+        {/* ZONE ANALYTIQUE */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           
-          {/* GRAPHIQUE DE FLUX - VISIBLE POUR TOUS */}
+          {/* GRAPHIQUE DE FLUX */}
           <div className="lg:col-span-2 glass-card p-8 relative overflow-hidden">
             <h3 className="text-xl font-bold text-white mb-6 flex items-center">
               <span className="w-2 h-2 bg-emerald-400 rounded-full mr-3 shadow-[0_0_8px_#2ecc71]"></span>
@@ -47,25 +47,23 @@ export default function Home() {
             <MainChart />
           </div>
 
-          {/* ANALYSE DÉMOGRAPHIQUE - VERROUILLÉE SI PAS ELITE */}
+          {/* ANALYSE DÉMOGRAPHIQUE - LOGIQUE DE VERROUILLAGE */}
           <div className="glass-card p-8 relative overflow-hidden group">
-            {/* Ligne 54 : Vérification du niveau pour afficher le cadenas */}
             {currentPartnerLevel !== 'Elite' && <LockedOverlay levelRequired="ELITE" />}
             
             <h3 className="text-xl font-bold text-white mb-6 flex items-center">
               <span className="w-2 h-2 bg-gold rounded-full mr-3 shadow-[0_0_8px_#f1c40f]"></span>
               Segments de Fidélité
             </h3>
-            <div className={currentPartnerLevel !== 'Elite' ? 'blur-md grayscale' : ''}>
+            <div className={currentPartnerLevel !== 'Elite' ? 'blur-md grayscale opacity-50' : ''}>
                 <LoyaltyChart />
             </div>
           </div>
 
         </div>
 
-        {/* SECTION GÉO-INTELLIGENCE (Phase 3) - VERROUILLÉE SI PAS ELITE */}
+        {/* SECTION GÉO-INTELLIGENCE - LOGIQUE DE VERROUILLAGE */}
         <div className="mt-8 glass-card p-8 min-h-[400px] relative overflow-hidden">
-           {/* Ligne 71 : Système de protection pour la carte */}
            {currentPartnerLevel !== 'Elite' && <LockedOverlay levelRequired="ELITE" />}
            
            <h3 className="text-xl font-bold text-emerald-400 mb-6 flex items-center">
