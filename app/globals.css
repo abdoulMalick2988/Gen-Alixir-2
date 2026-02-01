@@ -1,0 +1,33 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --emerald: #2ecc71;
+  --gold: #f1c40f;
+}
+
+body {
+  background: radial-gradient(circle at top left, #1a2e25 0%, #050505 100%);
+  color: white;
+  min-height: 100vh;
+  font-family: var(--font-body);
+}
+
+/* L'effet de verre transparent */
+.glass-card {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 24px;
+}
+
+/* Le cadre doré fluorescent */
+.gold-border-glow {
+  border: 1px solid var(--gold);
+  box-shadow: 0 0 20px rgba(241, 196, 15, 0.3);
+}
+
+.text-gold { color: var(--gold); }
+.text-emerald { color: var(--emerald); }
