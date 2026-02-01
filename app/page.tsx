@@ -72,12 +72,17 @@ export default function Home() {
            </h3>
            <div className={`h-80 bg-emerald-900/5 rounded-3xl border border-white/5 flex flex-col items-center justify-center ${currentPartnerLevel !== 'Elite' ? 'blur-xl' : ''}`}>
               <div className="animate-pulse text-emerald-500 font-mono text-sm uppercase tracking-[0.5em]">
-                Scanning Geographical Data...
-              </div>
-           </div>
-        </div>
-
-      </main>
-    </div>
-  );
-}
+                {/* SECTION GÉO-INTELLIGENCE - MODIFIÉE À LA LIGNE 75 */}
+<div className="mt-8 glass-card p-8 min-h-[500px] relative overflow-hidden">
+   {currentPartnerLevel !== 'Elite' && <LockedOverlay levelRequired="ELITE" />}
+   
+   <h3 className="text-xl font-bold text-emerald-400 mb-6 flex items-center">
+      <span className="w-4 h-4 bg-emerald-500/20 border border-emerald-500 rounded-sm mr-3"></span>
+      Géo-Intelligence : Heatmap Burundi (Live)
+   </h3>
+   
+   <div className={`h-[400px] w-full relative ${currentPartnerLevel !== 'Elite' ? 'blur-xl' : ''}`}>
+      {/* On appelle ici notre nouveau composant Carte */}
+      <AnalyticsMap />
+   </div>
+</div>
