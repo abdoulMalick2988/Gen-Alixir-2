@@ -7,7 +7,7 @@ import LockedOverlay from "../components/LockedOverlay";
 export default function Home() {
   // --- MODIFICATION ICI (Ligne 11) ---
   // On ajoute "as string" pour que TypeScript accepte la comparaison plus bas
-  const currentPartnerLevel = 'Business' as string; 
+  const currentPartnerLevel = 'Elite' as string; 
 
   return (
     <div className="flex h-screen bg-black overflow-hidden font-sans text-white">
