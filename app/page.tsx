@@ -1,7 +1,8 @@
-import Sidebar from "@/components/Sidebar";
-import StatCard from "@/components/StatCard";
-import MainChart from "@/components/MainChart";
-import LoyaltyChart from "@/components/LoyaltyChart";
+// Au lieu de @/components, on utilise le chemin direct
+import Sidebar from "../components/Sidebar";
+import StatCard from "../components/StatCard";
+import MainChart from "../components/MainChart";
+import LoyaltyChart from "../components/LoyaltyChart";
 
 export default function Home() {
   return (
