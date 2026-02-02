@@ -51,6 +51,8 @@ const EmeraldBadge = ({ letter }: { letter: string }) => (
 );
 
 export default function RHPage() {
+  const [showModal, setShowModal] = useState(false);
+const [newTask, setNewTask] = useState({ title: '', assigned_to: '', priority: 'Normale', department: '' });
   const [view, setView] = useState<'members' | 'tasks'>('members');
   const [selectedDept, setSelectedDept] = useState<string | null>(null);
   const [staff, setStaff] = useState<any[]>([]);
