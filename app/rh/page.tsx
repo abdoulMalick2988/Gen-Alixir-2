@@ -86,7 +86,7 @@ export default function RHPage() {
   };
 
   const handleDeployTask = async () => {
-    if(!newTask.title || !newTask.assigned_to || !newTask.deadline) return alert("⚠️ Erreur : Veuillez remplir tous les champs, y compris la date.");
+    if(!newTask.title || !newTask.assigned_to || !newTask.deadline) return alert("⚠️ Veuillez définir une date limite.");
     setIsDeploying(true);
     const { error } = await supabase.from('tasks').insert([{ ...newTask, department: selectedDept, status: 'En cours' }]);
     if (!error) {
@@ -196,7 +196,7 @@ export default function RHPage() {
           )}
         </div>
 
-        {/* MODAL AJOUT MISSION */}
+        {/* MODAL AJOUT MISSION - CORRIGÉ */}
         {showTaskModal && (
             <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/90 p-4 backdrop-blur-xl">
                 <div className="glass-card w-full max-w-md p-8 border-t-4 border-t-emerald-500 animate-in zoom-in duration-300">
@@ -218,15 +218,29 @@ export default function RHPage() {
                                 ))}
                             </select>
                         </div>
+                        
+                        {/* FIX POUR LE CHAMP DATE */}
                         <div>
-                            <label className="text-[9px] font-black text-gray-500 uppercase">Délai Limite</label>
-                            <input 
-                              type="date" 
-                              className="w-full bg-white/10 border border-white/20 p-4 rounded-xl text-white text-sm scheme-dark block"
-                              onChange={(e)=>setNewTask({...newTask, deadline: e.target.value})}
-                            />
+                            <label className="text-[9px] font-black text-gray-500 uppercase mb-2 block">Délai Limite</label>
+                            <div className="relative w-full h-14 bg-white/10 border border-white/20 rounded-xl flex items-center px-4 overflow-hidden group hover:border-emerald-500 transition-colors">
+                                {/* Visuel pour l'utilisateur (Texte ou Placeholder) */}
+                                <div className="flex items-center gap-3 w-full pointer-events-none">
+                                    <Calendar className="text-emerald-500" size={18} />
+                                    <span className={`text-sm ${newTask.deadline ? 'text-white font-bold' : 'text-gray-400 italic'}`}>
+                                        {newTask.deadline ? new Date(newTask.deadline).toLocaleDateString() : "Toucher pour choisir une date..."}
+                                    </span>
+                                </div>
+                                
+                                {/* Input INVISIBLE qui prend toute la place et capte le clic */}
+                                <input 
+                                  type="date" 
+                                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                                  onChange={(e)=>setNewTask({...newTask, deadline: e.target.value})}
+                                />
+                            </div>
                         </div>
-                        <button onClick={handleDeployTask} disabled={isDeploying} className="w-full py-4 bg-emerald-500 text-black font-black uppercase text-xs rounded-xl shadow-lg flex items-center justify-center gap-2 hover:bg-emerald-400 transition-all">
+
+                        <button onClick={handleDeployTask} disabled={isDeploying} className="w-full py-4 bg-emerald-500 text-black font-black uppercase text-xs rounded-xl shadow-lg flex items-center justify-center gap-2 hover:bg-emerald-400 transition-all mt-4">
                             {isDeploying ? <Loader2 className="animate-spin" /> : <><Play size={14} fill="black" /> Lancer l'Opération</>}
                         </button>
                     </div>
