@@ -8,7 +8,6 @@
 }
 
 body {
-  /* Fond technologique sombre */
   background: 
     radial-gradient(circle at 50% 50%, rgba(46, 204, 113, 0.05) 0%, transparent 50%),
     linear-gradient(to bottom, #050a08, #010101);
@@ -16,32 +15,32 @@ body {
   color: white;
   height: 100vh;
   width: 100vw;
-  overflow: hidden; /* Empêche de défiler pour garder le look tablette */
-  font-family: sans-serif;
+  overflow: hidden;
+  font-family: 'Inter', sans-serif;
 }
 
-/* CARTE GIVRÉE : Plus blanche pour la lisibilité */
 .glass-card {
-  background: rgba(255, 255, 255, 0.12) !important; 
-  backdrop-filter: blur(20px) saturate(160%);
-  -webkit-backdrop-filter: blur(20px) saturate(160%);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
-  border-radius: 20px;
+  /* Fond plus opaque (0.15) pour que les graphiques se détachent mieux */
+  background: rgba(255, 255, 255, 0.15) !important; 
+  backdrop-filter: blur(25px) saturate(180%);
+  -webkit-backdrop-filter: blur(25px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+  border-radius: 24px;
 }
 
 .gold-border-glow {
-  border: 1px solid rgba(241, 196, 15, 0.4);
-  box-shadow: 0 0 15px rgba(241, 196, 15, 0.1);
+  border: 1px solid rgba(241, 196, 15, 0.5);
+  box-shadow: 0 0 20px rgba(241, 196, 15, 0.15);
 }
 
-/* Couleur émeraude spécifique pour les titres */
 .text-emerald-header {
   color: #2ecc71;
-  text-shadow: 0 0 8px rgba(46, 204, 113, 0.4);
+  font-weight: 900;
+  text-shadow: 0 0 12px rgba(46, 204, 113, 0.5);
 }
 
-/* Supprime les barres de scroll */
+/* Cache tout scroll éventuel pour garder l'aspect tablette */
 ::-webkit-scrollbar {
   display: none;
 }
