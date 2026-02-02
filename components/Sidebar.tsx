@@ -1,54 +1,64 @@
-import { LayoutDashboard, Users, ShieldCheck, PieChart, Calendar, Settings, Users2 } from "lucide-react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-const navItems = [
-  { icon: LayoutDashboard, label: "Dashboard", href: "/" },
-  { icon: Users, label: "RH Interne", href: "/rh" },
-  { icon: ShieldCheck, label: "Partenaires", href: "/partners" },
-  { icon: Users2, label: "Clients", href: "/clients" }, // Remplacement de Contact2 par Users2
-  { icon: PieChart, label: "Mine d'Or Data", href: "/data" },
-  { icon: Calendar, label: "Événements", href: "/events" },
-  { icon: Settings, label: "Paramètres", href: "/settings" },
-];
+:root {
+  --emerald: #2ecc71;
+  --gold: #f1c40f;
+  --glass-bg: rgba(255, 255, 255, 0.015); /* Transparence quasi totale */
+  --glass-border: rgba(255, 255, 255, 0.08);
+}
 
-export default function Sidebar() {
-  const pathname = usePathname();
+body {
+  /* Simulation du fond de l'image : Labo technologique sombre avec reflets */
+  background: 
+    radial-gradient(circle at 50% -20%, rgba(241, 196, 15, 0.08) 0%, transparent 50%),
+    radial-gradient(circle at 0% 0%, rgba(46, 204, 113, 0.05) 0%, transparent 30%),
+    radial-gradient(circle at 100% 100%, rgba(46, 204, 113, 0.05) 0%, transparent 30%),
+    linear-gradient(to bottom, #080d0b, #020202);
+  background-attachment: fixed;
+  color: white;
+  min-height: 100vh;
+  font-family: 'Inter', sans-serif;
+  overflow-x: hidden;
+}
 
-  return (
-    <div className="w-72 h-screen bg-transparent border-r border-white/10 p-6 flex flex-col backdrop-blur-md">
-      <div className="mb-12">
-        <h1 className="text-2xl font-bold bg-gradient-to-r from-emerald-400 to-gold text-transparent bg-clip-text">
-          ECODREUM
-        </h1>
-        <p className="text-[10px] text-gold tracking-[0.3em] uppercase font-bold italic">Intelligence Engine</p>
-      </div>
-      
-      <nav className="space-y-2">
-        {navItems.map((item) => {
-          const isActive = pathname === item.href;
-          return (
-            <Link key={item.label} href={item.href}>
-              <div className={`flex items-center space-x-4 p-3 rounded-xl cursor-pointer transition-all ${
-                isActive 
-                ? 'bg-white/10 text-emerald-400 border border-white/10 shadow-[0_0_15px_rgba(46,204,113,0.1)]' 
-                : 'text-gray-400 hover:text-white hover:bg-white/5'
-              }`}>
-                <item.icon size={20} />
-                <span className="font-semibold text-sm">{item.label}</span>
-              </div>
-            </Link>
-          );
-        })}
-      </nav>
+/* L'EFFET VITRE DE LA TABLETTE */
+.glass-card {
+  background: var(--glass-bg) !important;
+  backdrop-filter: blur(40px) saturate(180%); /* Flou très puissant pour l'effet vitre */
+  -webkit-backdrop-filter: blur(40px) saturate(180%);
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
+  border-radius: 32px; /* Coins très arrondis comme sur l'image */
+}
 
-      {/* Petit indicateur de statut en bas de la sidebar */}
-      <div className="mt-auto p-4 glass-card border border-white/5 rounded-2xl">
-        <div className="flex items-center space-x-2">
-          <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
-          <span className="text-[10px] text-gray-400 uppercase tracking-widest font-bold">Node: Bujumbura</span>
-        </div>
-      </div>
-    </div>
-  );
+/* LE HALO DORÉ AUTOUR DU DASHBOARD (L'effet "Cadre lumineux") */
+.gold-border-glow {
+  border: 1.5px solid rgba(241, 196, 15, 0.5);
+  box-shadow: 
+    0 0 20px rgba(241, 196, 15, 0.15),
+    inset 0 0 15px rgba(241, 196, 15, 0.05);
+}
+
+/* PERSONNALISATION DES BARRES DE DÉFILEMENT (Invisible pour le look tablette) */
+::-webkit-scrollbar {
+  width: 0px;
+}
+
+/* Animation subtile des lueurs de fond */
+@keyframes pulseGlow {
+  0% { opacity: 0.3; }
+  50% { opacity: 0.5; }
+  100% { opacity: 0.3; }
+}
+
+.bg-glow {
+  position: fixed;
+  width: 100vw;
+  height: 100vh;
+  background: radial-gradient(circle at center, rgba(46, 204, 113, 0.02) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: -1;
+  animation: pulseGlow 8s infinite ease-in-out;
 }
