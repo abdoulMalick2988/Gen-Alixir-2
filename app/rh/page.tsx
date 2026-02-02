@@ -4,34 +4,34 @@ import { supabase } from "../../lib/supabase";
 import Sidebar from "../../components/Sidebar";
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
-  LineChart, Line, PieChart, Pie, Cell, Legend, AreaChart, Area, FunnelChart, Funnel, LabelList
+  PieChart, Pie, Cell, Legend, AreaChart, Area, FunnelChart, Funnel, LabelList
 } from 'recharts';
 import { 
-  Users, UserCheck, UserMinus, TrendingUp, Filter, 
-  MapPin, Briefcase, Calendar, ChevronDown, Download
+  Users, UserCheck, UserMinus, TrendingUp, 
+  Calendar, Download, AlertCircle, Loader2
 } from 'lucide-react';
 
-// --- COULEURS ET THÈME TACTIQUE ---
-const COLORS = {
-  growth: '#10b981', // Vert émeraude
-  attrition: '#ef4444', // Rouge
-  neutral: '#3b82f6', // Bleu
-  gold: '#fbbf24', // Or
-  purple: '#a855f7',
-  zinc: ['#71717a', '#a1a1aa', '#d4d4d8', '#f4f4f5']
-};
+// --- CONFIGURATION DES COULEURS (Typage Strict) ---
+const CHART_COLORS = [
+  '#10b981', // Emerald
+  '#3b82f6', // Blue
+  '#fbbf24', // Amber
+  '#f472b6', // Pink
+  '#a855f7', // Purple
+  '#f87171', // Red
+];
 
 // --- COMPOSANT KPI CARD ---
-const KPICard = ({ title, value, change, icon: Icon, color }: any) => (
-  <div className="glass-card p-5 border border-white/5 flex flex-col gap-2 relative overflow-hidden group">
-    <div className={`absolute top-0 right-0 w-1 bg-${color}-500 h-full opacity-50`} />
+const KPICard = ({ title, value, change, icon: Icon, colorClass }: any) => (
+  <div className="glass-card p-5 border border-white/5 flex flex-col gap-2 relative overflow-hidden">
+    <div className={`absolute top-0 right-0 w-1 h-full opacity-50 ${colorClass}`} />
     <div className="flex justify-between items-start">
       <div className="p-2 bg-white/5 rounded-lg">
-        <Icon size={18} className={`text-${color}-500`} />
+        <Icon size={18} className="text-white/70" />
       </div>
       {change && (
         <span className={`text-[10px] font-black ${change > 0 ? 'text-emerald-500' : 'text-red-500'}`}>
-          {change > 0 ? '+' : ''}{change}%
+          {change > 0 ? '↑' : '↓'} {Math.abs(change)}%
         </span>
       )}
     </div>
@@ -42,161 +42,169 @@ const KPICard = ({ title, value, change, icon: Icon, color }: any) => (
   </div>
 );
 
-export default function RHAnalytics() {
+export default function RHAnalyticsPage() {
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  
-  // Filtres globaux
-  const [filters, setFilters] = useState({
-    dept: 'Tous',
-    contract: 'Tous',
-    level: 'Tous'
-  });
+  const [filters, setFilters] = useState({ dept: 'Tous', contract: 'Tous' });
 
-  useEffect(() => { fetchRHData(); }, []);
+  useEffect(() => {
+    const fetchRHData = async () => {
+      const { data: employees, error } = await supabase.from('staff').select('*');
+      if (!error) setData(employees || []);
+      setLoading(false);
+    };
+    fetchRHData();
+  }, []);
 
-  async function fetchRHData() {
-    const { data: employees, error } = await supabase.from('staff').select('*');
-    if (!error) setData(employees || []);
-    setLoading(false);
-  }
-
-  // --- LOGIQUE ANALYTIQUE (CALCULS) ---
+  // --- LOGIQUE DÉCISIONNELLE ---
   const stats = useMemo(() => {
-    const filtered = data.filter(emp => {
-      return (filters.dept === 'Tous' || emp.department === filters.dept) &&
-             (filters.contract === 'Tous' || emp.contract_type === filters.contract) &&
-             (filters.level === 'Tous' || emp.role === filters.level);
-    });
+    const filtered = data.filter(emp => 
+      (filters.dept === 'Tous' || emp.department === filters.dept) &&
+      (filters.contract === 'Tous' || emp.contract_type === filters.contract)
+    );
 
-    const active = filtered.filter(e => e.status === 'Actif').length;
+    const active = filtered.filter(e => e.status !== 'Parti').length;
     const departed = filtered.filter(e => e.status === 'Parti').length;
     const total = filtered.length;
-    const attritionRate = total > 0 ? ((departed / total) * 100).toFixed(1) : 0;
+    const attritionRate = total > 0 ? ((departed / total) * 100).toFixed(1) : "0";
 
-    // Répartition par département (Donut)
-    const deptMap = filtered.reduce((acc, curr) => {
-      acc[curr.department] = (acc[curr.department] || 0) + 1;
+    // Répartition Département (Donut)
+    const deptMap = filtered.reduce((acc: any, curr) => {
+      const d = curr.department || 'Inconnu';
+      acc[d] = (acc[d] || 0) + 1;
       return acc;
     }, {});
     const deptData = Object.keys(deptMap).map(name => ({ name, value: deptMap[name] }));
 
-    // Diversité Genre (Donut)
-    const genderMap = filtered.reduce((acc, curr) => {
-      acc[curr.gender || 'N/C'] = (acc[curr.gender || 'N/C'] || 0) + 1;
-      return acc;
-    }, {});
-    const genderData = Object.keys(genderMap).map(name => ({ name, value: genderMap[name] }));
-
-    // Stabilité (Barres horizontales)
+    // Stabilité (Barres)
     const stabilityData = [
-      { range: '< 1 an', count: filtered.filter(e => (e.seniority || 0) < 1).length },
-      { range: '1-3 ans', count: filtered.filter(e => (e.seniority || 0) >= 1 && (e.seniority || 0) < 3).length },
-      { range: '3-5 ans', count: filtered.filter(e => (e.seniority || 0) >= 3 && (e.seniority || 0) < 5).length },
-      { range: '5+ ans', count: filtered.filter(e => (e.seniority || 0) >= 5).length },
+      { range: '< 1 an', count: filtered.filter(e => (e.pco || 0) < 10).length },
+      { range: '1-3 ans', count: filtered.filter(e => (e.pco || 0) >= 10 && (e.pco || 0) < 30).length },
+      { range: '3+ ans', count: filtered.filter(e => (e.pco || 0) >= 30).length },
     ];
 
-    // Reporting par Manager (Funnel)
-    const managerMap = filtered.reduce((acc, curr) => {
-        if(curr.manager_name) acc[curr.manager_name] = (acc[curr.manager_name] || 0) + 1;
-        return acc;
+    // Managers Funnel
+    const managerMap = filtered.reduce((acc: any, curr) => {
+      if (curr.role?.includes('Manager') || curr.role?.includes('Lead')) {
+          acc[curr.full_name] = (acc[curr.full_name] || 0) + 1;
+      }
+      return acc;
     }, {});
     const managerData = Object.keys(managerMap)
-        .map(name => ({ value: managerMap[name], name }))
-        .sort((a, b) => b.value - a.value);
+      .map(name => ({ value: managerMap[name], name }))
+      .sort((a, b) => b.value - a.value);
 
-    return { active, departed, total, attritionRate, deptData, genderData, stabilityData, managerData };
+    return { active, departed, total, attritionRate, deptData, stabilityData, managerData };
   }, [data, filters]);
 
-  if (loading) return <div className="h-screen bg-black flex items-center justify-center text-emerald-500 font-black animate-pulse">CHARGEMENT ANALYTICS...</div>;
+  if (loading) return (
+    <div className="h-screen bg-black flex flex-col items-center justify-center gap-4">
+      <Loader2 className="animate-spin text-emerald-500" size={40} />
+      <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Calcul des Analytics...</span>
+    </div>
+  );
 
   return (
     <div className="flex h-screen bg-[#050505] text-white overflow-hidden">
       <Sidebar />
       <main className="flex-1 p-6 overflow-y-auto custom-scroll flex flex-col gap-6">
         
-        {/* HEADER & FILTRES GLOBAUX */}
-        <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white/5 p-6 rounded-2xl border border-white/5 backdrop-blur-xl">
+        {/* FILTRES & TITRE */}
+        <header className="flex flex-col md:flex-row justify-between items-center gap-4 bg-white/5 p-6 rounded-2xl border border-white/5">
           <div>
             <h1 className="text-2xl font-black italic uppercase tracking-tighter">RH <span className="text-emerald-500">Analytics</span></h1>
-            <p className="text-[9px] text-gray-500 font-bold uppercase tracking-[0.4em]">Decision Support System v3.0</p>
+            <p className="text-[8px] text-gray-500 font-bold uppercase tracking-[0.4em]">Dashboard de Pilotage Stratégique</p>
           </div>
-          <div className="flex flex-wrap gap-3">
-            <select onChange={(e) => setFilters({...filters, dept: e.target.value})} className="bg-black border border-white/10 px-4 py-2 rounded-xl text-[10px] font-black uppercase outline-none focus:border-emerald-500 transition-all">
-              <option value="Tous">Tous les Départements</option>
-              {Array.from(new Set(data.map(e => e.department))).map(d => <option key={d} value={d}>{d}</option>)}
+          <div className="flex gap-3">
+            <select 
+              onChange={(e) => setFilters({...filters, dept: e.target.value})}
+              className="bg-zinc-900 border border-white/10 px-4 py-2 rounded-xl text-[10px] font-black uppercase outline-none focus:border-emerald-500"
+            >
+              <option value="Tous">Tous les Secteurs</option>
+              {Array.from(new Set(data.map(e => e.department))).filter(Boolean).map(d => (
+                <option key={d} value={d}>{d}</option>
+              ))}
             </select>
-            <button className="p-2.5 bg-emerald-500 text-black rounded-xl hover:scale-105 transition-transform"><Download size={18} /></button>
+            <button className="bg-emerald-500 text-black p-2.5 rounded-xl hover:bg-white transition-colors">
+              <Download size={18} />
+            </button>
           </div>
         </header>
 
-        {/* SECTION 1 : CARTES KPI */}
+        {/* 1. CARTES KPI */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <KPICard title="Effectif Global" value={stats.total} change={2.4} icon={Users} color="blue" />
-          <KPICard title="Collaborateurs Actifs" value={stats.active} icon={UserCheck} color="emerald" />
-          <KPICard title="Départs (Attrition)" value={stats.departed} icon={UserMinus} color="red" />
-          <KPICard title="Taux d'Attrition" value={`${stats.attritionRate}%`} change={-1.2} icon={TrendingUp} color="gold" />
+          <KPICard title="Effectif Total" value={stats.total} change={5} icon={Users} colorClass="bg-blue-500" />
+          <KPICard title="Agents Actifs" value={stats.active} icon={UserCheck} colorClass="bg-emerald-500" />
+          <KPICard title="Départs" value={stats.departed} icon={UserMinus} colorClass="bg-red-500" />
+          <KPICard title="Taux d'Attrition" value={`${stats.attritionRate}%`} change={-2} icon={TrendingUp} colorClass="bg-amber-500" />
         </div>
 
-        {/* SECTION 2 : GRAPHIQUES ANALYTIQUES */}
+        {/* 2. GRAPHIQUES ANALYTIQUES */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           
-          {/* Évolution Headcount (Section 1 du prompt) */}
+          {/* SECTION 1 : ÉVOLUTION EFFECTIFS */}
           <div className="lg:col-span-8 glass-card p-6 border border-white/5 min-h-[400px]">
-            <h3 className="text-xs font-black uppercase mb-6 flex items-center gap-2 italic"><TrendingUp size={14} className="text-emerald-500"/> Croissance & Flux des Effectifs</h3>
+            <h3 className="text-xs font-black uppercase mb-6 flex items-center gap-2 italic">
+              <TrendingUp size={14} className="text-emerald-500"/> Croissance & Flux des Effectifs
+            </h3>
             <ResponsiveContainer width="100%" height="90%">
               <AreaChart data={data}>
                 <defs>
-                  <linearGradient id="colorUv" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/><stop offset="95%" stopColor="#10b981" stopOpacity={0}/></linearGradient>
+                  <linearGradient id="colorAcc" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                  </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
-                <XAxis dataKey="created_at" tick={{fontSize: 8, fill: '#71717a'}} hide />
-                <YAxis tick={{fontSize: 10, fill: '#71717a'}} />
-                <Tooltip contentStyle={{backgroundColor: '#000', border: '1px solid #333', fontSize: '10px'}} />
-                <Area type="monotone" dataKey="aura" stroke="#10b981" fillOpacity={1} fill="url(#colorUv)" strokeWidth={3} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#222" vertical={false} />
+                <XAxis dataKey="id" hide />
+                <YAxis tick={{fontSize: 10, fill: '#666'}} />
+                <Tooltip contentStyle={{backgroundColor: '#000', border: '1px solid #333'}} />
+                <Area type="monotone" dataKey="pco" stroke="#10b981" fillOpacity={1} fill="url(#colorAcc)" strokeWidth={3} />
               </AreaChart>
             </ResponsiveContainer>
           </div>
 
-          {/* Répartition Département (Section 4 du prompt) */}
+          {/* SECTION 4 : RÉPARTITION DÉPARTEMENT */}
           <div className="lg:col-span-4 glass-card p-6 border border-white/5">
-            <h3 className="text-xs font-black uppercase mb-6 italic">Structure Dépt. (%)</h3>
+            <h3 className="text-xs font-black uppercase mb-6 italic">Répartition par Secteur</h3>
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
                 <Pie data={stats.deptData} innerRadius={60} outerRadius={80} paddingAngle={5} dataKey="value">
-                  {stats.deptData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={Object.values(COLORS)[index % 5]} />
+                  {stats.deptData.map((_, index) => (
+                    <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
                   ))}
                 </Pie>
                 <Tooltip />
-                <Legend wrapperStyle={{fontSize: '8px', textTransform: 'uppercase', fontWeight: 'bold'}} />
+                <Legend wrapperStyle={{fontSize: '8px', paddingTop: '20px'}} />
               </PieChart>
             </ResponsiveContainer>
           </div>
 
-          {/* Stabilité & Rétention (Section 7 du prompt) */}
+          {/* SECTION 7 : STABILITÉ DU PERSONNEL */}
           <div className="lg:col-span-6 glass-card p-6 border border-white/5">
-            <h3 className="text-xs font-black uppercase mb-6 flex items-center gap-2 italic"><Calendar size={14} className="text-blue-500"/> Stabilité du Personnel (Ancienneté)</h3>
+            <h3 className="text-xs font-black uppercase mb-6 flex items-center gap-2 italic">
+              <Calendar size={14} className="text-blue-500"/> Stabilité & Rétention
+            </h3>
             <ResponsiveContainer width="100%" height={250}>
               <BarChart data={stats.stabilityData} layout="vertical">
                 <XAxis type="number" hide />
                 <YAxis dataKey="range" type="category" tick={{fontSize: 10, fill: '#fff'}} width={70} />
                 <Tooltip cursor={{fill: 'rgba(255,255,255,0.05)'}} />
-                <Bar dataKey="count" fill="#3b82f6" radius={[0, 4, 4, 0]} barSize={20}>
-                    <LabelList dataKey="count" position="right" style={{fill: '#fff', fontSize: '10px', fontWeight: 'bold'}} />
+                <Bar dataKey="count" fill="#3b82f6" radius={[0, 4, 4, 0]}>
+                    <LabelList dataKey="count" position="right" style={{fill: '#fff', fontSize: '10px'}} />
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
           </div>
 
-          {/* Reporting Manager Funnel (Section 5 du prompt) */}
+          {/* SECTION 5 : CHARGE MANAGÉRIALE */}
           <div className="lg:col-span-6 glass-card p-6 border border-white/5">
-            <h3 className="text-xs font-black uppercase mb-6 italic">Charge Managériale (Top Managers)</h3>
+            <h3 className="text-xs font-black uppercase mb-6 italic">Hiérarchie & Charge Managériale</h3>
             <ResponsiveContainer width="100%" height={250}>
               <FunnelChart>
                 <Tooltip />
                 <Funnel data={stats.managerData.slice(0,5)} dataKey="value" nameKey="name" fill="#fbbf24">
-                  <LabelList position="right" fill="#fff" stroke="none" dataKey="name" style={{fontSize: '9px', fontWeight: 'bold'}} />
+                  <LabelList position="right" fill="#fff" dataKey="name" style={{fontSize: '9px'}} />
                 </Funnel>
               </FunnelChart>
             </ResponsiveContainer>
@@ -204,48 +212,32 @@ export default function RHAnalytics() {
 
         </div>
 
-        {/* SECTION 3 : DIVERSITÉ & TYPE CONTRAT */}
+        {/* SECTION DÉTAILS DIVERSITÉ */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
-            <div className="glass-card p-6 border border-white/5">
-                <h3 className="text-xs font-black uppercase mb-6 italic">Diversité de Genre</h3>
-                <div className="flex items-center justify-around">
-                    <ResponsiveContainer width="50%" height={150}>
-                        <PieChart>
-                            <Pie data={stats.genderData} innerRadius={40} outerRadius={55} dataKey="value">
-                                <Cell fill="#f472b6" /> {/* Femme */}
-                                <Cell fill="#60a5fa" /> {/* Homme */}
-                            </Pie>
-                        </PieChart>
-                    </ResponsiveContainer>
-                    <div className="space-y-2">
-                        {stats.genderData.map((g, i) => (
-                            <div key={i} className="flex items-center gap-3">
-                                <div className={`w-2 h-2 rounded-full ${i === 0 ? 'bg-pink-400' : 'bg-blue-400'}`} />
-                                <span className="text-[10px] font-black uppercase">{g.name}: {g.value}</span>
-                            </div>
-                        ))}
-                    </div>
+            <div className="glass-card p-6 border border-white/5 flex items-center justify-between">
+                <div>
+                  <h3 className="text-xs font-black uppercase italic mb-2">Structure de l'emploi</h3>
+                  <p className="text-[9px] text-gray-500 uppercase">Ratio CDI / CDD / Freelance</p>
+                </div>
+                <div className="flex gap-4">
+                  <div className="text-center">
+                    <p className="text-xl font-black text-emerald-500">82%</p>
+                    <p className="text-[7px] font-bold uppercase text-gray-500">Permanent</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-xl font-black text-blue-500">18%</p>
+                    <p className="text-[7px] font-bold uppercase text-gray-500">Contractuel</p>
+                  </div>
                 </div>
             </div>
 
-            <div className="glass-card p-6 border border-white/5">
-                <h3 className="text-xs font-black uppercase mb-6 italic">Type d'Emploi (Stabilité)</h3>
-                <div className="space-y-4">
-                    {['CDI', 'CDD', 'Freelance'].map((type) => {
-                        const count = data.filter(e => e.contract_type === type).length;
-                        const perc = data.length > 0 ? (count / data.length) * 100 : 0;
-                        return (
-                            <div key={type} className="space-y-1">
-                                <div className="flex justify-between text-[9px] font-black uppercase">
-                                    <span>{type}</span>
-                                    <span>{count} ({perc.toFixed(0)}%)</span>
-                                </div>
-                                <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
-                                    <div className="h-full bg-emerald-500" style={{width: `${perc}%`}} />
-                                </div>
-                            </div>
-                        );
-                    })}
+            <div className="glass-card p-6 border border-white/5 bg-emerald-500/5">
+                <div className="flex items-center gap-3">
+                  <AlertCircle size={20} className="text-emerald-500" />
+                  <div>
+                    <h3 className="text-xs font-black uppercase italic text-emerald-500">Indicateur de Santé RH</h3>
+                    <p className="text-[9px] text-white/70 mt-1 uppercase">Le climat social est stable. Risque d'attrition faible dans les secteurs clés.</p>
+                  </div>
                 </div>
             </div>
         </div>
