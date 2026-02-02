@@ -1,15 +1,14 @@
-import { ArrowUpRight } from "lucide-react";
-
-export default function StatCard({ title, value, change }: { title: string, value: string, change: string }) {
+export default function StatCard({ title, value, change }: any) {
   return (
-    <div className="glass-card p-6 flex flex-col space-y-2 hover:border-emerald/40 transition-all cursor-default">
-      <span className="text-gray-400 text-sm font-medium uppercase tracking-wider">{title}</span>
-      <div className="flex justify-between items-end">
-        <span className="text-3xl font-bold text-white">{value}</span>
-        <div className="flex items-center text-emerald-400 text-sm font-bold bg-emerald-400/10 px-2 py-1 rounded-lg">
-          <ArrowUpRight size={16} className="mr-1" />
+    <div className="glass-card p-3 flex flex-col justify-center border-l-4 border-l-emerald-500 h-20">
+      <p className="text-[10px] font-bold text-emerald-header uppercase tracking-tighter mb-1">
+        {title}
+      </p>
+      <div className="flex items-end justify-between">
+        <h4 className="text-lg font-black text-white">{value}</h4>
+        <span className="text-[8px] text-emerald-400 font-bold bg-emerald-500/10 px-1 rounded">
           {change}
-        </div>
+        </span>
       </div>
     </div>
   );
