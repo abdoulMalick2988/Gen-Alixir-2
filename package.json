@@ -1,31 +1,314 @@
-{
-  "name": "ecodreum-dashboard",
-  "version": "0.1.0",
-  "private": true,
-  "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint"
-  },
-  "dependencies": {
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "react-leaflet": "^4.2.1", "leaflet": "^1.9.4", "@types/leaflet": "^1.9.8",
-    "@supabase/supabase-js": "^2.39.3",
-    "next": "14.1.0",
-    "lucide-react": "^0.321.0",
-    "recharts": "^2.10.4",
-    "clsx": "^2.1.0",
-    "tailwind-merge": "^2.2.1"
-  },
-  "devDependencies": {
-    "typescript": "^5",
-    "@types/node": "^20",
-    "@types/react": "^18",
-    "@types/react-dom": "^18",
-    "postcss": "^8",
-    "tailwindcss": "^3.3.0",
-    "autoprefixer": "^10.4.17"
+"use client";
+import React, { useState, useMemo, useEffect } from 'react';
+import { supabase } from "../../lib/supabase";
+import Sidebar from "../../components/Sidebar";
+import { 
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
+  PieChart, Pie, Cell, Legend, AreaChart, Area, ComposedChart, Line
+} from 'recharts';
+import { 
+  Users, Wallet, Clock, Activity, TrendingUp, TrendingDown, 
+  AlertTriangle, CheckCircle2, ChevronRight, Info, Filter, Search,
+  Briefcase, Calendar, ShieldCheck, Zap
+} from 'lucide-react';
+
+// --- CONFIGURATION DU THÈME ---
+const THEME = {
+  primary: '#10b981', // Emerald
+  secondary: '#3b82f6', // Blue
+  accent: '#fbbf24', // Amber
+  danger: '#f43f5e', // Rose
+  background: '#050505',
+  card: 'rgba(255, 255, 255, 0.03)',
+};
+
+const CHART_COLORS = [THEME.primary, THEME.secondary, THEME.accent, '#8b5cf6', '#f472b6'];
+
+type ViewContext = 'headcount' | 'payroll' | 'stability' | 'attrition';
+
+export default function RHCommandCenter() {
+  const [data, setData] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [activeContext, setActiveContext] = useState<ViewContext>('headcount');
+  const [searchTerm, setSearchTerm] = useState('');
+
+  useEffect(() => {
+    fetchRHData();
+  }, []);
+
+  async function fetchRHData() {
+    const { data: staff, error } = await supabase.from('staff').select('*');
+    if (!error) setData(staff || []);
+    setLoading(false);
   }
+
+  // --- MOTEUR ANALYTIQUE (LOGIQUE MÉTIER) ---
+  const analytics = useMemo(() => {
+    const total = data.length;
+    const active = data.filter(e => e.status !== 'Parti').length;
+    const departed = data.filter(e => e.status === 'Parti').length;
+    
+    // Calcul Masse Salariale (Simulé via pco si salaire non défini)
+    const totalPayroll = data.reduce((acc, curr) => acc + (curr.pco * 150 || 0), 0);
+    const avgSalary = total > 0 ? totalPayroll / total : 0;
+
+    // Répartition Département
+    const deptMap = data.reduce((acc: any, curr) => {
+      acc[curr.department] = (acc[curr.department] || 0) + 1;
+      return acc;
+    }, {});
+    const deptData = Object.keys(deptMap).map(name => ({ name, value: deptMap[name] }));
+
+    // Ancienneté & Stabilité
+    const stabilityData = [
+      { name: '15-24', H: 12, F: 15 },
+      { name: '25-34', H: 25, F: 22 },
+      { name: '35-44', H: 30, F: 28 },
+      { name: '45-54', H: 20, F: 18 },
+      { name: '55+', H: 10, F: 8 },
+    ];
+
+    // Recommandations IA
+    const recommendations = [];
+    if ((departed / total) > 0.15) recommendations.push({ type: 'danger', text: "Taux d'attrition critique : Auditer le management Q1." });
+    if (active < total * 0.8) recommendations.push({ type: 'warning', text: "Sous-effectif détecté : 5 recrutements urgents." });
+    if (recommendations.length === 0) recommendations.push({ type: 'success', text: "Stabilité RH optimale. Focus sur la formation." });
+
+    return { total, active, departed, totalPayroll, avgSalary, deptData, stabilityData, recommendations };
+  }, [data]);
+
+  // --- FILTRAGE TABLEAU ---
+  const filteredStaff = data.filter(emp => 
+    emp.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    emp.department?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  if (loading) return (
+    <div className="h-screen bg-black flex flex-col items-center justify-center">
+      <Zap className="animate-pulse text-emerald-500 mb-4" size={48} />
+      <h2 className="text-white font-black uppercase tracking-[0.5em] text-[10px]">Initialisation du RH Engine...</h2>
+    </div>
+  );
+
+  return (
+    <div className="flex h-screen bg-[#050505] text-white overflow-hidden font-sans">
+      <Sidebar />
+      
+      <main className="flex-1 p-6 overflow-y-auto custom-scroll flex flex-col gap-6">
+        
+        {/* HEADER & FILTRES */}
+        <header className="flex justify-between items-end">
+          <div>
+            <h1 className="text-3xl font-black italic uppercase tracking-tighter">TABLEAU DE BORD <span className="text-emerald-500">RH</span></h1>
+            <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-1">Plateforme Analytics de Dernière Génération</p>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={14} />
+              <input 
+                type="text" 
+                placeholder="RECHERCHER AGENT..." 
+                className="bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-2 text-[10px] font-black uppercase outline-none focus:border-emerald-500 w-64 transition-all"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+          </div>
+        </header>
+
+        {/* 1. LES 4 CARTES KPI CLIQUABLES */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <KPICard 
+            title="Effectif Total" 
+            value={analytics.total} 
+            icon={Users} 
+            color="#3b82f6" 
+            isActive={activeContext === 'headcount'}
+            onClick={() => setActiveContext('headcount')}
+          />
+          <KPICard 
+            title="Masse Salariale (€)" 
+            value={`${(analytics.totalPayroll / 1000).toFixed(0)}k€`} 
+            icon={Wallet} 
+            color="#10b981" 
+            isActive={activeContext === 'payroll'}
+            onClick={() => setActiveContext('payroll')}
+          />
+          <KPICard 
+            title="Heures de Travail" 
+            value="12,450h" 
+            icon={Clock} 
+            color="#fbbf24" 
+            isActive={activeContext === 'stability'}
+            onClick={() => setActiveContext('stability')}
+          />
+          <KPICard 
+            title="Taux d'Attrition" 
+            value={`${((analytics.departed / analytics.total) * 100).toFixed(1)}%`} 
+            icon={Activity} 
+            color="#f43f5e" 
+            isActive={activeContext === 'attrition'}
+            onClick={() => setActiveContext('attrition')}
+          />
+        </div>
+
+        {/* 2. GRAPHIQUES ANALYTIQUES (MIDDLE LAYER) */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          
+          {/* Pyramide des âges (Visualisation DEMO) */}
+          <div className="lg:col-span-7 glass-card p-6 border border-white/5 bg-white/[0.01]">
+            <h3 className="text-[11px] font-black uppercase mb-6 flex items-center gap-2 italic">
+              <Users size={16} className="text-emerald-500"/> Pyramide des Âges & Diversité
+            </h3>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={analytics.stabilityData} layout="vertical">
+                <CartesianGrid strokeDasharray="3 3" stroke="#222" horizontal={true} vertical={false} />
+                <XAxis type="number" hide />
+                <YAxis dataKey="name" type="category" tick={{fontSize: 10, fill: '#666'}} width={50} />
+                <Tooltip cursor={{fill: 'rgba(255,255,255,0.03)'}} contentStyle={{backgroundColor: '#000', border: '1px solid #333'}} />
+                <Bar dataKey="H" fill="#3b82f6" stackId="a" barSize={15} radius={[0, 0, 0, 0]} />
+                <Bar dataKey="F" fill="#f472b6" stackId="a" barSize={15} radius={[0, 4, 4, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* Recommandations IA (Sidebar droite) */}
+          <div className="lg:col-span-5 flex flex-col gap-4">
+            <div className="glass-card p-6 border border-white/5 flex-1">
+              <h3 className="text-[11px] font-black uppercase mb-4 italic flex items-center gap-2">
+                <ShieldCheck size={16} className="text-amber-500"/> IA Recommendations
+              </h3>
+              <div className="space-y-3">
+                {analytics.recommendations.map((rec, i) => (
+                  <div key={i} className={`p-4 rounded-xl border flex items-start gap-3 transition-all hover:scale-[1.02] ${
+                    rec.type === 'danger' ? 'bg-red-500/5 border-red-500/20 text-red-400' : 
+                    rec.type === 'warning' ? 'bg-amber-500/5 border-amber-500/20 text-amber-400' : 
+                    'bg-emerald-500/5 border-emerald-500/20 text-emerald-400'
+                  }`}>
+                    <Info size={16} className="mt-0.5" />
+                    <p className="text-[10px] font-bold uppercase leading-relaxed">{rec.text}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            <div className="glass-card p-4 border border-emerald-500/20 bg-emerald-500/5">
+                <div className="flex justify-between items-center">
+                    <span className="text-[10px] font-black uppercase italic">Stabilité Globale</span>
+                    <span className="text-xl font-black italic text-emerald-500">88%</span>
+                </div>
+                <div className="w-full h-1 bg-white/10 mt-2 rounded-full overflow-hidden">
+                    <div className="h-full bg-emerald-500" style={{width: '88%'}} />
+                </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 3. TABLEAU DÉTAILLÉ (DYNAMIQUE SELON CONTEXTE) */}
+        <section className="glass-card border border-white/5 overflow-hidden flex flex-col">
+          <div className="p-6 border-b border-white/5 bg-white/[0.01] flex justify-between items-center">
+            <h2 className="text-sm font-black uppercase italic tracking-widest">
+              {activeContext === 'payroll' ? 'Détail Masse Salariale par Département' : 'Liste de Pilotage des Effectifs'}
+            </h2>
+            <div className="px-3 py-1 bg-white/5 rounded-full text-[9px] font-black text-gray-500 uppercase">
+              {filteredStaff.length} Agents Affichés
+            </div>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left">
+              <thead className="bg-black text-[10px] font-black uppercase text-gray-600 border-b border-white/5">
+                <tr>
+                  <th className="p-5">Agent</th>
+                  <th className="p-5">Département</th>
+                  <th className="p-5">{activeContext === 'payroll' ? 'Salaire Estimé' : 'Poste'}</th>
+                  <th className="p-5">{activeContext === 'payroll' ? 'Bonus / Aura' : 'Ancienneté'}</th>
+                  <th className="p-5 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="text-[11px] font-bold">
+                {filteredStaff.slice(0, 10).map((emp) => (
+                  <tr key={emp.id} className="border-b border-white/[0.02] hover:bg-white/[0.03] transition-colors group">
+                    <td className="p-5">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-lg bg-zinc-900 border border-white/10 flex items-center justify-center font-black text-emerald-500 shadow-lg">
+                          {emp.full_name?.charAt(0)}
+                        </div>
+                        <span className="uppercase italic text-white/90">{emp.full_name}</span>
+                      </div>
+                    </td>
+                    <td className="p-5 text-gray-400 uppercase">{emp.department}</td>
+                    <td className="p-5">
+                      {activeContext === 'payroll' ? (
+                        <span className="text-emerald-500 font-black italic">{(emp.pco * 150).toLocaleString()} €</span>
+                      ) : (
+                        <span className="text-white/70 uppercase">{emp.role || 'Agent'}</span>
+                      )}
+                    </td>
+                    <td className="p-5">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-black px-2 py-0.5 bg-blue-500/10 text-blue-500 rounded uppercase">
+                          {activeContext === 'payroll' ? `+${emp.aura}% Aura` : '2.4 ans'}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="p-5 text-right">
+                      <button className="p-2 hover:bg-emerald-500 hover:text-black rounded-lg transition-all">
+                        <ChevronRight size={16} />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+      </main>
+
+      {/* --- STYLES CSS LOCAUX --- */}
+      <style jsx>{`
+        .glass-card {
+          backdrop-filter: blur(20px);
+          border-radius: 24px;
+        }
+        .custom-scroll::-webkit-scrollbar {
+          width: 4px;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb {
+          background: #10b98155;
+          border-radius: 10px;
+        }
+      `}</style>
+    </div>
+  );
+}
+
+// --- SOUS-COMPOSANT KPI CARD ---
+function KPICard({ title, value, icon: Icon, color, isActive, onClick }: any) {
+  return (
+    <button 
+      onClick={onClick}
+      className={`glass-card p-6 border transition-all flex flex-col gap-2 relative overflow-hidden text-left group
+        ${isActive ? 'border-emerald-500 bg-emerald-500/5 shadow-[0_0_20px_rgba(16,185,129,0.1)]' : 'border-white/5 hover:border-white/20'}
+      `}
+    >
+      <div className="flex justify-between items-start relative z-10">
+        <div className={`p-3 rounded-2xl ${isActive ? 'bg-emerald-500 text-black' : 'bg-white/5 text-gray-400'}`}>
+          <Icon size={20} />
+        </div>
+        <div className={`text-[10px] font-black ${isActive ? 'text-emerald-500' : 'text-gray-500'}`}>
+          {isActive ? 'CONTEXTE ACTIF' : 'VOIR DÉTAILS'}
+        </div>
+      </div>
+      <div className="mt-4 relative z-10">
+        <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest">{title}</p>
+        <p className={`text-3xl font-black italic tracking-tighter ${isActive ? 'text-white' : 'text-white/80'}`}>{value}</p>
+      </div>
+      {/* Background Decor */}
+      <div className={`absolute -right-2 -bottom-2 opacity-5 group-hover:scale-110 transition-transform ${isActive ? 'opacity-20' : ''}`} style={{ color }}>
+        <Icon size={80} />
+      </div>
+    </button>
+  );
 }
