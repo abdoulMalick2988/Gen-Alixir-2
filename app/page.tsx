@@ -10,73 +10,83 @@ import LockedOverlay from "../components/LockedOverlay";
 
 const AnalyticsMap = dynamic(() => import("../components/AnalyticsMap"), { 
   ssr: false,
-  loading: () => <div className="h-full w-full flex items-center justify-center text-emerald-500 animate-pulse">GPS INITIALIZATION...</div>
+  loading: () => <div className="h-full w-full flex items-center justify-center text-emerald-500 animate-pulse text-xs">GPS...</div>
 });
 
 export default function Home() {
-  const [stats, setStats] = useState({ users: 0, totalEco: 0 });
-  const currentPartnerLevel = 'Elite' as string; 
+  const [stats, setStats] = useState({ users: 0, totalEco: 1240000 });
+  const currentPartnerLevel = 'Elite'; // MODIFICATION ICI : 'Elite' ou 'Business'
 
   useEffect(() => {
     async function fetchRealData() {
       const { count } = await supabase.from('users_data').select('*', { count: 'exact', head: true });
-      setStats({ users: count || 0, totalEco: 1240000 }); // 1.24M pour le test
+      setStats(prev => ({ ...prev, users: count || 0 }));
     }
     fetchRealData();
   }, []);
 
   return (
-    <div className="flex h-screen bg-transparent overflow-hidden font-sans text-white">
+    <div className="flex h-screen bg-transparent overflow-hidden text-white">
       <Sidebar />
       
-      <main className="flex-1 p-4 md:p-8 overflow-y-auto">
-        {/* HEADER GLASS */}
-        <div className="gold-border-glow glass-card p-6 md:p-8 mb-8 flex flex-col md:flex-row justify-between items-center relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-400/5 blur-[100px] -z-10"></div>
+      <main className="flex-1 p-3 flex flex-col gap-3 min-w-0">
+        
+        {/* HEADER MINI */}
+        <div className="gold-border-glow glass-card p-3 flex justify-between items-center shrink-0">
           <div>
-            <h2 className="text-2xl md:text-4xl font-bold text-white mb-2 tracking-tight">ECODREUM BI</h2>
-            <p className="text-emerald-400 font-medium uppercase tracking-widest text-[10px] italic">Glass Engine Active</p>
+            <h2 className="text-lg font-black text-white italic tracking-tighter">ECODREUM BI</h2>
+            <p className="text-[9px] text-emerald-header uppercase font-bold tracking-[0.2em]">Data Engine v1.2</p>
           </div>
-          <div className="mt-4 md:mt-0 px-6 py-2 bg-white/5 border border-white/10 rounded-2xl flex flex-col items-end backdrop-blur-xl">
-            <span className="text-gray-400 text-[10px] uppercase font-bold tracking-tighter">Accès Partenaire</span>
-            <span className="text-gold font-bold">{currentPartnerLevel.toUpperCase()}</span>
+          <div className="px-3 py-1 bg-white/5 border border-white/10 rounded-full text-[9px] font-bold text-gold italic">
+            {currentPartnerLevel.toUpperCase()} ACCESS
           </div>
         </div>
 
-        {/* KPIs GRID */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-8">
-          <StatCard title="Total eCo" value={stats.totalEco.toLocaleString()} change="LIVE" />
-          <StatCard title="eCoLixir" value="3,500" change="+25%" />
-          <StatCard title="Clients" value={stats.users.toString()} change="LIVE" />
-          <StatCard title="Revenue" value="45.2M" change="+8%" />
+        {/* GRILLE STATS (Ligne du haut) */}
+        <div className="grid grid-cols-4 gap-3 shrink-0">
+          <StatCard title="Total eCo Generated" value={stats.totalEco.toLocaleString()} change="+12%" />
+          <StatCard title="eCoLixir Accmum." value="3,500" change="+25%" />
+          <StatCard title="Active Clients" value={stats.users.toString()} change="LIVE" />
+          <StatCard title="Revenue (XAF)" value="45.2M" change="+8%" />
         </div>
 
-        {/* ANALYTICS SECTION */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-          <div className="lg:col-span-2 glass-card p-6 min-h-[350px]">
-             <h3 className="text-lg font-bold text-white mb-6">Flux Financier Stratégique</h3>
-             <MainChart />
-          </div>
-          <div className="glass-card p-6 relative overflow-hidden">
-            {currentPartnerLevel !== 'Elite' && <LockedOverlay levelRequired="ELITE" />}
-            <h3 className="text-lg font-bold text-white mb-6 uppercase text-xs tracking-widest">Fidélité</h3>
-            <div className={currentPartnerLevel !== 'Elite' ? 'blur-md opacity-40' : ''}>
-                <LoyaltyChart />
+        {/* SECTION GRAPHIQUES (Milieu) */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 flex-1 min-h-0">
+          <div className="lg:col-span-2 glass-card p-4 flex flex-col">
+            <h3 className="text-[10px] font-bold text-emerald-header mb-2 uppercase italic">Financial Flow (30 Days)</h3>
+            <div className="flex-1 min-h-0">
+              <MainChart />
             </div>
           </div>
+
+          <div className="glass-card p-4 flex flex-col relative overflow-hidden">
+             {currentPartnerLevel !== 'Elite' && <LockedOverlay levelRequired="ELITE" />}
+             <h3 className="text-[10px] font-bold text-emerald-header mb-2 uppercase italic">Client Loyalty Levels</h3>
+             <div className={`flex-1 min-h-0 ${currentPartnerLevel !== 'Elite' ? 'blur-md' : ''}`}>
+                <LoyaltyChart />
+             </div>
+          </div>
         </div>
 
-        {/* MAP SECTION */}
-        <div className="glass-card p-4 md:p-6 min-h-[500px] relative overflow-hidden mb-8">
-           {currentPartnerLevel !== 'Elite' && <LockedOverlay levelRequired="ELITE" />}
-           <h3 className="text-lg font-bold text-emerald-400 mb-6 flex items-center italic">
-              <span className="w-3 h-3 bg-emerald-500/20 border border-emerald-500 rounded-full mr-3 animate-pulse"></span>
-              Géo-Intelligence : Heatmap Live
-           </h3>
-           <div className={`h-[400px] w-full rounded-2xl overflow-hidden relative ${currentPartnerLevel !== 'Elite' ? 'blur-xl' : ''}`}>
-              <AnalyticsMap />
+        {/* BAS DE PAGE (Carte & Dernières Transactions) */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 h-40 shrink-0">
+           <div className="lg:col-span-2 glass-card p-3 relative overflow-hidden">
+              {currentPartnerLevel !== 'Elite' && <LockedOverlay levelRequired="ELITE" />}
+              <h3 className="text-[9px] font-bold text-emerald-header mb-2 uppercase italic">Géo-Intelligence Burundi</h3>
+              <div className={`h-full w-full rounded-xl overflow-hidden ${currentPartnerLevel !== 'Elite' ? 'blur-xl' : ''}`}>
+                 <AnalyticsMap />
+              </div>
+           </div>
+
+           <div className="glass-card p-3">
+              <h3 className="text-[9px] font-bold text-emerald-header mb-2 uppercase italic">Status Node</h3>
+              <div className="flex items-center space-x-2 text-[10px] text-gray-400">
+                <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+                <span>Bujumbura HUB - Online</span>
+              </div>
            </div>
         </div>
+
       </main>
     </div>
   );
