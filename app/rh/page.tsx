@@ -2,7 +2,8 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
 import Sidebar from "../../components/Sidebar";
-import { Users, Crosshair, ChevronLeft, CheckCircle, Plus, Zap, Star, X, Loader2, Lock, Unlock, Calendar, Filter } from "lucide-react";
+// Ajoute "Play" dans la liste ci-dessous
+import { Users, Crosshair, ChevronLeft, CheckCircle, Plus, Zap, Star, X, Loader2, Lock, Unlock, Calendar, Filter, Play } from "lucide-react";
 
 const DEPARTMENTS = [
   { name: "Management", pin: "1111" },
