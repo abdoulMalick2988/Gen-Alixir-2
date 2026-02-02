@@ -7,7 +7,7 @@ import {
   Loader2, Lock, Unlock, Calendar, Play, ArrowRight 
 } from "lucide-react";
 
-// --- DONNÉES & BADGES ---
+// --- CONFIGURATION ---
 const DEPARTMENTS = [
   { name: "Management", pin: "1111" },
   { name: "Marketing", pin: "2222" },
@@ -19,6 +19,7 @@ const DEPARTMENTS = [
   { name: "Ressources Humaines", pin: "7777" }
 ];
 
+// --- COMPOSANTS UI BADGES ---
 const GoldBadge = ({ letter, name }: { letter: string, name: string }) => (
     <div className="relative z-10 flex flex-col items-center">
       <div className="relative w-28 h-28 md:w-36 md:h-36 flex items-center justify-center">
@@ -45,36 +46,22 @@ const EmeraldBadge = ({ letter }: { letter: string }) => (
     </div>
 );
 
-// --- COMPOSANT CALENDRIER TACTIQUE (SPECIAL OCULUS) ---
-// Ce composant remplace l'input type="date" qui ne marche pas en VR
+// --- CALENDRIER TACTIQUE (FIX VR) ---
 const TacticalCalendar = ({ onSelect }: { onSelect: (date: string) => void }) => {
     const [currentDate, setCurrentDate] = useState(new Date());
     const [selectedDateStr, setSelectedDateStr] = useState<string>('');
     const today = new Date();
-    today.setHours(0,0,0,0); // Reset heure pour comparaison juste
+    today.setHours(0,0,0,0);
 
     const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
-    const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).getDay(); // 0 = Dimanche
-    
-    // Ajustement pour commencer Lundi (1) au lieu de Dimanche (0)
-    // Si Dimanche (0) -> 6 cases vides. Sinon jour - 1.
+    const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).getDay();
     const paddingDays = firstDayOfMonth === 0 ? 6 : firstDayOfMonth - 1;
 
     const handleDayClick = (day: number) => {
         const newDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
-        // Format YYYY-MM-DD manuellement pour éviter les soucis de fuseau
-        const year = newDate.getFullYear();
-        const month = String(newDate.getMonth() + 1).padStart(2, '0');
-        const d = String(day).padStart(2, '0');
-        const dateStr = `${year}-${month}-${d}`;
-        
+        const dateStr = `${newDate.getFullYear()}-${String(newDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
         setSelectedDateStr(dateStr);
         onSelect(dateStr);
-    };
-
-    const changeMonth = (offset: number) => {
-        const newDate = new Date(currentDate.setMonth(currentDate.getMonth() + offset));
-        setCurrentDate(new Date(newDate));
     };
 
     const monthNames = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
@@ -82,47 +69,23 @@ const TacticalCalendar = ({ onSelect }: { onSelect: (date: string) => void }) =>
     return (
         <div className="w-full bg-black/60 border border-emerald-500/30 rounded-xl p-4 shadow-xl">
             <div className="flex justify-between items-center mb-4">
-                <button onClick={() => changeMonth(-1)} className="p-2 hover:bg-white/10 rounded-lg transition-colors"><ChevronLeft size={20} className="text-emerald-500"/></button>
+                <button onClick={() => setCurrentDate(new Date(currentDate.setMonth(currentDate.getMonth() - 1)))} className="p-2 hover:bg-white/10 rounded-lg"><ChevronLeft size={20} className="text-emerald-500"/></button>
                 <span className="text-white font-black uppercase text-sm tracking-widest">{monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}</span>
-                <button onClick={() => changeMonth(1)} className="p-2 hover:bg-white/10 rounded-lg transition-colors"><ChevronRight size={20} className="text-emerald-500"/></button>
+                <button onClick={() => setCurrentDate(new Date(currentDate.setMonth(currentDate.getMonth() + 1)))} className="p-2 hover:bg-white/10 rounded-lg"><ChevronRight size={20} className="text-emerald-500"/></button>
             </div>
-            
             <div className="grid grid-cols-7 gap-1 mb-2 text-center border-b border-white/10 pb-2">
                 {['L', 'M', 'M', 'J', 'V', 'S', 'D'].map(d => <span key={d} className="text-[10px] text-gray-500 font-bold">{d}</span>)}
             </div>
-            
             <div className="grid grid-cols-7 gap-2">
-                {/* Cases vides début de mois */}
                 {Array.from({ length: paddingDays }).map((_, i) => <div key={`pad-${i}`} />)}
-                
-                {/* Jours du mois */}
                 {Array.from({ length: daysInMonth }).map((_, i) => {
                     const day = i + 1;
                     const thisDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
+                    const dateStr = `${thisDate.getFullYear()}-${String(thisDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
                     const isPast = thisDate < today;
-                    
-                    // Reconstruction format YYYY-MM-DD pour comparaison sélection
-                    const year = thisDate.getFullYear();
-                    const month = String(thisDate.getMonth() + 1).padStart(2, '0');
-                    const d = String(day).padStart(2, '0');
-                    const thisDateStr = `${year}-${month}-${d}`;
-                    
-                    const isSelected = selectedDateStr === thisDateStr;
-                    
+                    const isSelected = selectedDateStr === dateStr;
                     return (
-                        <button 
-                            key={day}
-                            onClick={() => !isPast && handleDayClick(day)}
-                            disabled={isPast}
-                            className={`
-                                h-9 w-full rounded-lg flex items-center justify-center text-xs font-bold transition-all
-                                ${isSelected ? 'bg-emerald-500 text-black scale-110 shadow-[0_0_15px_#10b981] z-10' : ''}
-                                ${isPast ? 'text-gray-700 cursor-not-allowed opacity-30' : 'text-white hover:bg-white/20'}
-                                ${!isPast && !isSelected ? 'bg-white/5' : ''}
-                            `}
-                        >
-                            {day}
-                        </button>
+                        <button key={day} onClick={() => !isPast && handleDayClick(day)} disabled={isPast} className={`h-9 rounded-lg flex items-center justify-center text-xs font-bold transition-all ${isSelected ? 'bg-emerald-500 text-black scale-110 shadow-[0_0_15px_#10b981]' : isPast ? 'text-gray-700 opacity-20' : 'text-white bg-white/5 hover:bg-white/20'}`}>{day}</button>
                     );
                 })}
             </div>
@@ -137,13 +100,12 @@ export default function RHPage() {
   const [wakandaInput, setWakandaInput] = useState("");
   const [showPinModal, setShowPinModal] = useState(false);
   const [tempDept, setTempDept] = useState<any>(null);
-
   const [staff, setStaff] = useState<any[]>([]);
   const [tasks, setTasks] = useState<any[]>([]);
   const [filterStatus, setFilterStatus] = useState('En cours');
   const [loading, setLoading] = useState(true);
   
-  // États Mission & Alertes
+  // États Mission
   const [showTaskModal, setShowTaskModal] = useState(false);
   const [taskStep, setTaskStep] = useState(1);
   const [isDeploying, setIsDeploying] = useState(false);
@@ -182,8 +144,22 @@ export default function RHPage() {
   };
 
   const handleDeployTask = async () => {
+    if (!newTask.title || !newTask.assigned_to || !newTask.deadline) {
+        return triggerAlert("DONNÉES INCOMPLÈTES");
+    }
+
     setIsDeploying(true);
-    const { error } = await supabase.from('tasks').insert([{ ...newTask, department: selectedDept, status: 'En cours' }]);
+    // On force l'insertion avec les colonnes exactes
+    const { error } = await supabase.from('tasks').insert([
+        { 
+            title: newTask.title, 
+            assigned_to: newTask.assigned_to, 
+            deadline: newTask.deadline,
+            department: selectedDept, 
+            status: 'En cours' 
+        }
+    ]);
+
     if (!error) {
         setShowTaskModal(false);
         setTaskStep(1);
@@ -191,7 +167,8 @@ export default function RHPage() {
         fetchTasks();
         triggerAlert("MISSION DÉPLOYÉE AVEC SUCCÈS", 'success');
     } else {
-        triggerAlert("ERREUR LORS DU DÉPLOIEMENT");
+        console.error("Erreur Supabase:", error);
+        triggerAlert(`ERREUR : ${error.message}`);
     }
     setIsDeploying(false);
   };
@@ -203,11 +180,11 @@ export default function RHPage() {
       <Sidebar />
       <main className="flex-1 p-4 flex flex-col gap-4 overflow-hidden relative">
         
-        {/* ALERTES ECODREUM (Custom Alert System) */}
+        {/* ALERTES ECODREUM */}
         {customAlert.show && (
-            <div className={`fixed top-10 left-1/2 -translate-x-1/2 z-[600] px-8 py-4 rounded-2xl border-2 font-black uppercase italic tracking-tighter animate-in slide-in-from-top duration-300 shadow-[0_20px_50px_rgba(0,0,0,0.5)] ${customAlert.type === 'error' ? 'bg-red-600 border-white' : 'bg-emerald-600 border-white'}`}>
+            <div className={`fixed top-10 left-1/2 -translate-x-1/2 z-[600] px-8 py-4 rounded-2xl border-2 font-black uppercase italic tracking-tighter animate-in slide-in-from-top duration-300 shadow-2xl ${customAlert.type === 'error' ? 'bg-red-600 border-white' : 'bg-emerald-600 border-white'}`}>
                 <div className="flex flex-col items-center">
-                    <span className="text-[10px] opacity-80">ECODREUM INDIQUE :</span>
+                    <span className="text-[10px] opacity-80 uppercase">ECODREUM INDIQUE :</span>
                     <span className="text-sm">{customAlert.msg}</span>
                 </div>
             </div>
@@ -236,11 +213,11 @@ export default function RHPage() {
             <div className="h-full flex flex-col">
                <div className="flex justify-between items-center mb-6">
                  <button onClick={() => { setIsAuthorized(false); setSelectedDept(null); }} className="text-[10px] font-black text-emerald-400 flex items-center gap-2 uppercase">
-                   <Unlock size={14} /> Quitter Secteur {selectedDept}
+                   <Unlock size={14} /> Quitter {selectedDept}
                  </button>
                  {view === 'tasks' && (
-                    <button onClick={() => {setTaskStep(1); setShowTaskModal(true);}} className="bg-black border-2 border-emerald-500 px-6 py-2 rounded-xl font-black text-emerald-500 uppercase flex items-center gap-2 shadow-[0_0_15px_rgba(16,185,129,0.2)] hover:bg-emerald-500/10 transition-colors">
-                        <Plus size={16} strokeWidth={3} /> Ajouter Mission
+                    <button onClick={() => {setTaskStep(1); setShowTaskModal(true);}} className="bg-black border-2 border-emerald-500 px-6 py-2 rounded-xl font-black text-emerald-500 uppercase flex items-center gap-2 shadow-[0_0_15px_rgba(16,185,129,0.2)]">
+                        <Plus size={16} strokeWidth={3} /> Nouvelle Mission
                     </button>
                  )}
                </div>
@@ -272,7 +249,6 @@ export default function RHPage() {
                             <button key={status} onClick={() => setFilterStatus(status)} className={`px-4 py-2 rounded-lg text-[9px] font-black uppercase transition-all ${filterStatus === status ? 'bg-white/10 text-white shadow-lg' : 'text-gray-500'}`}>{status}</button>
                         ))}
                     </div>
-
                     <div className="grid gap-3">
                         {tasks.filter(t => t.status === filterStatus).map(task => (
                             <div key={task.id} className="glass-card p-4 border border-white/5 flex justify-between items-center gap-4">
@@ -295,7 +271,7 @@ export default function RHPage() {
           )}
         </div>
 
-        {/* MODAL MISSION 2 ÉTAPES (TACTIQUE) */}
+        {/* MODAL MISSION 2 ÉTAPES */}
         {showTaskModal && (
             <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/95 p-4 backdrop-blur-3xl">
                 <div className="glass-card w-full max-w-md p-6 border-t-4 border-t-emerald-500 animate-in zoom-in duration-200 shadow-2xl overflow-y-auto max-h-[90vh]">
@@ -304,58 +280,42 @@ export default function RHPage() {
                             <p className="text-emerald-500 text-[10px] font-black uppercase tracking-widest">Étape {taskStep} / 2</p>
                             <h2 className="text-xl font-black text-white uppercase italic">Déploiement Mission</h2>
                         </div>
-                        <button onClick={() => setShowTaskModal(false)}><X className="text-white/50 hover:text-white" /></button>
+                        <button onClick={() => setShowTaskModal(false)}><X className="text-white/50" /></button>
                     </div>
 
                     {taskStep === 1 ? (
                         <div className="space-y-6">
                             <div>
                                 <label className="text-[10px] font-black text-gray-500 uppercase mb-2 block">Nom de l'Opération</label>
-                                <input type="text" className="w-full bg-white/5 border border-white/10 p-5 rounded-2xl outline-none focus:border-emerald-500 text-white font-bold" value={newTask.title} onChange={(e)=>setNewTask({...newTask, title: e.target.value})} placeholder="INTITULÉ DE LA MISSION..."/>
+                                <input type="text" className="w-full bg-white/5 border border-white/10 p-5 rounded-2xl outline-none focus:border-emerald-500 text-white font-bold" value={newTask.title} onChange={(e)=>setNewTask({...newTask, title: e.target.value})} placeholder="INTITULÉ..."/>
                             </div>
                             <div>
                                 <label className="text-[10px] font-black text-gray-500 uppercase mb-2 block">Agent de Terrain</label>
-                                <select className="w-full bg-white/5 border border-white/10 p-5 rounded-2xl outline-none text-white appearance-none font-bold cursor-pointer" onChange={(e)=>setNewTask({...newTask, assigned_to: e.target.value})} value={newTask.assigned_to}>
+                                <select className="w-full bg-white/5 border border-white/10 p-5 rounded-2xl outline-none text-white appearance-none font-bold" onChange={(e)=>setNewTask({...newTask, assigned_to: e.target.value})} value={newTask.assigned_to}>
                                     <option value="">SÉLECTIONNER UN AGENT...</option>
                                     {staff.filter(m => m.department === selectedDept).map(m => (
                                         <option key={m.id} value={m.id} className="bg-black text-white">{m.full_name.toUpperCase()}</option>
                                     ))}
                                 </select>
                             </div>
-                            <button 
-                                onClick={() => (newTask.title && newTask.assigned_to) ? setTaskStep(2) : triggerAlert("REMPLISSEZ TOUS LES CHAMPS")}
-                                className="w-full py-5 bg-emerald-500 text-black font-black uppercase text-sm rounded-2xl flex items-center justify-center gap-2 hover:bg-emerald-400 transition-all shadow-lg"
-                            >
-                                Continuer <ArrowRight size={18} strokeWidth={3} />
-                            </button>
+                            <button onClick={() => (newTask.title && newTask.assigned_to) ? setTaskStep(2) : triggerAlert("REMPLISSEZ TOUS LES CHAMPS")} className="w-full py-5 bg-emerald-500 text-black font-black uppercase text-sm rounded-2xl flex items-center justify-center gap-2 hover:bg-emerald-400 transition-all shadow-lg">Continuer <ArrowRight size={18} /></button>
                         </div>
                     ) : (
                         <div className="space-y-4">
-                            {/* Récapitulatif Compact */}
                             <div className="bg-emerald-500/10 p-3 rounded-xl border border-emerald-500/20 mb-2 flex justify-between items-center">
                                 <div>
-                                    <p className="text-[9px] font-black text-emerald-500 uppercase mb-1">Mission</p>
+                                    <p className="text-[9px] font-black text-emerald-500 uppercase">Mission</p>
                                     <p className="text-xs font-bold text-white truncate max-w-[150px]">{newTask.title}</p>
                                 </div>
                                 <div className="text-right">
-                                     <p className="text-[9px] font-black text-emerald-500 uppercase mb-1">Échéance</p>
+                                     <p className="text-[9px] font-black text-emerald-500 uppercase">Échéance</p>
                                      <p className="text-sm font-black text-white">{newTask.deadline || "..."}</p>
                                 </div>
                             </div>
-
-                            {/* CALENDRIER TACTIQUE INTÉGRÉ */}
-                            <div>
-                                <label className="text-[10px] font-black text-gray-500 uppercase mb-2 block">Sélection Tactique de Date</label>
-                                <TacticalCalendar onSelect={(date) => setNewTask({...newTask, deadline: date})} />
-                            </div>
-
+                            <TacticalCalendar onSelect={(date) => setNewTask({...newTask, deadline: date})} />
                             <div className="flex gap-3 mt-4">
-                                <button onClick={() => setTaskStep(1)} className="flex-1 py-4 bg-white/5 text-white font-black uppercase text-[10px] rounded-xl border border-white/10 hover:bg-white/10">Précédent</button>
-                                <button 
-                                    onClick={handleDeployTask} 
-                                    disabled={isDeploying || !newTask.deadline}
-                                    className="flex-[2] py-4 bg-emerald-500 text-black font-black uppercase text-xs rounded-xl shadow-lg flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-emerald-400 transition-colors"
-                                >
+                                <button onClick={() => setTaskStep(1)} className="flex-1 py-4 bg-white/5 text-white font-black uppercase text-[10px] rounded-xl border border-white/10">Précédent</button>
+                                <button onClick={handleDeployTask} disabled={isDeploying || !newTask.deadline} className="flex-[2] py-4 bg-emerald-500 text-black font-black uppercase text-xs rounded-xl shadow-lg flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50">
                                     {isDeploying ? <Loader2 className="animate-spin" /> : <><Play size={16} fill="black" /> Confirmer Mission</>}
                                 </button>
                             </div>
@@ -375,7 +335,7 @@ export default function RHPage() {
                         <p className="text-[10px] text-emerald-500 font-bold uppercase tracking-[0.3em] mt-2 italic">Entrez le WAKANDA Code</p>
                     </div>
                     <input type="password" maxLength={4} value={wakandaInput} onChange={(e) => setWakandaInput(e.target.value)} className="bg-white/5 border-b-2 border-emerald-500 w-40 py-4 text-center text-3xl font-black tracking-[0.5em] outline-none text-white" autoFocus onKeyDown={(e) => e.key === 'Enter' && handlePinSubmit()} />
-                    <button onClick={handlePinSubmit} className="w-full py-4 bg-emerald-500 text-black text-[10px] font-black uppercase rounded-xl font-bold px-10 hover:bg-emerald-400 transition-colors">VÉRIFIER L'AUTORISATION</button>
+                    <button onClick={handlePinSubmit} className="w-full py-4 bg-emerald-500 text-black text-[10px] font-black uppercase rounded-xl font-bold px-10">VÉRIFIER L'AUTORISATION</button>
                 </div>
             </div>
         )}
