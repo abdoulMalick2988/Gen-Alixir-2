@@ -1,15 +1,23 @@
-import './globals.css'
-import { Montserrat, Open_Sans } from 'next/font/google'
+import type { Metadata } from "next";
+import { Inter } from "next/font/google";
+import "./globals.css";
 
-const montserrat = Montserrat({ subsets: ['latin'], variable: '--font-titles' })
-const openSans = Open_Sans({ subsets: ['latin'], variable: '--font-body' })
+const inter = Inter({ subsets: ["latin"] });
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export const metadata: Metadata = {
+  title: "ECODREUM Dashboard",
+  description: "Intelligence Engine",
+};
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
   return (
     <html lang="fr">
-      <body className={`${montserrat.variable} ${openSans.variable} font-body bg-black text-white`}>
-        {children}
-      </body>
+      {/* IMPORTANT : className={inter.className} SEULEMENT. Pas de bg-black ! */}
+      <body className={inter.className}>{children}</body>
     </html>
-  )
+  );
 }
