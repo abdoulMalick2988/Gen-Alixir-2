@@ -4,7 +4,7 @@ import { supabase } from "../../lib/supabase";
 import Sidebar from "../../components/Sidebar";
 import { 
   Users, Crosshair, ChevronLeft, ChevronRight, Plus, X, 
-  Loader2, Lock, Unlock, Calendar, Play, ArrowRight 
+  Loader2, Lock, Unlock, Calendar, Play, ArrowRight, CheckCircle, FileText, Trash2 
 } from "lucide-react";
 
 // --- CONFIGURATION ---
@@ -19,14 +19,14 @@ const DEPARTMENTS = [
   { name: "Ressources Humaines", pin: "7777" }
 ];
 
-// --- COMPOSANTS UI BADGES ---
+// --- COMPOSANTS UI ---
 const GoldBadge = ({ letter, name }: { letter: string, name: string }) => (
     <div className="relative z-10 flex flex-col items-center">
-      <div className="relative w-28 h-28 md:w-36 md:h-36 flex items-center justify-center">
+      <div className="relative w-24 h-24 md:w-36 md:h-36 flex items-center justify-center">
         <div className="absolute inset-0 bg-gold/20 rounded-full blur-2xl animate-pulse"></div>
         <div className="absolute inset-0 rounded-full bg-gradient-to-b from-[#fceabb] via-[#f8b500] to-[#fceabb] p-[2px] shadow-xl">
           <div className="w-full h-full rounded-full bg-gradient-to-tr from-[#bf953f] via-[#fcf6ba] to-[#b38728] flex items-center justify-center">
-            <span className="text-4xl font-black text-black/70 italic">{letter}</span>
+            <span className="text-3xl md:text-4xl font-black text-black/70 italic">{letter}</span>
           </div>
         </div>
       </div>
@@ -37,7 +37,7 @@ const GoldBadge = ({ letter, name }: { letter: string, name: string }) => (
 );
 
 const EmeraldBadge = ({ letter }: { letter: string }) => (
-    <div className="relative w-14 h-14 md:w-18 md:h-18 flex items-center justify-center">
+    <div className="relative w-12 h-12 md:w-18 md:h-18 flex items-center justify-center">
       <div className="absolute inset-0 rounded-full bg-gradient-to-b from-gray-300 via-emerald-500 to-gray-500 p-[2px] shadow-lg">
         <div className="w-full h-full rounded-full bg-gradient-to-tr from-[#065f46] via-[#10b981] to-[#064e3b] flex items-center justify-center">
           <span className="text-lg font-black text-white italic">{letter}</span>
@@ -46,7 +46,6 @@ const EmeraldBadge = ({ letter }: { letter: string }) => (
     </div>
 );
 
-// --- CALENDRIER TACTIQUE (FIX VR) ---
 const TacticalCalendar = ({ onSelect }: { onSelect: (date: string) => void }) => {
     const [currentDate, setCurrentDate] = useState(new Date());
     const [selectedDateStr, setSelectedDateStr] = useState<string>('');
@@ -64,13 +63,11 @@ const TacticalCalendar = ({ onSelect }: { onSelect: (date: string) => void }) =>
         onSelect(dateStr);
     };
 
-    const monthNames = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
-
     return (
         <div className="w-full bg-black/60 border border-emerald-500/30 rounded-xl p-4 shadow-xl">
             <div className="flex justify-between items-center mb-4">
                 <button onClick={() => setCurrentDate(new Date(currentDate.setMonth(currentDate.getMonth() - 1)))} className="p-2 hover:bg-white/10 rounded-lg"><ChevronLeft size={20} className="text-emerald-500"/></button>
-                <span className="text-white font-black uppercase text-sm tracking-widest">{monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}</span>
+                <span className="text-white font-black uppercase text-sm tracking-widest">{currentDate.toLocaleString('default', { month: 'long', year: 'numeric' })}</span>
                 <button onClick={() => setCurrentDate(new Date(currentDate.setMonth(currentDate.getMonth() + 1)))} className="p-2 hover:bg-white/10 rounded-lg"><ChevronRight size={20} className="text-emerald-500"/></button>
             </div>
             <div className="grid grid-cols-7 gap-1 mb-2 text-center border-b border-white/10 pb-2">
@@ -97,6 +94,7 @@ export default function RHPage() {
   const [view, setView] = useState<'members' | 'tasks'>('members');
   const [selectedDept, setSelectedDept] = useState<string | null>(null);
   const [isAuthorized, setIsAuthorized] = useState(false);
+  const [isManager, setIsManager] = useState(false);
   const [wakandaInput, setWakandaInput] = useState("");
   const [showPinModal, setShowPinModal] = useState(false);
   const [tempDept, setTempDept] = useState<any>(null);
@@ -105,7 +103,6 @@ export default function RHPage() {
   const [filterStatus, setFilterStatus] = useState('En cours');
   const [loading, setLoading] = useState(true);
   
-  // États Mission
   const [showTaskModal, setShowTaskModal] = useState(false);
   const [taskStep, setTaskStep] = useState(1);
   const [isDeploying, setIsDeploying] = useState(false);
@@ -132,42 +129,45 @@ export default function RHPage() {
   }
 
   const handlePinSubmit = () => {
-    if (wakandaInput === tempDept.pin) {
+    if (wakandaInput === tempDept.pin || wakandaInput === "9999") { // 9999 code Manager par défaut pour test
       setSelectedDept(tempDept.name);
       setIsAuthorized(true);
+      setIsManager(wakandaInput === tempDept.pin);
       setShowPinModal(false);
       setWakandaInput("");
     } else {
-      triggerAlert("WAKANDA CODE INCORRECT");
+      triggerAlert("CODE INCORRECT");
       setWakandaInput("");
     }
   };
 
-  const handleDeployTask = async () => {
-    if (!newTask.title || !newTask.assigned_to || !newTask.deadline) {
-        return triggerAlert("DONNÉES INCOMPLÈTES");
+  const handleUpdateStatus = async (taskId: string, newStatus: string) => {
+    const { error } = await supabase.from('tasks').update({ status: newStatus }).eq('id', taskId);
+    if (!error) {
+        fetchTasks();
+        triggerAlert(`MISSION ${newStatus.toUpperCase()}`, 'success');
     }
+  };
 
+  const handleDeleteTask = async (taskId: string) => {
+    if (!confirm("CONFIRMER LA SUPPRESSION DÉFINITIVE ?")) return;
+    const { error } = await supabase.from('tasks').delete().eq('id', taskId);
+    if (!error) {
+        fetchTasks();
+        triggerAlert("MISSION SUPPRIMÉE", 'success');
+    }
+  };
+
+  const handleDeployTask = async () => {
     setIsDeploying(true);
-    // On force l'insertion avec les colonnes exactes
-    const { error } = await supabase.from('tasks').insert([
-        { 
-            title: newTask.title, 
-            assigned_to: newTask.assigned_to, 
-            deadline: newTask.deadline,
-            department: selectedDept, 
-            status: 'En cours' 
-        }
-    ]);
-
+    const { error } = await supabase.from('tasks').insert([{ ...newTask, department: selectedDept, status: 'En cours' }]);
     if (!error) {
         setShowTaskModal(false);
         setTaskStep(1);
         setNewTask({ title: '', assigned_to: '', deadline: '' });
         fetchTasks();
-        triggerAlert("MISSION DÉPLOYÉE AVEC SUCCÈS", 'success');
+        triggerAlert("MISSION DÉPLOYÉE", 'success');
     } else {
-        console.error("Erreur Supabase:", error);
         triggerAlert(`ERREUR : ${error.message}`);
     }
     setIsDeploying(false);
@@ -180,22 +180,19 @@ export default function RHPage() {
       <Sidebar />
       <main className="flex-1 p-4 flex flex-col gap-4 overflow-hidden relative">
         
-        {/* ALERTES ECODREUM */}
+        {/* ALERTE ECODREUM */}
         {customAlert.show && (
-            <div className={`fixed top-10 left-1/2 -translate-x-1/2 z-[600] px-8 py-4 rounded-2xl border-2 font-black uppercase italic tracking-tighter animate-in slide-in-from-top duration-300 shadow-2xl ${customAlert.type === 'error' ? 'bg-red-600 border-white' : 'bg-emerald-600 border-white'}`}>
-                <div className="flex flex-col items-center">
-                    <span className="text-[10px] opacity-80 uppercase">ECODREUM INDIQUE :</span>
-                    <span className="text-sm">{customAlert.msg}</span>
-                </div>
+            <div className={`fixed top-10 left-1/2 -translate-x-1/2 z-[999] px-8 py-4 rounded-2xl border-2 font-black uppercase italic tracking-tighter animate-in slide-in-from-top duration-300 shadow-2xl ${customAlert.type === 'error' ? 'bg-red-600 border-white' : 'bg-emerald-600 border-white'}`}>
+                <span className="text-sm">{customAlert.msg}</span>
             </div>
         )}
 
         {/* HEADER */}
-        <div className="flex justify-between items-center shrink-0">
-          <h1 className="text-2xl font-black italic uppercase text-white tracking-tighter">HUMAN <span className="text-emerald-500">ENGINE</span></h1>
-          <div className="glass-card p-1 flex bg-white/5 border border-white/10 rounded-2xl w-80">
-            <button onClick={() => setView('members')} className={`flex-1 py-2 rounded-xl text-[10px] font-black uppercase transition-all ${view === 'members' ? 'bg-emerald-500 text-white' : 'text-gray-400'}`}>Collaborateurs</button>
-            <button onClick={() => setView('tasks')} className={`flex-1 py-2 rounded-xl text-[10px] font-black uppercase transition-all ${view === 'tasks' ? 'bg-gold !text-black' : 'text-gray-400'}`}>Missions</button>
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shrink-0">
+          <h1 className="text-2xl font-black italic uppercase tracking-tighter">HUMAN <span className="text-emerald-500">ENGINE</span></h1>
+          <div className="glass-card p-1 flex bg-white/5 border border-white/10 rounded-2xl w-full md:w-80">
+            <button onClick={() => setView('members')} className={`flex-1 py-2 rounded-xl text-[10px] font-black uppercase transition-all ${view === 'members' ? 'bg-emerald-500 text-white shadow-lg' : 'text-gray-400'}`}>Équipe</button>
+            <button onClick={() => setView('tasks')} className={`flex-1 py-2 rounded-xl text-[10px] font-black uppercase transition-all ${view === 'tasks' ? 'bg-gold text-black shadow-lg' : 'text-gray-400'}`}>Missions</button>
           </div>
         </div>
 
@@ -203,9 +200,9 @@ export default function RHPage() {
           {!isAuthorized ? (
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               {DEPARTMENTS.map((dept) => (
-                <button key={dept.name} onClick={() => { setTempDept(dept); setShowPinModal(true); }} className="glass-card p-8 border border-white/5 hover:border-gold/50 group flex flex-col items-center gap-3 transition-all">
+                <button key={dept.name} onClick={() => { setTempDept(dept); setShowPinModal(true); }} className="glass-card p-6 md:p-8 border border-white/5 hover:border-gold/50 group flex flex-col items-center gap-3 transition-all">
                   <Lock className="text-gold/30 group-hover:text-gold" size={24} />
-                  <span className="text-[10px] font-black uppercase tracking-widest">{dept.name}</span>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-center">{dept.name}</span>
                 </button>
               ))}
             </div>
@@ -215,28 +212,28 @@ export default function RHPage() {
                  <button onClick={() => { setIsAuthorized(false); setSelectedDept(null); }} className="text-[10px] font-black text-emerald-400 flex items-center gap-2 uppercase">
                    <Unlock size={14} /> Quitter {selectedDept}
                  </button>
-                 {view === 'tasks' && (
-                    <button onClick={() => {setTaskStep(1); setShowTaskModal(true);}} className="bg-black border-2 border-emerald-500 px-6 py-2 rounded-xl font-black text-emerald-500 uppercase flex items-center gap-2 shadow-[0_0_15px_rgba(16,185,129,0.2)]">
-                        <Plus size={16} strokeWidth={3} /> Nouvelle Mission
+                 {view === 'tasks' && isManager && (
+                    <button onClick={() => {setTaskStep(1); setShowTaskModal(true);}} className="bg-black border-2 border-emerald-500 px-4 md:px-6 py-2 rounded-xl font-black text-emerald-500 uppercase flex items-center gap-2 text-xs">
+                        <Plus size={16} /> Nouvelle Mission
                     </button>
                  )}
                </div>
 
                {view === 'members' ? (
-                 <div className="flex-1 relative flex items-center justify-center min-h-[500px]">
+                 <div className="flex-1 relative flex items-center justify-center min-h-[400px]">
                     {staff.filter(m => m.department === selectedDept && (m.role.toLowerCase().includes('chef') || m.role.toLowerCase().includes('ceo'))).map((chef) => (
                       <GoldBadge key={chef.id} letter={chef.full_name.charAt(0)} name={chef.full_name} />
                     ))}
                     <div className="absolute inset-0 flex items-center justify-center">
                        {staff.filter(m => m.department === selectedDept && !m.role.toLowerCase().includes('chef') && !m.role.toLowerCase().includes('ceo')).map((member, index, array) => {
                          const angle = (index / array.length) * (2 * Math.PI);
-                         const radius = 220; 
+                         const radius = window.innerWidth < 768 ? 120 : 200; 
                          const x = Math.cos(angle) * radius;
                          const y = Math.sin(angle) * radius;
                          return (
                            <div key={member.id} style={{ transform: `translate(${x}px, ${y}px)` }} className="absolute flex flex-col items-center z-20">
                              <EmeraldBadge letter={member.full_name.charAt(0)} />
-                             <p className="text-[8px] font-black uppercase mt-2 text-gray-400">{member.full_name}</p>
+                             <p className="text-[7px] font-black uppercase mt-1 text-gray-400 text-center w-16 truncate">{member.full_name}</p>
                            </div>
                          );
                        })}
@@ -246,21 +243,39 @@ export default function RHPage() {
                  <div className="space-y-6">
                     <div className="flex gap-2 bg-white/5 p-1 rounded-xl border border-white/10 w-fit">
                         {['En cours', 'Terminée', 'Annulée'].map((status) => (
-                            <button key={status} onClick={() => setFilterStatus(status)} className={`px-4 py-2 rounded-lg text-[9px] font-black uppercase transition-all ${filterStatus === status ? 'bg-white/10 text-white shadow-lg' : 'text-gray-500'}`}>{status}</button>
+                            <button key={status} onClick={() => setFilterStatus(status)} className={`px-4 py-2 rounded-lg text-[9px] font-black uppercase transition-all ${filterStatus === status ? 'bg-white/10 text-white' : 'text-gray-500'}`}>{status}</button>
                         ))}
                     </div>
                     <div className="grid gap-3">
                         {tasks.filter(t => t.status === filterStatus).map(task => (
-                            <div key={task.id} className="glass-card p-4 border border-white/5 flex justify-between items-center gap-4">
+                            <div key={task.id} className="glass-card p-4 border border-white/5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                                 <div className="flex items-center gap-4">
                                     <div className={`w-2 h-2 rounded-full ${task.status === 'En cours' ? 'bg-emerald-500 shadow-[0_0_8px_#10b981]' : 'bg-gray-500'}`}></div>
                                     <div>
                                         <h4 className="font-black text-sm uppercase italic">{task.title}</h4>
-                                        <p className="text-[9px] text-gray-500 uppercase">Agent : {staff.find(s => s.id === task.assigned_to)?.full_name}</p>
+                                        <p className="text-[9px] text-gray-400 uppercase">Agent : {staff.find(s => s.id === task.assigned_to)?.full_name}</p>
                                     </div>
                                 </div>
-                                <div className="text-right">
-                                    <p className="text-[9px] font-black text-emerald-500 uppercase tracking-tighter">Délai : {task.deadline}</p>
+                                
+                                <div className="flex items-center gap-3 w-full md:w-auto justify-end">
+                                    <p className="text-[9px] font-black text-emerald-500 uppercase mr-4">Délai : {task.deadline}</p>
+                                    
+                                    {/* ACTIONS MANAGER */}
+                                    {isManager && (
+                                        <>
+                                            {task.status === 'En cours' && (
+                                                <button onClick={() => handleUpdateStatus(task.id, 'Terminée')} className="p-2 bg-emerald-500/10 text-emerald-500 rounded-lg hover:bg-emerald-500 hover:text-black transition-all"><CheckCircle size={18} /></button>
+                                            )}
+                                            <button onClick={() => handleDeleteTask(task.id)} className="p-2 bg-red-500/10 text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition-all"><Trash2 size={18} /></button>
+                                        </>
+                                    )}
+
+                                    {/* ACTION MEMBRE (SIMULÉE) */}
+                                    {!isManager && task.status === 'En cours' && (
+                                        <button onClick={() => handleUpdateStatus(task.id, 'Terminée')} className="flex items-center gap-2 px-3 py-1.5 bg-emerald-500 text-black font-black text-[9px] uppercase rounded-lg">
+                                            <FileText size={14} /> Terminer
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                         ))}
@@ -271,52 +286,33 @@ export default function RHPage() {
           )}
         </div>
 
-        {/* MODAL MISSION 2 ÉTAPES */}
+        {/* MODAL MISSION (CALENDRIER RESPONSIVE) */}
         {showTaskModal && (
-            <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/95 p-4 backdrop-blur-3xl">
-                <div className="glass-card w-full max-w-md p-6 border-t-4 border-t-emerald-500 animate-in zoom-in duration-200 shadow-2xl overflow-y-auto max-h-[90vh]">
+            <div className="fixed inset-0 z-[500] flex items-center justify-center bg-black/95 p-4 backdrop-blur-3xl">
+                <div className="glass-card w-full max-w-md p-6 border-t-4 border-t-emerald-500 animate-in zoom-in">
                     <div className="flex justify-between items-center mb-6">
-                        <div>
-                            <p className="text-emerald-500 text-[10px] font-black uppercase tracking-widest">Étape {taskStep} / 2</p>
-                            <h2 className="text-xl font-black text-white uppercase italic">Déploiement Mission</h2>
-                        </div>
-                        <button onClick={() => setShowTaskModal(false)}><X className="text-white/50" /></button>
+                        <h2 className="text-xl font-black text-white uppercase italic">Déploiement Mission</h2>
+                        <button onClick={() => setShowTaskModal(false)} className="text-white/40"><X size={24} /></button>
                     </div>
 
                     {taskStep === 1 ? (
-                        <div className="space-y-6">
-                            <div>
-                                <label className="text-[10px] font-black text-gray-500 uppercase mb-2 block">Nom de l'Opération</label>
-                                <input type="text" className="w-full bg-white/5 border border-white/10 p-5 rounded-2xl outline-none focus:border-emerald-500 text-white font-bold" value={newTask.title} onChange={(e)=>setNewTask({...newTask, title: e.target.value})} placeholder="INTITULÉ..."/>
-                            </div>
-                            <div>
-                                <label className="text-[10px] font-black text-gray-500 uppercase mb-2 block">Agent de Terrain</label>
-                                <select className="w-full bg-white/5 border border-white/10 p-5 rounded-2xl outline-none text-white appearance-none font-bold" onChange={(e)=>setNewTask({...newTask, assigned_to: e.target.value})} value={newTask.assigned_to}>
-                                    <option value="">SÉLECTIONNER UN AGENT...</option>
-                                    {staff.filter(m => m.department === selectedDept).map(m => (
-                                        <option key={m.id} value={m.id} className="bg-black text-white">{m.full_name.toUpperCase()}</option>
-                                    ))}
-                                </select>
-                            </div>
-                            <button onClick={() => (newTask.title && newTask.assigned_to) ? setTaskStep(2) : triggerAlert("REMPLISSEZ TOUS LES CHAMPS")} className="w-full py-5 bg-emerald-500 text-black font-black uppercase text-sm rounded-2xl flex items-center justify-center gap-2 hover:bg-emerald-400 transition-all shadow-lg">Continuer <ArrowRight size={18} /></button>
+                        <div className="space-y-4">
+                            <input type="text" className="w-full bg-white/5 border border-white/10 p-4 rounded-xl text-white font-bold" value={newTask.title} onChange={(e)=>setNewTask({...newTask, title: e.target.value})} placeholder="TITRE DE LA MISSION"/>
+                            <select className="w-full bg-white/5 border border-white/10 p-4 rounded-xl text-white font-bold" onChange={(e)=>setNewTask({...newTask, assigned_to: e.target.value})} value={newTask.assigned_to}>
+                                <option value="" className="bg-black text-gray-500">SÉLECTIONNER UN COLLABORATEUR</option>
+                                {staff.filter(m => m.department === selectedDept).map(m => (
+                                    <option key={m.id} value={m.id} className="bg-black">{m.full_name}</option>
+                                ))}
+                            </select>
+                            <button onClick={() => (newTask.title && newTask.assigned_to) ? setTaskStep(2) : triggerAlert("CHAMPS INCOMPLETS")} className="w-full py-4 bg-emerald-500 text-black font-black uppercase rounded-xl flex items-center justify-center gap-2">Continuer <ArrowRight size={18} /></button>
                         </div>
                     ) : (
                         <div className="space-y-4">
-                            <div className="bg-emerald-500/10 p-3 rounded-xl border border-emerald-500/20 mb-2 flex justify-between items-center">
-                                <div>
-                                    <p className="text-[9px] font-black text-emerald-500 uppercase">Mission</p>
-                                    <p className="text-xs font-bold text-white truncate max-w-[150px]">{newTask.title}</p>
-                                </div>
-                                <div className="text-right">
-                                     <p className="text-[9px] font-black text-emerald-500 uppercase">Échéance</p>
-                                     <p className="text-sm font-black text-white">{newTask.deadline || "..."}</p>
-                                </div>
-                            </div>
                             <TacticalCalendar onSelect={(date) => setNewTask({...newTask, deadline: date})} />
-                            <div className="flex gap-3 mt-4">
-                                <button onClick={() => setTaskStep(1)} className="flex-1 py-4 bg-white/5 text-white font-black uppercase text-[10px] rounded-xl border border-white/10">Précédent</button>
-                                <button onClick={handleDeployTask} disabled={isDeploying || !newTask.deadline} className="flex-[2] py-4 bg-emerald-500 text-black font-black uppercase text-xs rounded-xl shadow-lg flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50">
-                                    {isDeploying ? <Loader2 className="animate-spin" /> : <><Play size={16} fill="black" /> Confirmer Mission</>}
+                            <div className="flex gap-2">
+                                <button onClick={() => setTaskStep(1)} className="flex-1 py-3 bg-white/5 text-white font-black uppercase text-[10px] rounded-xl border border-white/10">Retour</button>
+                                <button onClick={handleDeployTask} disabled={isDeploying || !newTask.deadline} className="flex-[2] py-3 bg-emerald-500 text-black font-black uppercase text-xs rounded-xl">
+                                    {isDeploying ? <Loader2 className="animate-spin" /> : "Confirmer le déploiement"}
                                 </button>
                             </div>
                         </div>
@@ -325,17 +321,17 @@ export default function RHPage() {
             </div>
         )}
 
-        {/* MODAL PIN WAKANDA */}
+        {/* MODAL PIN RESPONSIVE */}
         {showPinModal && (
-            <div className="fixed inset-0 z-[400] flex items-center justify-center bg-black/95 backdrop-blur-2xl">
-                <div className="glass-card p-10 border border-emerald-500/20 flex flex-col items-center gap-6 animate-in zoom-in">
-                    <Lock className="text-emerald-500" size={40} />
+            <div className="fixed inset-0 z-[600] flex items-center justify-center bg-black/95 backdrop-blur-2xl p-4">
+                <div className="glass-card p-6 md:p-10 border border-emerald-500/20 flex flex-col items-center gap-6 w-full max-w-sm animate-in zoom-in">
+                    <Lock className="text-emerald-500" size={32} />
                     <div className="text-center">
-                        <h2 className="text-xl font-black text-white uppercase italic tracking-widest">Secteur {tempDept?.name}</h2>
-                        <p className="text-[10px] text-emerald-500 font-bold uppercase tracking-[0.3em] mt-2 italic">Entrez le WAKANDA Code</p>
+                        <h2 className="text-lg font-black text-white uppercase italic">Secteur {tempDept?.name}</h2>
+                        <p className="text-[8px] text-emerald-500 font-bold uppercase tracking-widest mt-1">Authentification Requise</p>
                     </div>
-                    <input type="password" maxLength={4} value={wakandaInput} onChange={(e) => setWakandaInput(e.target.value)} className="bg-white/5 border-b-2 border-emerald-500 w-40 py-4 text-center text-3xl font-black tracking-[0.5em] outline-none text-white" autoFocus onKeyDown={(e) => e.key === 'Enter' && handlePinSubmit()} />
-                    <button onClick={handlePinSubmit} className="w-full py-4 bg-emerald-500 text-black text-[10px] font-black uppercase rounded-xl font-bold px-10">VÉRIFIER L'AUTORISATION</button>
+                    <input type="password" maxLength={4} value={wakandaInput} onChange={(e) => setWakandaInput(e.target.value)} className="bg-white/5 border-b-2 border-emerald-500 w-32 py-2 text-center text-2xl font-black text-white outline-none" autoFocus onKeyDown={(e) => e.key === 'Enter' && handlePinSubmit()} />
+                    <button onClick={handlePinSubmit} className="w-full py-3 bg-emerald-500 text-black text-[10px] font-black uppercase rounded-xl">Accéder</button>
                 </div>
             </div>
         )}
