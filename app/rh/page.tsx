@@ -218,17 +218,21 @@ export default function RHPage() {
                         </div>
 
                         <div className="space-y-1">
-                            <label className="text-[9px] font-black text-gray-500 uppercase tracking-widest">Date Limite d'Exécution</label>
-                            <div className="relative">
-                                <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-gold" size={16} />
-                                <input type="date" className="w-full bg-white/5 border border-white/10 p-4 pl-12 rounded-xl outline-none focus:border-gold text-sm text-white scheme-dark" onChange={(e)=>setNewTask({...newTask, deadline: e.target.value})}/>
-                            </div>
-                        </div>
-
-                        <button onClick={handleDeployTask} disabled={isDeploying} className="w-full py-4 bg-gold text-black font-black uppercase text-xs rounded-xl shadow-lg flex items-center justify-center gap-2 hover:brightness-110 active:scale-95 transition-all mt-4">
-                            {isDeploying ? <Loader2 className="animate-spin" /> : <><Play size={14}/> Lancer l'Opération</>}
-                        </button>
-                    </div>
+    <label className="text-[9px] font-black text-gray-500 uppercase tracking-widest">Date Limite d'Exécution</label>
+    <div className="relative group">
+        {/* L'icône avec pointer-events-none pour laisser passer le clic */}
+        <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-gold pointer-events-none z-10" size={16} />
+        
+        <input 
+            type="date" 
+            className="w-full bg-white/5 border border-white/10 p-4 pl-12 rounded-xl outline-none focus:border-gold transition-all text-sm text-white scheme-dark cursor-pointer hover:bg-white/10"
+            required
+            onClick={(e) => (e.target as any).showPicker?.()} // Force l'ouverture sur les navigateurs modernes
+            onChange={(e) => setNewTask({...newTask, deadline: e.target.value})}
+        />
+    </div>
+    <p className="text-[7px] text-gold/50 italic font-bold mt-1 uppercase">Cliquez sur le champ pour définir la timeline</p>
+</div>
                 </div>
             </div>
         )}
