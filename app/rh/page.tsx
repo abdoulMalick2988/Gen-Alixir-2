@@ -4,97 +4,53 @@ import { supabase } from "../../lib/supabase";
 import Sidebar from "../../components/Sidebar";
 import { 
   Users, Crosshair, ChevronLeft, ChevronRight, Plus, X, 
-  Loader2, Lock, Unlock, Calendar, Play, ArrowRight, CheckCircle, FileText, Trash2 
+  Loader2, Lock, Unlock, Calendar, Play, ArrowRight, CheckCircle, FileText, Trash2, ShieldCheck, User
 } from "lucide-react";
 
 // --- CONFIGURATION ---
 const DEPARTMENTS = [
-  { name: "Management", pin: "1111" },
-  { name: "Marketing", pin: "2222" },
-  { name: "Ventes", pin: "3333" },
-  { name: "Finances", pin: "4444" },
-  { name: "Juridique", pin: "5555" },
-  { name: "Relations Publiques", pin: "6666" },
-  { name: "Technique", pin: "0000" },
-  { name: "Ressources Humaines", pin: "7777" }
+  { name: "Management", pin: "1111", wakanda: "9991" },
+  { name: "Marketing", pin: "2222", wakanda: "9992" },
+  { name: "Technique", pin: "0000", wakanda: "9990" },
+  { name: "Ressources Humaines", pin: "7777", wakanda: "9997" }
 ];
 
-// --- COMPOSANTS UI ---
-const GoldBadge = ({ letter, name }: { letter: string, name: string }) => (
-    <div className="relative z-10 flex flex-col items-center">
-      <div className="relative w-24 h-24 md:w-36 md:h-36 flex items-center justify-center">
-        <div className="absolute inset-0 bg-gold/20 rounded-full blur-2xl animate-pulse"></div>
-        <div className="absolute inset-0 rounded-full bg-gradient-to-b from-[#fceabb] via-[#f8b500] to-[#fceabb] p-[2px] shadow-xl">
-          <div className="w-full h-full rounded-full bg-gradient-to-tr from-[#bf953f] via-[#fcf6ba] to-[#b38728] flex items-center justify-center">
-            <span className="text-3xl md:text-4xl font-black text-black/70 italic">{letter}</span>
-          </div>
+// --- COMPOSANT CARTE DE MEMBRE TACTIQUE ---
+const MemberCard = ({ member }: { member: any }) => (
+    <div className="glass-card p-6 border-2 border-emerald-500/30 bg-gradient-to-br from-black via-emerald-950/20 to-black relative overflow-hidden w-full max-w-sm">
+        <div className="absolute top-0 right-0 p-2 bg-emerald-500 text-black font-black text-[8px] uppercase italic">Membre Actif</div>
+        <div className="flex gap-4 items-center mb-6">
+            <div className="w-20 h-20 rounded-full border-2 border-emerald-500 p-1">
+                <div className="w-full h-full rounded-full bg-emerald-900 flex items-center justify-center overflow-hidden">
+                    {member.photo ? <img src={member.photo} alt="Avatar" /> : <User size={40} className="text-emerald-500" />}
+                </div>
+            </div>
+            <div>
+                <h3 className="text-xl font-black italic uppercase text-white leading-none">{member.full_name}</h3>
+                <p className="text-emerald-500 font-bold text-[10px] uppercase tracking-widest">{member.role}</p>
+                <div className="mt-2 flex gap-2">
+                    {member.skills?.map((s: string) => <span key={s} className="text-[7px] border border-white/20 px-2 py-0.5 rounded uppercase">{s}</span>)}
+                </div>
+            </div>
         </div>
-      </div>
-      <div className="mt-4 glass-card px-4 py-1 border border-gold/30 bg-black/40 rounded-lg text-center">
-          <p className="text-gold font-black uppercase text-[10px] tracking-tighter">{name}</p>
-      </div>
+        <div className="grid grid-cols-2 gap-4 border-t border-white/10 pt-4">
+            <div>
+                <p className="text-[8px] text-gray-500 uppercase font-black">Niveau d'Aura</p>
+                <p className="text-lg font-black text-emerald-400 italic">{member.aura || "BETA"}</p>
+            </div>
+            <div className="text-right">
+                <p className="text-[8px] text-gray-500 uppercase font-black">Contribution PCO</p>
+                <p className="text-lg font-black text-gold italic">{member.pco || 1} PTS</p>
+            </div>
+        </div>
     </div>
 );
-
-const EmeraldBadge = ({ letter }: { letter: string }) => (
-    <div className="relative w-12 h-12 md:w-18 md:h-18 flex items-center justify-center">
-      <div className="absolute inset-0 rounded-full bg-gradient-to-b from-gray-300 via-emerald-500 to-gray-500 p-[2px] shadow-lg">
-        <div className="w-full h-full rounded-full bg-gradient-to-tr from-[#065f46] via-[#10b981] to-[#064e3b] flex items-center justify-center">
-          <span className="text-lg font-black text-white italic">{letter}</span>
-        </div>
-      </div>
-    </div>
-);
-
-const TacticalCalendar = ({ onSelect }: { onSelect: (date: string) => void }) => {
-    const [currentDate, setCurrentDate] = useState(new Date());
-    const [selectedDateStr, setSelectedDateStr] = useState<string>('');
-    const today = new Date();
-    today.setHours(0,0,0,0);
-
-    const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
-    const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).getDay();
-    const paddingDays = firstDayOfMonth === 0 ? 6 : firstDayOfMonth - 1;
-
-    const handleDayClick = (day: number) => {
-        const newDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
-        const dateStr = `${newDate.getFullYear()}-${String(newDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-        setSelectedDateStr(dateStr);
-        onSelect(dateStr);
-    };
-
-    return (
-        <div className="w-full bg-black/60 border border-emerald-500/30 rounded-xl p-4 shadow-xl">
-            <div className="flex justify-between items-center mb-4">
-                <button onClick={() => setCurrentDate(new Date(currentDate.setMonth(currentDate.getMonth() - 1)))} className="p-2 hover:bg-white/10 rounded-lg"><ChevronLeft size={20} className="text-emerald-500"/></button>
-                <span className="text-white font-black uppercase text-sm tracking-widest">{currentDate.toLocaleString('default', { month: 'long', year: 'numeric' })}</span>
-                <button onClick={() => setCurrentDate(new Date(currentDate.setMonth(currentDate.getMonth() + 1)))} className="p-2 hover:bg-white/10 rounded-lg"><ChevronRight size={20} className="text-emerald-500"/></button>
-            </div>
-            <div className="grid grid-cols-7 gap-1 mb-2 text-center border-b border-white/10 pb-2">
-                {['L', 'M', 'M', 'J', 'V', 'S', 'D'].map(d => <span key={d} className="text-[10px] text-gray-500 font-bold">{d}</span>)}
-            </div>
-            <div className="grid grid-cols-7 gap-2">
-                {Array.from({ length: paddingDays }).map((_, i) => <div key={`pad-${i}`} />)}
-                {Array.from({ length: daysInMonth }).map((_, i) => {
-                    const day = i + 1;
-                    const thisDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
-                    const dateStr = `${thisDate.getFullYear()}-${String(thisDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-                    const isPast = thisDate < today;
-                    const isSelected = selectedDateStr === dateStr;
-                    return (
-                        <button key={day} onClick={() => !isPast && handleDayClick(day)} disabled={isPast} className={`h-9 rounded-lg flex items-center justify-center text-xs font-bold transition-all ${isSelected ? 'bg-emerald-500 text-black scale-110 shadow-[0_0_15px_#10b981]' : isPast ? 'text-gray-700 opacity-20' : 'text-white bg-white/5 hover:bg-white/20'}`}>{day}</button>
-                    );
-                })}
-            </div>
-        </div>
-    );
-};
 
 export default function RHPage() {
   const [view, setView] = useState<'members' | 'tasks'>('members');
   const [selectedDept, setSelectedDept] = useState<string | null>(null);
   const [isAuthorized, setIsAuthorized] = useState(false);
-  const [isManager, setIsManager] = useState(false);
+  const [accessMode, setAccessMode] = useState<'manager' | 'member'>('manager');
   const [wakandaInput, setWakandaInput] = useState("");
   const [showPinModal, setShowPinModal] = useState(false);
   const [tempDept, setTempDept] = useState<any>(null);
@@ -102,20 +58,10 @@ export default function RHPage() {
   const [tasks, setTasks] = useState<any[]>([]);
   const [filterStatus, setFilterStatus] = useState('En cours');
   const [loading, setLoading] = useState(true);
-  
-  const [showTaskModal, setShowTaskModal] = useState(false);
-  const [taskStep, setTaskStep] = useState(1);
-  const [isDeploying, setIsDeploying] = useState(false);
-  const [newTask, setNewTask] = useState({ title: '', assigned_to: '', deadline: '' });
   const [customAlert, setCustomAlert] = useState<{show: boolean, msg: string, type: 'error' | 'success'}>({show: false, msg: '', type: 'success'});
 
   useEffect(() => { fetchStaff(); }, []);
   useEffect(() => { if (isAuthorized && selectedDept) fetchTasks(); }, [isAuthorized, selectedDept]);
-
-  const triggerAlert = (msg: string, type: 'error' | 'success' = 'error') => {
-    setCustomAlert({ show: true, msg, type });
-    setTimeout(() => setCustomAlert({ show: false, msg: '', type: 'error' }), 4000);
-  };
 
   async function fetchStaff() {
     const { data } = await supabase.from('staff').select('*');
@@ -128,15 +74,23 @@ export default function RHPage() {
     if (data) setTasks(data);
   }
 
+  const triggerAlert = (msg: string, type: 'error' | 'success' = 'error') => {
+    setCustomAlert({ show: true, msg, type });
+    setTimeout(() => setCustomAlert({ show: false, msg: '', type: 'error' }), 4000);
+  };
+
   const handlePinSubmit = () => {
-    if (wakandaInput === tempDept.pin || wakandaInput === "9999") { // 9999 code Manager par défaut pour test
+    const isManagerCode = wakandaInput === tempDept.pin;
+    const isMemberCode = wakandaInput === tempDept.wakanda;
+
+    if (isManagerCode || isMemberCode) {
       setSelectedDept(tempDept.name);
+      setAccessMode(isManagerCode ? 'manager' : 'member');
       setIsAuthorized(true);
-      setIsManager(wakandaInput === tempDept.pin);
       setShowPinModal(false);
       setWakandaInput("");
     } else {
-      triggerAlert("CODE INCORRECT");
+      triggerAlert("CODE INCORRECT - ACCÈS REFUSÉ");
       setWakandaInput("");
     }
   };
@@ -145,138 +99,87 @@ export default function RHPage() {
     const { error } = await supabase.from('tasks').update({ status: newStatus }).eq('id', taskId);
     if (!error) {
         fetchTasks();
-        triggerAlert(`MISSION ${newStatus.toUpperCase()}`, 'success');
+        triggerAlert(`MISSION VALIDÉE`, 'success');
     }
   };
-
-  const handleDeleteTask = async (taskId: string) => {
-    if (!confirm("CONFIRMER LA SUPPRESSION DÉFINITIVE ?")) return;
-    const { error } = await supabase.from('tasks').delete().eq('id', taskId);
-    if (!error) {
-        fetchTasks();
-        triggerAlert("MISSION SUPPRIMÉE", 'success');
-    }
-  };
-
-  const handleDeployTask = async () => {
-    setIsDeploying(true);
-    const { error } = await supabase.from('tasks').insert([{ ...newTask, department: selectedDept, status: 'En cours' }]);
-    if (!error) {
-        setShowTaskModal(false);
-        setTaskStep(1);
-        setNewTask({ title: '', assigned_to: '', deadline: '' });
-        fetchTasks();
-        triggerAlert("MISSION DÉPLOYÉE", 'success');
-    } else {
-        triggerAlert(`ERREUR : ${error.message}`);
-    }
-    setIsDeploying(false);
-  };
-
-  if (loading) return <div className="h-screen bg-black flex items-center justify-center"><Loader2 className="text-emerald-500 animate-spin" /></div>;
 
   return (
     <div className="flex h-screen bg-transparent text-white overflow-hidden font-sans">
       <Sidebar />
       <main className="flex-1 p-4 flex flex-col gap-4 overflow-hidden relative">
         
-        {/* ALERTE ECODREUM */}
         {customAlert.show && (
-            <div className={`fixed top-10 left-1/2 -translate-x-1/2 z-[999] px-8 py-4 rounded-2xl border-2 font-black uppercase italic tracking-tighter animate-in slide-in-from-top duration-300 shadow-2xl ${customAlert.type === 'error' ? 'bg-red-600 border-white' : 'bg-emerald-600 border-white'}`}>
+            <div className={`fixed top-10 left-1/2 -translate-x-1/2 z-[999] px-8 py-4 rounded-2xl border-2 font-black uppercase italic animate-in slide-in-from-top ${customAlert.type === 'error' ? 'bg-red-600 border-white' : 'bg-emerald-600 border-white'}`}>
                 <span className="text-sm">{customAlert.msg}</span>
             </div>
         )}
 
-        {/* HEADER */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shrink-0">
+        <div className="flex justify-between items-center shrink-0">
           <h1 className="text-2xl font-black italic uppercase tracking-tighter">HUMAN <span className="text-emerald-500">ENGINE</span></h1>
-          <div className="glass-card p-1 flex bg-white/5 border border-white/10 rounded-2xl w-full md:w-80">
-            <button onClick={() => setView('members')} className={`flex-1 py-2 rounded-xl text-[10px] font-black uppercase transition-all ${view === 'members' ? 'bg-emerald-500 text-white shadow-lg' : 'text-gray-400'}`}>Équipe</button>
-            <button onClick={() => setView('tasks')} className={`flex-1 py-2 rounded-xl text-[10px] font-black uppercase transition-all ${view === 'tasks' ? 'bg-gold text-black shadow-lg' : 'text-gray-400'}`}>Missions</button>
-          </div>
+          {isAuthorized && (
+            <div className="flex items-center gap-2 px-4 py-2 bg-emerald-500/10 border border-emerald-500/20 rounded-full">
+                <ShieldCheck size={14} className="text-emerald-500" />
+                <span className="text-[9px] font-black uppercase text-emerald-500 italic">{accessMode} mode</span>
+            </div>
+          )}
         </div>
 
         <div className="flex-1 overflow-y-auto custom-scroll">
           {!isAuthorized ? (
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               {DEPARTMENTS.map((dept) => (
-                <button key={dept.name} onClick={() => { setTempDept(dept); setShowPinModal(true); }} className="glass-card p-6 md:p-8 border border-white/5 hover:border-gold/50 group flex flex-col items-center gap-3 transition-all">
-                  <Lock className="text-gold/30 group-hover:text-gold" size={24} />
-                  <span className="text-[10px] font-black uppercase tracking-widest text-center">{dept.name}</span>
+                <button key={dept.name} onClick={() => { setTempDept(dept); setShowPinModal(true); }} className="glass-card p-8 border border-white/5 hover:border-emerald-500 group flex flex-col items-center gap-3 transition-all">
+                  <Lock className="text-white/20 group-hover:text-emerald-500" size={24} />
+                  <span className="text-[10px] font-black uppercase tracking-widest">{dept.name}</span>
                 </button>
               ))}
             </div>
           ) : (
             <div className="h-full flex flex-col">
                <div className="flex justify-between items-center mb-6">
-                 <button onClick={() => { setIsAuthorized(false); setSelectedDept(null); }} className="text-[10px] font-black text-emerald-400 flex items-center gap-2 uppercase">
-                   <Unlock size={14} /> Quitter {selectedDept}
+                 <button onClick={() => { setIsAuthorized(false); setSelectedDept(null); }} className="text-[10px] font-black text-emerald-400 flex items-center gap-2 uppercase italic hover:text-white transition-all">
+                   <Unlock size={14} /> Quitter le secteur {selectedDept}
                  </button>
-                 {view === 'tasks' && isManager && (
-                    <button onClick={() => {setTaskStep(1); setShowTaskModal(true);}} className="bg-black border-2 border-emerald-500 px-4 md:px-6 py-2 rounded-xl font-black text-emerald-500 uppercase flex items-center gap-2 text-xs">
-                        <Plus size={16} /> Nouvelle Mission
-                    </button>
-                 )}
+                 <div className="glass-card p-1 flex bg-white/5 border border-white/10 rounded-2xl w-60">
+                    <button onClick={() => setView('members')} className={`flex-1 py-2 rounded-xl text-[10px] font-black uppercase transition-all ${view === 'members' ? 'bg-emerald-500 text-white' : 'text-gray-400'}`}>Équipe</button>
+                    <button onClick={() => setView('tasks')} className={`flex-1 py-2 rounded-xl text-[10px] font-black uppercase transition-all ${view === 'tasks' ? 'bg-gold text-black' : 'text-gray-400'}`}>Missions</button>
+                </div>
                </div>
 
                {view === 'members' ? (
-                 <div className="flex-1 relative flex items-center justify-center min-h-[400px]">
-                    {staff.filter(m => m.department === selectedDept && (m.role.toLowerCase().includes('chef') || m.role.toLowerCase().includes('ceo'))).map((chef) => (
-                      <GoldBadge key={chef.id} letter={chef.full_name.charAt(0)} name={chef.full_name} />
-                    ))}
-                    <div className="absolute inset-0 flex items-center justify-center">
-                       {staff.filter(m => m.department === selectedDept && !m.role.toLowerCase().includes('chef') && !m.role.toLowerCase().includes('ceo')).map((member, index, array) => {
-                         const angle = (index / array.length) * (2 * Math.PI);
-                         const radius = window.innerWidth < 768 ? 120 : 200; 
-                         const x = Math.cos(angle) * radius;
-                         const y = Math.sin(angle) * radius;
-                         return (
-                           <div key={member.id} style={{ transform: `translate(${x}px, ${y}px)` }} className="absolute flex flex-col items-center z-20">
-                             <EmeraldBadge letter={member.full_name.charAt(0)} />
-                             <p className="text-[7px] font-black uppercase mt-1 text-gray-400 text-center w-16 truncate">{member.full_name}</p>
-                           </div>
-                         );
-                       })}
-                    </div>
+                 <div className="flex-1 flex flex-wrap gap-6 justify-center items-center py-10">
+                    {/* Si mode Manager : Vue d'ensemble */}
+                    {accessMode === 'manager' ? (
+                        staff.filter(m => m.department === selectedDept).map(m => (
+                            <MemberCard key={m.id} member={m} />
+                        ))
+                    ) : (
+                        /* Si mode Membre : Sa propre carte (simulation ici sur le premier membre du dept) */
+                        <MemberCard member={staff.find(m => m.department === selectedDept)} />
+                    )}
                  </div>
                ) : (
                  <div className="space-y-6">
                     <div className="flex gap-2 bg-white/5 p-1 rounded-xl border border-white/10 w-fit">
-                        {['En cours', 'Terminée', 'Annulée'].map((status) => (
+                        {['En cours', 'Terminée'].map((status) => (
                             <button key={status} onClick={() => setFilterStatus(status)} className={`px-4 py-2 rounded-lg text-[9px] font-black uppercase transition-all ${filterStatus === status ? 'bg-white/10 text-white' : 'text-gray-500'}`}>{status}</button>
                         ))}
                     </div>
                     <div className="grid gap-3">
                         {tasks.filter(t => t.status === filterStatus).map(task => (
-                            <div key={task.id} className="glass-card p-4 border border-white/5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                            <div key={task.id} className="glass-card p-4 border border-white/5 flex justify-between items-center gap-4">
                                 <div className="flex items-center gap-4">
-                                    <div className={`w-2 h-2 rounded-full ${task.status === 'En cours' ? 'bg-emerald-500 shadow-[0_0_8px_#10b981]' : 'bg-gray-500'}`}></div>
+                                    <div className={`w-2 h-2 rounded-full ${task.status === 'En cours' ? 'bg-emerald-500' : 'bg-gray-500'}`}></div>
                                     <div>
                                         <h4 className="font-black text-sm uppercase italic">{task.title}</h4>
                                         <p className="text-[9px] text-gray-400 uppercase">Agent : {staff.find(s => s.id === task.assigned_to)?.full_name}</p>
                                     </div>
                                 </div>
-                                
-                                <div className="flex items-center gap-3 w-full md:w-auto justify-end">
-                                    <p className="text-[9px] font-black text-emerald-500 uppercase mr-4">Délai : {task.deadline}</p>
-                                    
-                                    {/* ACTIONS MANAGER */}
-                                    {isManager && (
-                                        <>
-                                            {task.status === 'En cours' && (
-                                                <button onClick={() => handleUpdateStatus(task.id, 'Terminée')} className="p-2 bg-emerald-500/10 text-emerald-500 rounded-lg hover:bg-emerald-500 hover:text-black transition-all"><CheckCircle size={18} /></button>
-                                            )}
-                                            <button onClick={() => handleDeleteTask(task.id)} className="p-2 bg-red-500/10 text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition-all"><Trash2 size={18} /></button>
-                                        </>
-                                    )}
-
-                                    {/* ACTION MEMBRE (SIMULÉE) */}
-                                    {!isManager && task.status === 'En cours' && (
-                                        <button onClick={() => handleUpdateStatus(task.id, 'Terminée')} className="flex items-center gap-2 px-3 py-1.5 bg-emerald-500 text-black font-black text-[9px] uppercase rounded-lg">
-                                            <FileText size={14} /> Terminer
-                                        </button>
-                                    )}
-                                </div>
+                                {task.status === 'En cours' && (
+                                    <button onClick={() => handleUpdateStatus(task.id, 'Terminée')} className="px-4 py-2 bg-emerald-500 text-black font-black text-[9px] uppercase rounded-lg hover:scale-105 transition-all">
+                                        Terminer Mission
+                                    </button>
+                                )}
                             </div>
                         ))}
                     </div>
@@ -286,52 +189,18 @@ export default function RHPage() {
           )}
         </div>
 
-        {/* MODAL MISSION (CALENDRIER RESPONSIVE) */}
-        {showTaskModal && (
-            <div className="fixed inset-0 z-[500] flex items-center justify-center bg-black/95 p-4 backdrop-blur-3xl">
-                <div className="glass-card w-full max-w-md p-6 border-t-4 border-t-emerald-500 animate-in zoom-in">
-                    <div className="flex justify-between items-center mb-6">
-                        <h2 className="text-xl font-black text-white uppercase italic">Déploiement Mission</h2>
-                        <button onClick={() => setShowTaskModal(false)} className="text-white/40"><X size={24} /></button>
-                    </div>
-
-                    {taskStep === 1 ? (
-                        <div className="space-y-4">
-                            <input type="text" className="w-full bg-white/5 border border-white/10 p-4 rounded-xl text-white font-bold" value={newTask.title} onChange={(e)=>setNewTask({...newTask, title: e.target.value})} placeholder="TITRE DE LA MISSION"/>
-                            <select className="w-full bg-white/5 border border-white/10 p-4 rounded-xl text-white font-bold" onChange={(e)=>setNewTask({...newTask, assigned_to: e.target.value})} value={newTask.assigned_to}>
-                                <option value="" className="bg-black text-gray-500">SÉLECTIONNER UN COLLABORATEUR</option>
-                                {staff.filter(m => m.department === selectedDept).map(m => (
-                                    <option key={m.id} value={m.id} className="bg-black">{m.full_name}</option>
-                                ))}
-                            </select>
-                            <button onClick={() => (newTask.title && newTask.assigned_to) ? setTaskStep(2) : triggerAlert("CHAMPS INCOMPLETS")} className="w-full py-4 bg-emerald-500 text-black font-black uppercase rounded-xl flex items-center justify-center gap-2">Continuer <ArrowRight size={18} /></button>
-                        </div>
-                    ) : (
-                        <div className="space-y-4">
-                            <TacticalCalendar onSelect={(date) => setNewTask({...newTask, deadline: date})} />
-                            <div className="flex gap-2">
-                                <button onClick={() => setTaskStep(1)} className="flex-1 py-3 bg-white/5 text-white font-black uppercase text-[10px] rounded-xl border border-white/10">Retour</button>
-                                <button onClick={handleDeployTask} disabled={isDeploying || !newTask.deadline} className="flex-[2] py-3 bg-emerald-500 text-black font-black uppercase text-xs rounded-xl">
-                                    {isDeploying ? <Loader2 className="animate-spin" /> : "Confirmer le déploiement"}
-                                </button>
-                            </div>
-                        </div>
-                    )}
-                </div>
-            </div>
-        )}
-
-        {/* MODAL PIN RESPONSIVE */}
+        {/* MODAL PIN WAKANDA DOUBLE ACCÈS */}
         {showPinModal && (
-            <div className="fixed inset-0 z-[600] flex items-center justify-center bg-black/95 backdrop-blur-2xl p-4">
-                <div className="glass-card p-6 md:p-10 border border-emerald-500/20 flex flex-col items-center gap-6 w-full max-w-sm animate-in zoom-in">
-                    <Lock className="text-emerald-500" size={32} />
+            <div className="fixed inset-0 z-[600] flex items-center justify-center bg-black/95 backdrop-blur-2xl">
+                <div className="glass-card p-10 border border-emerald-500/20 flex flex-col items-center gap-6 animate-in zoom-in">
+                    <Lock className="text-emerald-500" size={40} />
                     <div className="text-center">
-                        <h2 className="text-lg font-black text-white uppercase italic">Secteur {tempDept?.name}</h2>
-                        <p className="text-[8px] text-emerald-500 font-bold uppercase tracking-widest mt-1">Authentification Requise</p>
+                        <h2 className="text-xl font-black text-white uppercase italic tracking-widest">Secteur {tempDept?.name}</h2>
+                        <p className="text-[10px] text-emerald-500 font-bold uppercase tracking-[0.3em] mt-2 italic font-black">ENTREZ LE WAKANDA CODE</p>
                     </div>
-                    <input type="password" maxLength={4} value={wakandaInput} onChange={(e) => setWakandaInput(e.target.value)} className="bg-white/5 border-b-2 border-emerald-500 w-32 py-2 text-center text-2xl font-black text-white outline-none" autoFocus onKeyDown={(e) => e.key === 'Enter' && handlePinSubmit()} />
-                    <button onClick={handlePinSubmit} className="w-full py-3 bg-emerald-500 text-black text-[10px] font-black uppercase rounded-xl">Accéder</button>
+                    <input type="password" maxLength={4} value={wakandaInput} onChange={(e) => setWakandaInput(e.target.value)} className="bg-white/5 border-b-2 border-emerald-500 w-40 py-4 text-center text-3xl font-black tracking-[0.5em] outline-none text-white" autoFocus onKeyDown={(e) => e.key === 'Enter' && handlePinSubmit()} />
+                    <p className="text-[8px] text-gray-500 uppercase font-bold italic">Identification Manager ou Membre requise</p>
+                    <button onClick={handlePinSubmit} className="w-full py-4 bg-emerald-500 text-black text-[10px] font-black uppercase rounded-xl">VÉRIFIER L'AUTORISATION</button>
                 </div>
             </div>
         )}
