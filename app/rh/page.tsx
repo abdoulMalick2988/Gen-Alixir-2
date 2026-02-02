@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
 import Sidebar from "../../components/Sidebar";
-import { Users, Crosshair, ChevronLeft, Mail, Play, CheckCircle, Plus, Zap, Loader2, Star } from "lucide-react";
+import { Users, Crosshair, ChevronLeft, Mail, Play, CheckCircle, Plus, Zap, Loader2 } from "lucide-react";
 
 const DEPARTMENTS = [
   "Management", "Marketing", "Ventes", "Finances", 
@@ -20,8 +20,11 @@ export default function RHPage() {
       try {
         const { data } = await supabase.from('staff').select('*');
         if (data) setStaff(data);
-      } catch (err) { console.error(err); }
-      finally { setTimeout(() => setLoading(false), 800); }
+      } catch (err) { 
+        console.error(err); 
+      } finally { 
+        setTimeout(() => setLoading(false), 800); 
+      }
     }
     fetchData();
   }, []);
@@ -42,9 +45,7 @@ export default function RHPage() {
         
         {/* HEADER */}
         <div className="flex flex-col md:flex-row justify-between items-center gap-4 shrink-0">
-          <div className="text-center md:text-left">
-            <h1 className="text-2xl font-black italic tracking-tighter uppercase">HUMAN <span className="text-emerald-500">ENGINE</span></h1>
-          </div>
+          <h1 className="text-2xl font-black italic tracking-tighter uppercase">HUMAN <span className="text-emerald-500">ENGINE</span></h1>
 
           <div className="glass-card p-1 flex bg-white/5 border border-white/10 rounded-2xl w-full md:w-80 shadow-2xl">
             <button onClick={() => setView('members')} className={`flex-1 flex items-center justify-center space-x-2 py-2 rounded-xl transition-all ${view === 'members' ? 'bg-emerald-500 text-white' : 'text-gray-400'}`}>
@@ -56,12 +57,11 @@ export default function RHPage() {
           </div>
         </div>
 
-        {/* ZONE DE CONTENU */}
-        <div className="flex-1 overflow-y-auto pr-2">
+        {/* CONTENU */}
+        <div className="flex-1 overflow-y-auto pr-2 custom-scroll">
           {view === 'members' ? (
             <>
               {!selectedDept ? (
-                /* VUE DES DÉPARTEMENTS (ORBITES) */
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                   {DEPARTMENTS.map((dept) => (
                     <button 
@@ -77,29 +77,28 @@ export default function RHPage() {
                   ))}
                 </div>
               ) : (
-                /* VUE SYSTÈME SOLAIRE DU DÉPARTEMENT */
-                <div className="h-full flex flex-col">
+                <div className="h-full flex flex-col min-h-[600px]">
                   <button onClick={() => setSelectedDept(null)} className="flex items-center text-xs font-bold text-emerald-500 mb-8 hover:underline">
-                    <ChevronLeft size={16} /> Retour aux départements
+                    <ChevronLeft size={16} /> Retour
                   </button>
                   
                   <div className="flex-1 relative flex items-center justify-center">
-                    {/* CENTRE : CHEF DE DEPARTEMENT (SOLEIL DORE) */}
-                    {staff.filter(m => m.department === selectedDept && m.role.toLowerCase().includes('chef' || 'ceo')).map((chef) => (
+                    {/* CENTRE : CHEF (SOLEIL) */}
+                    {staff.filter(m => m.department === selectedDept && (m.role.toLowerCase().includes('chef') || m.role.toLowerCase().includes('ceo'))).map((chef) => (
                       <div key={chef.id} className="relative z-10 flex flex-col items-center">
-                        <div className="w-32 h-32 rounded-full bg-black border-4 border-gold shadow-[0_0_30px_rgba(241,196,15,0.4)] flex items-center justify-center mb-4">
-                          <span className="text-3xl font-black text-gold italic">{chef.full_name.charAt(0)}</span>
+                        <div className="w-24 h-24 md:w-32 md:h-32 rounded-full bg-black border-4 border-gold shadow-[0_0_30px_rgba(241,196,15,0.4)] flex items-center justify-center mb-4">
+                          <span className="text-3xl font-black text-gold italic">{chef.full_name?.charAt(0)}</span>
                         </div>
                         <p className="text-gold font-black uppercase tracking-tighter text-sm">{chef.full_name}</p>
-                        <p className="text-[9px] text-white/50 uppercase font-bold tracking-widest">Chef d'Orbite</p>
+                        <p className="text-[9px] text-white/50 uppercase font-bold tracking-widest">Chef de Département</p>
                       </div>
                     ))}
 
-                    {/* SATELLITES : COLLABORATEURS (CERCLES VERTS) */}
+                    {/* SATELLITES (COLLABORATEURS) */}
                     <div className="absolute inset-0 flex items-center justify-center">
-                       {staff.filter(m => m.department === selectedDept && !m.role.toLowerCase().includes('chef' || 'ceo')).map((member, index, array) => {
+                       {staff.filter(m => m.department === selectedDept && !m.role.toLowerCase().includes('chef') && !m.role.toLowerCase().includes('ceo')).map((member, index, array) => {
                          const angle = (index / array.length) * (2 * Math.PI);
-                         const radius = 220; // Distance du centre
+                         const radius = 180; 
                          const x = Math.cos(angle) * radius;
                          const y = Math.sin(angle) * radius;
                          
@@ -109,10 +108,10 @@ export default function RHPage() {
                              style={{ transform: `translate(${x}px, ${y}px)` }}
                              className="absolute flex flex-col items-center group cursor-pointer"
                            >
-                             <div className="w-16 h-16 rounded-full bg-black border-2 border-emerald-500 shadow-[0_0_15px_rgba(46,204,113,0.3)] flex items-center justify-center hover:scale-110 transition-transform">
-                               <span className="text-sm font-bold text-emerald-500">{member.full_name.charAt(0)}</span>
+                             <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-black border-2 border-emerald-500 shadow-[0_0_15px_rgba(46,204,113,0.3)] flex items-center justify-center hover:scale-110 transition-transform">
+                               <span className="text-sm font-bold text-emerald-500">{member.full_name?.charAt(0)}</span>
                              </div>
-                             <div className="opacity-0 group-hover:opacity-100 transition-opacity absolute -bottom-10 bg-black/80 p-2 rounded border border-emerald-500/30 w-32 text-center pointer-events-none">
+                             <div className="hidden group-hover:block absolute -bottom-10 bg-black/90 p-2 rounded border border-emerald-500/30 w-32 text-center z-50">
                                <p className="text-[8px] font-black uppercase">{member.full_name}</p>
                                <p className="text-[7px] text-emerald-400 uppercase">{member.role}</p>
                              </div>
@@ -120,14 +119,14 @@ export default function RHPage() {
                          );
                        })}
                     </div>
-                    {/* Orbite visuelle (Cercle en pointillés) */}
-                    <div className="absolute w-[440px] h-[440px] border border-white/5 rounded-full border-dashed animate-[spin_60s_linear_infinite]"></div>
+                    
+                    {/* Orbite visuelle */}
+                    <div className="absolute w-[360px] h-[360px] border border-white/5 rounded-full border-dashed animate-[spin_40s_linear_infinite]"></div>
                   </div>
                 </div>
               )}
             </>
           ) : (
-            /* VUE MISSIONS (Identique à avant) */
             <div className="space-y-4 pb-20">
                <div className="glass-card p-6 flex flex-col md:flex-row justify-between items-center gap-4 border-l-4 border-l-gold bg-gold/5">
                   <h3 className="text-xl font-black text-gold italic uppercase leading-none">Missions Stratégiques</h3>
@@ -154,7 +153,7 @@ export default function RHPage() {
            <CheckCircle size={20} className="text-black" />
            <div className="pr-2 text-black text-left">
               <p className="text-[8px] font-black uppercase leading-none opacity-60">IA Scanner</p>
-              <p className="text-[10px] font-black uppercase italic">Rapport Final</p>
+              <p className="text-[10px] font-black uppercase italic tracking-tighter">Générer Rapport</p>
            </div>
         </button>
       </main>
