@@ -108,7 +108,7 @@ export default function RHPage() {
           <h1 className="text-2xl font-black italic uppercase">HUMAN <span className="text-emerald-500">ENGINE</span></h1>
           <div className="glass-card p-1 flex bg-white/5 border border-white/10 rounded-2xl w-80">
             <button onClick={() => setView('members')} className={`flex-1 py-2 rounded-xl text-[10px] font-black uppercase transition-all ${view === 'members' ? 'bg-emerald-500 text-white' : 'text-gray-400'}`}>Collaborateurs</button>
-            <button onClick={() => setView('tasks')} className={`flex-1 py-2 rounded-xl text-[10px] font-black uppercase transition-all ${view === 'tasks' ? 'bg-gold text-black' : 'text-gray-400'}`}>Missions</button>
+            <button onClick={() => setView('tasks')} className={`flex-1 py-2 rounded-xl text-[10px] font-black uppercase transition-all ${view === 'tasks' ? 'bg-gold !text-black' : 'text-gray-400'}`}>Missions</button>
           </div>
         </div>
 
@@ -161,12 +161,13 @@ export default function RHPage() {
                                 <button key={status} onClick={() => setFilterStatus(status)} className={`px-4 py-2 rounded-lg text-[9px] font-black uppercase ${filterStatus === status ? 'bg-white/10 text-white border border-white/20' : 'text-gray-500'}`}>{status}</button>
                             ))}
                         </div>
-                        {/* BOUTON AJOUTER MISSION - HAUTE VISIBILITÉ */}
+                        {/* BOUTON AJOUTER MISSION - TEXTE NOIR FORCE */}
                         <button 
                           onClick={() => setShowTaskModal(true)} 
-                          className="bg-gold text-black border-2 border-white/20 px-8 py-3 rounded-xl font-black text-[11px] uppercase flex items-center gap-2 shadow-[0_0_20px_rgba(241,196,15,0.3)] hover:scale-105 active:scale-95 transition-all"
+                          className="bg-gold !text-black px-8 py-3 rounded-xl font-black text-[11px] uppercase flex items-center gap-2 shadow-[0_0_20px_rgba(241,196,15,0.4)] hover:scale-105 active:scale-95 transition-all border border-black/10"
                         >
-                            <Plus size={16} strokeWidth={3} /> Ajouter une Mission
+                            <Plus size={16} strokeWidth={4} className="!text-black" /> 
+                            <span className="!text-black">Ajouter une Mission</span>
                         </button>
                     </div>
 
@@ -218,40 +219,38 @@ export default function RHPage() {
                             </select>
                         </div>
                         <div>
-                            <label className="text-[9px] font-black text-gray-500 uppercase">Date Limite</label>
-                            <input 
-                              type="date" 
-                              className="w-full bg-white/5 border border-white/10 p-4 rounded-xl outline-none focus:border-gold text-white text-sm scheme-dark cursor-pointer" 
-                              onChange={(e)=>setNewTask({...newTask, deadline: e.target.value})}
-                              onClick={(e) => (e.target as any).showPicker?.()} 
-                            />
+                            <label className="text-[9px] font-black text-gray-500 uppercase">Date Limite d'Exécution</label>
+                            <div className="relative cursor-pointer">
+                                <input 
+                                  type="date" 
+                                  className="w-full bg-white/10 border border-white/20 p-4 rounded-xl outline-none focus:border-gold text-white text-sm scheme-dark cursor-pointer block" 
+                                  style={{ colorScheme: 'dark' }}
+                                  onChange={(e)=>setNewTask({...newTask, deadline: e.target.value})}
+                                />
+                            </div>
                         </div>
-                        <button onClick={handleDeployTask} disabled={isDeploying} className="w-full py-4 bg-gold text-black font-black uppercase text-xs rounded-xl shadow-lg flex items-center justify-center gap-2 hover:brightness-110 transition-all">
-                            {isDeploying ? <Loader2 className="animate-spin" /> : <><Play size={14} fill="black" /> Lancer l'Opération</>}
+                        <button onClick={handleDeployTask} disabled={isDeploying} className="w-full py-4 bg-gold !text-black font-black uppercase text-xs rounded-xl shadow-lg flex items-center justify-center gap-2 hover:brightness-110 transition-all">
+                            {isDeploying ? <Loader2 className="animate-spin" /> : <><Play size={14} className="!text-black" fill="black" /> <span className="!text-black">Lancer l'Opération</span></>}
                         </button>
                     </div>
                 </div>
             </div>
         )}
 
-        {/* MODAL PIN */}
+        {/* MODAL PIN - WAKANDA CODE RETABLI */}
         {showPinModal && (
             <div className="fixed inset-0 z-[400] flex items-center justify-center bg-black/95 backdrop-blur-2xl">
                 <div className="glass-card p-10 border border-gold/20 flex flex-col items-center gap-6 animate-in zoom-in">
                     <Lock className="text-gold" size={40} />
-                    <h2 className="text-xl font-black text-white uppercase italic tracking-widest">Secteur {tempDept?.name}</h2>
-                    <input type="password" maxLength={4} value={wakandaInput} onChange={(e) => setWakandaInput(e.target.value)} className="bg-white/5 border-b-2 border-gold w-40 py-4 text-center text-3xl font-black tracking-[0.5em] outline-none" autoFocus onKeyDown={(e) => e.key === 'Enter' && handlePinSubmit()} />
-                    <button onClick={handlePinSubmit} className="w-full py-3 bg-gold text-black text-[10px] font-black uppercase rounded-lg">Accéder</button>
+                    <div className="text-center">
+                        <h2 className="text-xl font-black text-white uppercase italic tracking-widest">Secteur {tempDept?.name}</h2>
+                        <p className="text-[10px] text-gold font-bold uppercase tracking-[0.3em] mt-2">Entrez le WAKANDA Code</p>
+                    </div>
+                    <input type="password" maxLength={4} value={wakandaInput} onChange={(e) => setWakandaInput(e.target.value)} className="bg-white/5 border-b-2 border-gold w-40 py-4 text-center text-3xl font-black tracking-[0.5em] outline-none text-white" autoFocus onKeyDown={(e) => e.key === 'Enter' && handlePinSubmit()} />
+                    <button onClick={handlePinSubmit} className="w-full py-3 bg-gold !text-black text-[10px] font-black uppercase rounded-lg font-bold">Vérifier l'Accès</button>
                 </div>
             </div>
         )}
-
-        <button className="fixed bottom-6 right-6 bg-gradient-to-br from-emerald-500 to-gold p-4 rounded-2xl shadow-2xl flex items-center space-x-3 z-50">
-           <CheckCircle size={20} className="text-black" />
-           <div className="text-black text-left">
-              <p className="text-[10px] font-black uppercase italic tracking-tighter">Générer Rapport PDF</p>
-           </div>
-        </button>
       </main>
     </div>
   );
