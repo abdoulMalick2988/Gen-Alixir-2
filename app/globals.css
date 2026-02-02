@@ -5,60 +5,48 @@
 :root {
   --emerald: #2ecc71;
   --gold: #f1c40f;
-  --glass-bg: rgba(255, 255, 255, 0.015); /* Transparence quasi totale */
-  --glass-border: rgba(255, 255, 255, 0.08);
 }
 
 body {
-  /* Simulation du fond de l'image : Labo technologique sombre avec reflets */
-  background: 
-    radial-gradient(circle at 50% -20%, rgba(241, 196, 15, 0.08) 0%, transparent 50%),
-    radial-gradient(circle at 0% 0%, rgba(46, 204, 113, 0.05) 0%, transparent 30%),
-    radial-gradient(circle at 100% 100%, rgba(46, 204, 113, 0.05) 0%, transparent 30%),
-    linear-gradient(to bottom, #080d0b, #020202);
+  /* IMAGE DE FOND RÉELLE (Style Labo Futuriste) */
+  background-image: url('https://images.unsplash.com/photo-1518546305927-5a555bb7020d?q=80&w=2069&auto=format&fit=crop');
+  background-size: cover;
+  background-position: center;
   background-attachment: fixed;
+  background-repeat: no-repeat;
+  
   color: white;
   min-height: 100vh;
   font-family: 'Inter', sans-serif;
-  overflow-x: hidden;
 }
 
-/* L'EFFET VITRE DE LA TABLETTE */
+/* L'EFFET CRISTAL PUR (Plus transparent, moins flou) */
 .glass-card {
-  background: var(--glass-bg) !important;
-  backdrop-filter: blur(40px) saturate(180%); /* Flou très puissant pour l'effet vitre */
-  -webkit-backdrop-filter: blur(40px) saturate(180%);
-  border: 1px solid var(--glass-border);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
-  border-radius: 32px; /* Coins très arrondis comme sur l'image */
+  /* Fond presque invisible (2% de blanc) */
+  background: rgba(255, 255, 255, 0.02) !important;
+  
+  /* Flou léger pour garder la transparence (Cristal vs Givré) */
+  backdrop-filter: blur(12px); 
+  -webkit-backdrop-filter: blur(12px);
+  
+  /* Bordure brillante fine pour l'effet de coupe de verre */
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-top: 1px solid rgba(255, 255, 255, 0.3); /* Reflet haut */
+  border-left: 1px solid rgba(255, 255, 255, 0.3); /* Reflet gauche */
+  
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5); /* Ombre portée profonde */
+  border-radius: 24px;
 }
 
-/* LE HALO DORÉ AUTOUR DU DASHBOARD (L'effet "Cadre lumineux") */
+/* Le Halo Doré Lumineux */
 .gold-border-glow {
-  border: 1.5px solid rgba(241, 196, 15, 0.5);
+  border: 1px solid rgba(241, 196, 15, 0.6);
   box-shadow: 
-    0 0 20px rgba(241, 196, 15, 0.15),
-    inset 0 0 15px rgba(241, 196, 15, 0.05);
+    0 0 30px rgba(241, 196, 15, 0.2),
+    inset 0 0 20px rgba(241, 196, 15, 0.05);
 }
 
-/* PERSONNALISATION DES BARRES DE DÉFILEMENT (Invisible pour le look tablette) */
+/* Scrollbar invisible */
 ::-webkit-scrollbar {
-  width: 0px;
-}
-
-/* Animation subtile des lueurs de fond */
-@keyframes pulseGlow {
-  0% { opacity: 0.3; }
-  50% { opacity: 0.5; }
-  100% { opacity: 0.3; }
-}
-
-.bg-glow {
-  position: fixed;
-  width: 100vw;
-  height: 100vh;
-  background: radial-gradient(circle at center, rgba(46, 204, 113, 0.02) 0%, transparent 70%);
-  pointer-events: none;
-  z-index: -1;
-  animation: pulseGlow 8s infinite ease-in-out;
+  display: none;
 }
