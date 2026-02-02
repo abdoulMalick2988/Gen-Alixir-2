@@ -1,33 +1,36 @@
 "use client";
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 
 const data = [
-  { name: 'Karibu', value: 400 },
-  { name: 'Silver', value: 300 },
+  { name: 'Elite', value: 400 },
   { name: 'Gold', value: 300 },
-  { name: 'Platinum', value: 200 },
-  { name: 'Diamond', value: 100 },
+  { name: 'Silver', value: 300 },
+  { name: 'Karibu', value: 200 },
 ];
 
-const COLORS = ['#4ade80', '#2ecc71', '#f1c40f', '#eab308', '#ca8a04'];
+const COLORS = ['#f1c40f', '#2ecc71', '#bdc3c7', '#27ae60'];
 
 export default function LoyaltyChart() {
   return (
-    <div className="h-[300px] w-full">
+    <div className="w-full h-full min-h-[150px] flex items-center justify-center">
       <ResponsiveContainer width="100%" height="100%">
         <PieChart>
           <Pie
             data={data}
-            innerRadius={60}
-            outerRadius={80}
+            cx="50%"
+            cy="50%"
+            innerRadius="60%"  /* Crée le vide au centre */
+            outerRadius="85%"  /* Empêche de coller aux bords */
             paddingAngle={5}
             dataKey="value"
           >
             {data.map((entry, index) => (
-              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.COLORS.length]} stroke="rgba(0,0,0,0.2)" />
             ))}
           </Pie>
-          <Legend iconType="circle" wrapperStyle={{ fontSize: '12px', color: '#666' }} />
+          <Tooltip 
+             contentStyle={{ backgroundColor: 'rgba(0,0,0,0.8)', border: 'none', borderRadius: '8px', fontSize: '10px' }}
+          />
         </PieChart>
       </ResponsiveContainer>
     </div>
