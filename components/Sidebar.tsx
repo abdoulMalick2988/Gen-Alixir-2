@@ -6,6 +6,7 @@ const navItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/" },
   { icon: Users, label: "RH Interne", href: "/rh" },
   { icon: ShieldCheck, label: "Partenaires", href: "/partners" },
+  { icon: Contact2, label: "Clients", href: "/clients" },
   { icon: PieChart, label: "Mine d'Or Data", href: "/data" },
   { icon: Calendar, label: "Événements", href: "/events" },
   { icon: Settings, label: "Paramètres", href: "/settings" },
