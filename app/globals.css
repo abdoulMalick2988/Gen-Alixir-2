@@ -8,11 +8,14 @@
 }
 
 body {
-  /* IMAGE DE FOND RÉELLE (Style Labo Futuriste) */
-  background-image: url('https://images.unsplash.com/photo-1518546305927-5a555bb7020d?q=80&w=2069&auto=format&fit=crop');
+  /* IMAGE HD : Fluide Abstrait Émeraude sombre avec veines dorées */
+  background-image: 
+    linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.4)), /* Voile sombre pour lisibilité */
+    url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop');
+  
   background-size: cover;
   background-position: center;
-  background-attachment: fixed;
+  background-attachment: fixed; /* L'image reste fixe quand tu scrolles */
   background-repeat: no-repeat;
   
   color: white;
@@ -20,30 +23,33 @@ body {
   font-family: 'Inter', sans-serif;
 }
 
-/* L'EFFET CRISTAL PUR (Plus transparent, moins flou) */
+/* L'EFFET VERRE GIVRÉ (Le "Sweet Spot") */
 .glass-card {
-  /* Fond presque invisible (2% de blanc) */
-  background: rgba(255, 255, 255, 0.02) !important;
+  /* Fond très légèrement blanc (3%) pour matérialiser la vitre */
+  background: rgba(255, 255, 255, 0.03) !important;
   
-  /* Flou léger pour garder la transparence (Cristal vs Givré) */
-  backdrop-filter: blur(12px); 
-  -webkit-backdrop-filter: blur(12px);
+  /* FLOU AJUSTÉ À 20PX comme demandé */
+  backdrop-filter: blur(20px) saturate(160%); 
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
   
-  /* Bordure brillante fine pour l'effet de coupe de verre */
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-top: 1px solid rgba(255, 255, 255, 0.3); /* Reflet haut */
-  border-left: 1px solid rgba(255, 255, 255, 0.3); /* Reflet gauche */
+  /* Bordures fines pour l'effet premium */
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  border-left: 1px solid rgba(255, 255, 255, 0.2);
   
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5); /* Ombre portée profonde */
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.6);
   border-radius: 24px;
 }
 
 /* Le Halo Doré Lumineux */
 .gold-border-glow {
-  border: 1px solid rgba(241, 196, 15, 0.6);
+  border: 1px solid rgba(241, 196, 15, 0.5);
   box-shadow: 
-    0 0 30px rgba(241, 196, 15, 0.2),
+    0 0 30px rgba(241, 196, 15, 0.15),
     inset 0 0 20px rgba(241, 196, 15, 0.05);
+  
+  /* Un fond un peu plus sombre pour le Header pour bien lire le titre */
+  background: rgba(0, 0, 0, 0.2) !important;
 }
 
 /* Scrollbar invisible */
