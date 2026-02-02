@@ -17,7 +17,7 @@ export default function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <div className="w-72 h-screen bg-transparent border-r border-white/10 p-6 flex flex-col backdrop-blur-xl">
+   <div className="w-72 h-screen border-r border-white/10 p-6 flex flex-col glass-card rounded-none border-y-0 border-l-0">
       <div className="mb-12">
         <h1 className="text-2xl font-bold bg-gradient-to-r from-emerald-400 to-gold text-transparent bg-clip-text">
           ECODREUM
