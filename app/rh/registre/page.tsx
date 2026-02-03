@@ -28,6 +28,10 @@ interface Employee {
   joinDate: string;
   nation: string;
   aura: number;
+  // Nouveaux champs
+  age?: number;
+  genre?: 'M' | 'F';
+  pco?: string; // Point de Contact Opérationnel
 }
 
 // --- DATA SOURCE ---
@@ -58,6 +62,7 @@ export default function RHRegistreGlobalUltraRobust() {
   const [newCollab, setNewCollab] = useState({
     name: '', dept: 'Direction', post: '', contract: 'CDI', salary: 0, joinDate: new Date().toISOString().split('T')[0]
   });
+  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const itemsPerPage = 8;
 
   // --- CALCULS STATISTIQUES ---
@@ -236,18 +241,29 @@ export default function RHRegistreGlobalUltraRobust() {
                 {paginatedData.map((emp) => (
                   <tr key={emp.id} className="group hover:bg-white/[0.02] transition-all">
                     <td className="p-8">
-                      <div className="flex items-center gap-5">
-                        <div className="w-14 h-14 rounded-2xl bg-zinc-800 border border-white/10 flex items-center justify-center font-black text-2xl text-zinc-500 group-hover:text-emerald-500 transition-colors">
-                          {emp.name.charAt(0)}
-                        </div>
-                        <div>
-                          <p className="font-black uppercase text-sm text-white group-hover:text-emerald-500">{emp.name}</p>
-                          <p className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest flex items-center gap-2">
-                            <Fingerprint size={10} /> {emp.id}
-                          </p>
-                        </div>
-                      </div>
-                    </td>
+  <div className="flex items-center gap-5">
+    {/* Avatar cliquable */}
+    <div 
+      onClick={() => setSelectedEmployee(emp)}
+      className="w-14 h-14 rounded-2xl bg-zinc-800 border border-white/10 flex items-center justify-center font-black text-2xl text-zinc-500 hover:text-emerald-500 hover:border-emerald-500/50 transition-all cursor-pointer relative group/avatar"
+    >
+      {emp.name.charAt(0)}
+      <div className="absolute inset-0 bg-emerald-500/5 opacity-0 group-hover/avatar:opacity-100 rounded-2xl transition-opacity" />
+    </div>
+    <div>
+      {/* Nom cliquable */}
+      <p 
+        onClick={() => setSelectedEmployee(emp)}
+        className="font-black uppercase text-sm text-white hover:text-emerald-500 cursor-pointer transition-colors"
+      >
+        {emp.name}
+      </p>
+      <p className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest flex items-center gap-2">
+        <Fingerprint size={10} /> {emp.id}
+      </p>
+    </div>
+  </div>
+</td>
                     <td className="p-8">
                       <p className="text-[10px] font-black uppercase text-zinc-300 italic">{emp.dept}</p>
                       <p className="text-[9px] font-bold text-zinc-600 uppercase">{emp.post}</p>
