@@ -54,6 +54,10 @@ export default function RHRegistreGlobalUltraRobust() {
   const [isExporting, setIsExporting] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [newCollab, setNewCollab] = useState({
+    name: '', dept: 'Direction', post: '', contract: 'CDI', salary: 0, joinDate: new Date().toISOString().split('T')[0]
+  });
   const itemsPerPage = 8;
 
   // --- CALCULS STATISTIQUES ---
@@ -95,6 +99,22 @@ export default function RHRegistreGlobalUltraRobust() {
       setEmployees(prev => prev.filter(emp => emp.id !== id));
       setActiveMenu(null);
     }
+  };
+
+  const handleAddCollab = (e: React.FormEvent) => {
+    e.preventDefault();
+    const id = `WKD-${Math.floor(100 + Math.random() * 900)}`; // Génère un ID type WKD-452
+    const collabToAdd: Employee = {
+      ...newCollab,
+      id,
+      status: 'Actif',
+      email: `${newCollab.name.toLowerCase().replace(' ', '.')}@wakanda.tech`,
+      nation: 'Sénégal', // Par défaut
+      aura: 100
+    };
+    setEmployees([collabToAdd, ...employees]);
+    setIsModalOpen(false);
+    setNewCollab({ name: '', dept: 'Direction', post: '', contract: 'CDI', salary: 0, joinDate: new Date().toISOString().split('T')[0] });
   };
 
   const handleExport = () => {
@@ -188,9 +208,12 @@ export default function RHRegistreGlobalUltraRobust() {
             <button onClick={handleExport} className="flex-1 bg-white/5 border border-white/10 rounded-3xl flex items-center justify-center gap-4 hover:bg-white/10 font-black uppercase tracking-widest text-[10px]">
               {isExporting ? <div className="w-4 h-4 border-2 border-emerald-500 border-t-transparent animate-spin rounded-full" /> : <Download size={18} />} Export CSV
             </button>
-            <button className="flex-1 bg-emerald-500 text-black rounded-3xl flex items-center justify-center gap-4 font-black uppercase tracking-widest text-[10px]">
-              <UserPlus size={20} /> Nouvel Associé
-            </button>
+            <button 
+  onClick={() => setIsModalOpen(true)}
+  className="flex-1 bg-emerald-500 text-black rounded-3xl flex items-center justify-center gap-4 hover:scale-105 transition-all font-black uppercase tracking-widest text-[10px] shadow-lg shadow-emerald-500/20"
+>
+  <UserPlus size={20} /> Nouveau Collaborateur
+</button>
           </div>
         </section>
 
@@ -315,6 +338,62 @@ export default function RHRegistreGlobalUltraRobust() {
         @keyframes subtle-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
         .animate-pulse { animation: subtle-pulse 2s infinite; }
       `}</style>
+      {/* MODAL NOUVEAU COLLABORATEUR */}
+        {isModalOpen && (
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[100] flex items-center justify-center p-4">
+            <div className="bg-[#0a0a0a] border border-white/10 w-full max-w-2xl rounded-[3rem] p-10 shadow-2xl animate-in zoom-in duration-300">
+              <h2 className="text-2xl font-black italic uppercase mb-8 text-emerald-500">Recruter un Collaborateur</h2>
+              
+              <form onSubmit={handleAddCollab} className="grid grid-cols-2 gap-6">
+                <div className="col-span-2">
+                  <label className="text-[10px] font-black uppercase text-zinc-500 mb-2 block">Nom Complet</label>
+                  <input required type="text" className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 outline-none focus:border-emerald-500" 
+                    onChange={e => setNewCollab({...newCollab, name: e.target.value})} />
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-black uppercase text-zinc-500 mb-2 block">Pôle / Département</label>
+                  <select className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 outline-none appearance-none"
+                    onChange={e => setNewCollab({...newCollab, dept: e.target.value})}>
+                    {payrollStats.depts.map(d => <option key={d} value={d}>{d}</option>)}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-black uppercase text-zinc-500 mb-2 block">Poste Occupé</label>
+                  <input required type="text" className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 outline-none focus:border-emerald-500"
+                    onChange={e => setNewCollab({...newCollab, post: e.target.value})} />
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-black uppercase text-zinc-500 mb-2 block">Salaire Mensuel (FCFA)</label>
+                  <input required type="number" className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 outline-none focus:border-emerald-500"
+                    onChange={e => setNewCollab({...newCollab, salary: Number(e.target.value)})} />
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-black uppercase text-zinc-500 mb-2 block">Type de Contrat</label>
+                  <select className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 outline-none appearance-none"
+                    onChange={e => setNewCollab({...newCollab, contract: e.target.value})}>
+                    <option value="CDI">CDI</option>
+                    <option value="CDD">CDD</option>
+                    <option value="Freelance">Freelance</option>
+                    <option value="Stage">Stage</option>
+                  </select>
+                </div>
+
+                <div className="col-span-2 flex gap-4 mt-6">
+                  <button type="submit" className="flex-1 bg-emerald-500 text-black py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-emerald-400">
+                    Valider l'embauche
+                  </button>
+                  <button type="button" onClick={() => setIsModalOpen(false)} className="px-8 bg-white/5 border border-white/10 rounded-2xl font-black uppercase text-[10px] tracking-widest">
+                    Annuler
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
     </div>
   );
 }
