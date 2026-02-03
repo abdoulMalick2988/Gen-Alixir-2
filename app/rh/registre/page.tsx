@@ -87,7 +87,7 @@ export default function RHRegistreGlobalUltraRobust() {
       const matchDept = activeDept === "Tous" || emp.dept === activeDept;
       return matchSearch && matchDept;
     });
-  }, [search, activeDept, employees]); // Ajoute 'employees' ici pour que le filtre se mette à jour quand tu supprimes quelqu'un
+  }, [search, activeDept, employees]);
 
   // Pagination
   const paginatedData = filteredData.slice(
@@ -110,7 +110,7 @@ export default function RHRegistreGlobalUltraRobust() {
   };
 
   const terminateContract = (id: string) => {
-    if(window.confirm("Confirmer la fin de contrat définitive pour cet associé ?")) {
+    if(typeof window !== 'undefined' && window.confirm("Confirmer la fin de contrat définitive pour cet associé ?")) {
       setEmployees(prev => prev.filter(emp => emp.id !== id));
       setActiveMenu(null);
     }
