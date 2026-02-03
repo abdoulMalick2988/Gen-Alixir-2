@@ -411,6 +411,76 @@ export default function RHRegistreGlobalUltraRobust() {
             </div>
           </div>
         )}
+      {/* MODAL FICHE TECHNIQUE COLLABORATEUR */}
+        {selectedEmployee && (
+          <div className="fixed inset-0 bg-black/90 backdrop-blur-xl z-[110] flex items-center justify-center p-4">
+            <div className="bg-[#050505] border border-white/10 w-full max-w-xl rounded-[3.5rem] overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-300">
+              
+              {/* Header de la Fiche */}
+              <div className="relative h-32 bg-gradient-to-r from-emerald-900/20 to-zinc-900 p-8 flex items-end">
+                <button 
+                  onClick={() => setSelectedEmployee(null)}
+                  className="absolute top-6 right-6 p-3 bg-black/50 hover:bg-white/10 rounded-full text-white transition-all"
+                >
+                  <ArrowLeft size={20} />
+                </button>
+                <div className="flex items-center gap-6 translate-y-12">
+                   <div className="w-24 h-24 rounded-[2rem] bg-zinc-800 border-4 border-[#050505] flex items-center justify-center text-4xl font-black text-emerald-500 shadow-2xl">
+                    {selectedEmployee.name.charAt(0)}
+                   </div>
+                   <div>
+                     <h2 className="text-2xl font-black uppercase italic tracking-tighter text-white">{selectedEmployee.name}</h2>
+                     <span className="px-3 py-1 bg-emerald-500 text-black text-[8px] font-black uppercase rounded-full tracking-[0.2em]">
+                       {selectedEmployee.id}
+                     </span>
+                   </div>
+                </div>
+              </div>
+
+              {/* Corps de la Fiche */}
+              <div className="p-10 pt-16 grid grid-cols-2 gap-8">
+                <div>
+                  <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-2">Poste Actuel</p>
+                  <p className="text-sm font-bold text-white uppercase italic">{selectedEmployee.post}</p>
+                </div>
+                <div>
+                  <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-2">PCO (Référent)</p>
+                  <p className="text-sm font-bold text-emerald-500 uppercase">{selectedEmployee.pco || "Non assigné"}</p>
+                </div>
+                
+                <div className="h-px bg-white/5 col-span-2" />
+
+                <div className="space-y-6">
+                  <div>
+                    <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-1">Date d'entrée</p>
+                    <p className="text-xs font-bold text-zinc-300">{selectedEmployee.joinDate}</p>
+                  </div>
+                  <div>
+                    <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-1">Âge & Genre</p>
+                    <p className="text-xs font-bold text-zinc-300">{selectedEmployee.age || "--"} ans • {selectedEmployee.genre || "--"}</p>
+                  </div>
+                </div>
+
+                <div className="space-y-6">
+                  <div>
+                    <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-1">Email Pro</p>
+                    <p className="text-xs font-bold text-zinc-300">{selectedEmployee.email}</p>
+                  </div>
+                  <div>
+                    <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-1">Contrat</p>
+                    <p className="text-xs font-black text-emerald-500 uppercase">{selectedEmployee.contract}</p>
+                  </div>
+                </div>
+
+                <div className="col-span-2 pt-6">
+                   <button className="w-full py-4 bg-white/5 border border-white/10 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-500 hover:text-black transition-all">
+                     Télécharger le Dossier Complet
+                   </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
     </div>
   );
 }
