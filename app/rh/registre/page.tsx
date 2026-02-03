@@ -100,6 +100,21 @@ export default function RHRegistreGlobalUltraRobust() {
     setIsExporting(true);
     setTimeout(() => setIsExporting(false), 2000);
   };
+  // Fonction pour changer le statut (Actif / Congé / Absent)
+  const updateStatus = (id: string, newStatus: Employee['status']) => {
+    setEmployees(prev => prev.map(emp => 
+      emp.id === id ? { ...emp, status: newStatus } : emp
+    ));
+    setActiveMenu(null); // Ferme le menu après action
+  };
+
+  // Fonction pour supprimer (Fin de contrat)
+  const terminateContract = (id: string) => {
+    if(confirm("Confirmer la fin de contrat définitive pour cet associé ?")) {
+      setEmployees(prev => prev.filter(emp => emp.id !== id));
+      setActiveMenu(null);
+    }
+  };
 
   return (
     <div className="flex h-screen bg-[#010101] text-white overflow-hidden font-sans">
