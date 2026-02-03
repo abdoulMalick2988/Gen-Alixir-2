@@ -110,11 +110,13 @@ export default function RHRegistreGlobalUltraRobust() {
   };
 
   const terminateContract = (id: string) => {
-    if(typeof window !== 'undefined' && window.confirm("Confirmer la fin de contrat définitive pour cet associé ?")) {
+    if (typeof window !== 'undefined' && window.confirm("Confirmer la fin de contrat définitive ?")) {
       setEmployees(prev => prev.filter(emp => emp.id !== id));
       setActiveMenu(null);
     }
   };
+
+  // --- RENDU FINAL ---
 
   return (
     <div className="flex h-screen bg-[#010101] text-white overflow-hidden font-sans">
