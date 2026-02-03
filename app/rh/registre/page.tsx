@@ -80,14 +80,14 @@ export default function RHRegistreGlobalUltraRobust() {
 
   // --- SYSTÈME DE FILTRAGE DYNAMIQUE ---
   const filteredData = useMemo(() => {
-    return employees.filter(emp => { ...
+    return employees.filter(emp => {
       const matchSearch = emp.name.toLowerCase().includes(search.toLowerCase()) || 
                           emp.id.toLowerCase().includes(search.toLowerCase()) ||
                           emp.post.toLowerCase().includes(search.toLowerCase());
       const matchDept = activeDept === "Tous" || emp.dept === activeDept;
       return matchSearch && matchDept;
     });
-  }, [search, activeDept]);
+  }, [search, activeDept, employees]); // Ajoute 'employees' ici pour que le filtre se mette à jour quand tu supprimes quelqu'un
 
   // Pagination
   const paginatedData = filteredData.slice(
