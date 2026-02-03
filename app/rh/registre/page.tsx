@@ -80,7 +80,7 @@ export default function RHRegistreGlobalUltraRobust() {
 
   // --- SYSTÈME DE FILTRAGE DYNAMIQUE ---
   const filteredData = useMemo(() => {
-    return EMPLOYEES_MASTER.filter(emp => {
+    return employees.filter(emp => { ...
       const matchSearch = emp.name.toLowerCase().includes(search.toLowerCase()) || 
                           emp.id.toLowerCase().includes(search.toLowerCase()) ||
                           emp.post.toLowerCase().includes(search.toLowerCase());
