@@ -185,7 +185,13 @@ export default function RHDashboardRobust() {
           >
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
-                <Pie data={stats.contrats} innerRadius={70} outerRadius={90} dataKey="v" paddingAngle={8}>
+                <Pie 
+                  data={stats.contrats} 
+                  innerRadius={60} 
+                  outerRadius={75} 
+                  dataKey="v" 
+                  paddingAngle={8}
+                >
                   {stats.contrats.map((entry, i) => <Cell key={i} fill={entry.color} stroke="none" />)}
                 </Pie>
                 <Tooltip />
@@ -292,11 +298,11 @@ export default function RHDashboardRobust() {
           >
             <div className="flex justify-around items-center h-full">
               {stats.social.map((s, i) => (
-                <div key={i} className="flex flex-col items-center group/item">
-                  <div className="w-32 h-32 rounded-full border-[6px] border-white/5 flex flex-col items-center justify-center relative transition-transform group-hover/item:scale-105">
+                <div key={i} className="flex flex-col items-center group/item scale-90">
+                  <div className="w-28 h-28 rounded-full border-[6px] border-white/5 flex flex-col items-center justify-center relative transition-transform group-hover/item:scale-105">
                     <span className="text-3xl font-black italic">{s.p}%</span>
                     <span className="text-[8px] text-zinc-500 font-bold uppercase tracking-tighter">{s.v} PERSONNES</span>
-                    <svg className="absolute inset-0 w-full h-full -rotate-90 pointer-events-none">
+                    <svg className="absolute inset-0 w-full h-full -rotate-90 pointer-events-none scale-95">
                       <circle 
                         cx="64" cy="64" r="60" 
                         fill="none" stroke={s.color} strokeWidth="6" 
