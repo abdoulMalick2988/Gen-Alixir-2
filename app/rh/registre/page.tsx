@@ -55,6 +55,9 @@ export default function RHRegistreGlobalUltraRobust() {
   const [isExporting, setIsExporting] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
+  // --- ÉTATS DE GESTION ---
+  const [employees, setEmployees] = useState<Employee[]>(EMPLOYEES_MASTER); // On passe la data en state
+  const [activeMenu, setActiveMenu] = useState<string | null>(null); // Pour le menu des 3 petits points
 
   // --- CALCULS DE LA MASSE SALARIALE (LOGIQUE MÉTIER) ---
   const payrollStats = useMemo(() => {
