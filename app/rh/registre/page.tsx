@@ -210,9 +210,10 @@ export default function RHRegistreGlobalUltraRobust() {
             </button>
             <button 
   onClick={() => setIsModalOpen(true)}
-  className="flex-1 bg-emerald-500 text-black rounded-3xl flex items-center justify-center gap-4 hover:scale-105 transition-all font-black uppercase tracking-widest text-[10px] shadow-lg shadow-emerald-500/20"
+  className="flex-1 bg-emerald-500 text-black rounded-3xl flex items-center justify-center gap-2 hover:scale-105 transition-all font-black uppercase tracking-widest text-[10px] shadow-lg shadow-emerald-500/20 px-4"
 >
-  <UserPlus size={20} /> Nouveau Collaborateur
+  <UserPlus size={18} className="shrink-0" /> 
+  <span>Nouveau Collaborateur</span>
 </button>
           </div>
         </section>
@@ -383,13 +384,13 @@ export default function RHRegistreGlobalUltraRobust() {
                 </div>
 
                 <div className="col-span-2 flex gap-4 mt-6">
-                  <button type="submit" className="flex-1 bg-emerald-500 text-black py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-emerald-400">
-                    Valider l'embauche
-                  </button>
-                  <button type="button" onClick={() => setIsModalOpen(false)} className="px-8 bg-white/5 border border-white/10 rounded-2xl font-black uppercase text-[10px] tracking-widest">
-                    Annuler
-                  </button>
-                </div>
+  <button type="submit" className="flex-[2] bg-emerald-500 text-black py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-emerald-400 transition-colors shadow-lg shadow-emerald-500/10">
+    Confirmer le recrutement
+  </button>
+  <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 bg-white/5 border border-white/10 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-white/10 transition-all">
+    Annuler
+  </button>
+</div>
               </form>
             </div>
           </div>
