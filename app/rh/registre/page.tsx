@@ -295,35 +295,62 @@ export default function RHRegistreGlobalUltraRobust() {
                       </div>
                     </td>
 
-                    {/* Colonne Statut */}
+                    {/* Colonne Statut : Devient cliquable pour changer rapidement */}
                     <td className="p-8">
-                      <div className={`flex items-center gap-3 px-4 py-2 rounded-xl border w-fit ${
-                        emp.status === 'Actif' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500' : 'bg-amber-500/10 border-amber-500/20 text-amber-500'
+                      <button 
+                        onClick={() => updateStatus(emp.id, emp.status === 'Actif' ? 'Congé' : 'Actif')}
+                        className={`flex items-center gap-3 px-4 py-2 rounded-xl border w-fit transition-all hover:scale-105 ${
+                        emp.status === 'Actif' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500' : 
+                        emp.status === 'Congé' ? 'bg-amber-500/10 border-amber-500/20 text-amber-500' :
+                        'bg-rose-500/10 border-rose-500/20 text-rose-500'
                       }`}>
                         <div className={`w-1.5 h-1.5 rounded-full bg-current ${emp.status === 'Actif' ? 'animate-pulse' : ''}`} />
                         <span className="font-black uppercase text-[9px] tracking-[0.2em]">{emp.status}</span>
-                      </div>
+                      </button>
                     </td>
 
-                    {/* Colonne Actions (Ref demande: Télécharger contrat) */}
-                    <td className="p-8">
-                      <div className="flex justify-end gap-3 opacity-0 group-hover:opacity-100 transition-all translate-x-4 group-hover:translate-x-0">
+                    {/* Colonne Actions : Menu Contextuel */}
+                    <td className="p-8 relative">
+                      <div className="flex justify-end gap-3">
                         <button className="flex items-center gap-3 px-5 py-3 bg-white/5 border border-white/10 rounded-2xl text-[9px] font-black uppercase tracking-widest hover:bg-emerald-500 hover:text-black transition-all">
                           <DownloadCloud size={16} /> Contrat.pdf
                         </button>
-                        <button className="p-3 bg-white/5 border border-white/10 rounded-2xl text-zinc-500 hover:text-white hover:bg-zinc-800 transition-all">
-                          <Eye size={18} />
-                        </button>
-                        <button className="p-3 bg-white/5 border border-white/10 rounded-2xl text-zinc-500 hover:text-rose-500 transition-all">
-                          <MoreVertical size={18} />
-                        </button>
+                        
+                        <div className="relative">
+                          <button 
+                            onClick={() => setActiveMenu(activeMenu === emp.id ? null : emp.id)}
+                            className={`p-3 border rounded-2xl transition-all ${activeMenu === emp.id ? 'bg-emerald-500 text-black border-emerald-500' : 'bg-white/5 border-white/10 text-zinc-500 hover:text-white'}`}
+                          >
+                            <MoreVertical size={18} />
+                          </button>
+
+                          {/* MENU CONTEXTUEL (Apparaît au clic) */}
+                          {activeMenu === emp.id && (
+                            <div className="absolute right-0 mt-2 w-56 bg-[#0a0a0a] border border-white/10 rounded-2xl shadow-2xl z-50 overflow-hidden p-2 animate-in fade-in slide-in-from-top-2">
+                              <button onClick={() => updateStatus(emp.id, 'Actif')} className="w-full flex items-center justify-between p-3 hover:bg-white/5 rounded-xl text-[10px] font-bold uppercase tracking-widest text-emerald-500">
+                                <span>Marquer Actif</span>
+                                <CheckCircle2 size={14} />
+                              </button>
+                              
+                              <button onClick={() => updateStatus(emp.id, 'Congé')} className="w-full flex items-center justify-between p-3 hover:bg-white/5 rounded-xl text-[10px] font-bold uppercase tracking-widest text-amber-500">
+                                <div className="flex flex-col items-start">
+                                  <span>En Congé</span>
+                                  <span className="text-[7px] text-zinc-500 italic lowercase">Raisons & délais</span>
+                                </div>
+                                <Calendar size={14} />
+                              </button>
+
+                              <div className="h-[1px] bg-white/5 my-2" />
+
+                              <button onClick={() => terminateContract(emp.id)} className="w-full flex items-center justify-between p-3 hover:bg-rose-500 hover:text-white rounded-xl text-[10px] font-bold uppercase tracking-widest text-rose-500 transition-colors">
+                                <span>Fin de contrat</span>
+                                <AlertCircle size={14} />
+                              </button>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
 
           {/* FOOTER ALPHA : PAGINATION & INFOS SYSTÈME */}
           <div className="p-10 border-t border-white/5 bg-black/40 flex flex-col md:flex-row justify-between items-center gap-6">
