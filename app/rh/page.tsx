@@ -289,6 +289,7 @@ export default function RHDashboardRobust() {
           </AnalyticsModule>
 
           {/* 7. CLIMAT SOCIAL */}
+          {/* 7. CLIMAT SOCIAL - RECALIBRÉ & CLIQUEABLE */}
           <AnalyticsModule 
             title="Indicateurs de Statut Social" 
             icon={Heart} 
@@ -296,26 +297,38 @@ export default function RHDashboardRobust() {
             span="col-span-12 lg:col-span-6"
             legend="Aperçu de la situation familiale globale. Ces données influencent les politiques de mutuelle et d'avantages sociaux."
           >
-            <div className="flex justify-around items-center h-full">
+            <div className="flex justify-around items-center h-full bg-transparent">
               {stats.social.map((s, i) => (
-                <div key={i} className="flex flex-col items-center group/item scale-90">
-                  <div className="w-28 h-28 rounded-full border-[6px] border-white/5 flex flex-col items-center justify-center relative transition-transform group-hover/item:scale-105">
-                    <span className="text-3xl font-black italic">{s.p}%</span>
-                    <span className="text-[8px] text-zinc-500 font-bold uppercase tracking-tighter">{s.v} PERSONNES</span>
-                    <svg className="absolute inset-0 w-full h-full -rotate-90 pointer-events-none">
+                <div key={i} className="flex flex-col items-center group/item transform scale-110">
+                  {/* Conteneur Cercle - Pas de background forcé ici */}
+                  <div className="w-28 h-28 rounded-full border-[6px] border-white/5 flex flex-col items-center justify-center relative transition-all duration-500 group-hover/item:border-white/10">
+                    
+                    {/* Chiffres Centraux */}
+                    <span className="text-3xl font-black italic text-white tracking-tighter z-10">{s.p}%</span>
+                    <span className="text-[7px] text-zinc-500 font-bold uppercase tracking-widest z-10">{s.v} PERS.</span>
+                    
+                    {/* L'ARC DE COULEUR RECALIBRÉ */}
+                    <svg className="absolute inset-0 w-full h-full -rotate-90 pointer-events-none overflow-visible">
                       <circle 
-                        cx="56" cy="56" r="52" 
+                        cx="56" 
+                        cy="56" 
+                        r="52" 
                         fill="none" 
                         stroke={s.color} 
-                        strokeWidth="6" 
+                        strokeWidth="7" 
                         strokeDasharray="326.7" 
                         strokeDashoffset={326.7 - (326.7 * s.p) / 100}
                         strokeLinecap="round"
-                        className="opacity-60"
+                        className="drop-shadow-[0_0_8px_rgba(0,0,0,0.5)] transition-all duration-1000"
+                        style={{ filter: `drop-shadow(0 0 3px ${s.color}40)` }}
                       />
                     </svg>
                   </div>
-                  <p className="mt-6 text-[11px] font-black uppercase tracking-[0.3em] text-zinc-400">{s.name}</p>
+                  
+                  {/* Libellé sous le cercle */}
+                  <p className="mt-6 text-[11px] font-black uppercase tracking-[0.4em] text-zinc-400 group-hover/item:text-white transition-colors">
+                    {s.name}
+                  </p>
                 </div>
               ))}
             </div>
