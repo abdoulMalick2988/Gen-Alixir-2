@@ -9,9 +9,8 @@ import {
   Star, History, Calendar, User, ArrowRightCircle,
   Zap, ChevronLeft, Search, Filter, MoreVertical,
   Target, ShieldCheck, Activity, Terminal, AlertCircle,
-  RefreshCcw, X 
+  RefreshCcw, X, Users 
 } from 'lucide-react';
-
 // --- DESIGN SYSTEM : WORKSPACE PRO ---
 const THEME = {
   emerald: "#10b981",
