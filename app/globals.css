@@ -20,7 +20,7 @@ body {
 }
 
 .glass-card {
-  /* Fond plus opaque (0.15) pour que les graphiques se détachent mieux */
+  /* Retour au fond original sombre et élégant */
   background: rgba(255, 255, 255, 0.15) !important; 
   backdrop-filter: blur(25px) saturate(180%);
   -webkit-backdrop-filter: blur(25px) saturate(180%);
@@ -43,15 +43,4 @@ body {
 /* Cache tout scroll éventuel pour garder l'aspect tablette */
 ::-webkit-scrollbar {
   display: none;
-}
-
-/* Astuce pour que tes composants existants s'adaptent sans changer leur code */
-@layer components {
-  .glass-card {
-    @apply bg-white border-zinc-200 text-zinc-900 shadow-sm transition-colors duration-500;
-  }
-}
-
-.dark .glass-card {
-  @apply bg-white/5 border-white/10 text-white shadow-none;
 }
