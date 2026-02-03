@@ -9,7 +9,7 @@ import { useAuth } from "../../components/WakandaGuard";
 /** * ANALYTIQUE ENGINE - CONFIGURATION HAUTE DENSITÉ */
 import { 
   PieChart, Pie, Cell, ResponsiveContainer, AreaChart, Area, 
-  Tooltip, ComposedChart, Bar, XAxis, YAxis, CartesianGrid, Legend 
+  Tooltip, ComposedChart, Bar, XAxis, YAxis, CartesianGrid 
 } from 'recharts';
 
 /** * ICONSET - NEON UI */
@@ -28,44 +28,52 @@ const THEME = {
 };
 const COLORS = [THEME.emerald, THEME.blue, "#8b5cf6", THEME.gold, "#f43f5e", "#ec4899"];
 
-export default function RHAnalyticsRobust() {
+export default function RHAnalyticsComplete() {
   const user = useAuth();
   const router = useRouter();
   const [employees, setEmployees] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // 1. RÉCUPÉRATION DES DONNÉES
+  // --- 1. JEU DE DONNÉES FICTIFS (POUR TESTER LES GRAPHES) ---
+  const mockEmployees = useMemo(() => [
+    { id: '1', full_name: 'Malick Thiam', department: 'TECHNIQUE', aura: 95, pco: '8.5' },
+    { id: '2', full_name: 'Awa Diop', department: 'MARKETING', aura: 82, pco: '6.2' },
+    { id: '3', full_name: 'Jean-Luc Moukin', department: 'TECHNIQUE', aura: 78, pco: '7.0' },
+    { id: '4', full_name: 'Fiona Uwimana', department: 'MANAGEMENT', aura: 88, pco: '9.0' },
+    { id: '5', full_name: 'Eric Giba', department: 'TECHNIQUE', aura: 65, pco: '5.5' },
+    { id: '6', full_name: 'David Rukubu', department: 'MARKETING', aura: 91, pco: '7.8' },
+    { id: '7', full_name: 'Sarah Kone', department: 'RH', aura: 85, pco: '6.5' },
+    { id: '8', full_name: 'Omar Sy', department: 'SÉCURITÉ', aura: 98, pco: '9.5' }
+  ], []);
+
   const loadAnalytics = useCallback(async () => {
     if (!user) return;
     setLoading(true);
     try {
-      let query = supabase.from('staff').select('*').order('full_name');
-      if (user.role !== 'ADMIN') query = query.eq('partner_id', user.id);
-      const { data, error } = await query;
-      if (error) throw error;
-      setEmployees(data || []);
+      // Injection des données de test pour le visuel
+      setEmployees(mockEmployees); 
+      
+      // Note: Pour repasser sur Supabase plus tard, il suffira de 
+      // décommenter la logique de fetch ici.
     } catch (e) { 
       console.error("Critical Sync Error:", e); 
     } finally { 
-      setTimeout(() => setLoading(false), 600); 
+      setTimeout(() => setLoading(false), 800); 
     }
-  }, [user]);
+  }, [user, mockEmployees]);
 
   useEffect(() => { loadAnalytics(); }, [loadAnalytics]);
 
-  // 2. MOTEUR DE CALCULS STATISTIQUES
+  // --- 2. MOTEUR DE CALCULS STATISTIQUES ---
   const stats = useMemo(() => {
-    // Calcul Masse Salariale
     const totalPayroll = employees.reduce((acc, curr) => acc + ((parseFloat(curr.pco) || 0) * 190), 0);
     
-    // Distribution par Département
     const depts = employees.reduce((acc: any, curr) => {
       const d = curr.department || 'GÉNÉRAL';
       acc[d] = (acc[d] || 0) + 1;
       return acc;
     }, {});
 
-    // Rentabilité par Pôle (Calcul basé sur l'Aura moyenne vs PCO)
     const profitabilityData = Object.keys(depts).map(deptName => {
       const members = employees.filter(e => e.department === deptName);
       const avgAura = members.reduce((sum, e) => sum + (e.aura || 0), 0) / members.length;
@@ -79,7 +87,7 @@ export default function RHAnalyticsRobust() {
 
     const pieData = Object.keys(depts).map(name => ({ name, value: depts[name] }));
     
-    const chartData = employees.slice(0, 8).map(e => ({ 
+    const chartData = employees.map(e => ({ 
       name: e.full_name?.split(' ')[0], 
       aura: e.aura, 
       pco: (parseFloat(e.pco)||0) * 10 
@@ -91,7 +99,7 @@ export default function RHAnalyticsRobust() {
   if (loading) return (
     <div className="h-screen bg-black flex flex-col items-center justify-center gap-4">
       <Cpu className="text-emerald-500 animate-spin" size={40} />
-      <p className="text-[10px] font-black text-emerald-500 uppercase tracking-[0.6em]">Calcul des vecteurs...</p>
+      <p className="text-[10px] font-black text-emerald-500 uppercase tracking-[0.6em]">Génération des Mockups...</p>
     </div>
   );
 
@@ -101,39 +109,36 @@ export default function RHAnalyticsRobust() {
 
       <main className="flex-1 p-8 overflow-y-auto custom-scroll relative">
         
-        {/* --- HEADER STRATÉGIQUE --- */}
+        {/* --- HEADER --- */}
         <header className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-6xl font-black italic uppercase tracking-tighter leading-none">
               RH <span className="text-emerald-500 text-shadow-glow">INTEL</span>
             </h1>
-            <div className="flex items-center gap-3 mt-2">
-               <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_#10b981]"></div>
-               <p className="text-[9px] font-bold text-zinc-500 uppercase tracking-[0.4em] italic">
-                 SYSTÈME DE SURVEILLANCE DES PERFORMANCES BIOMÉTRIQUES
-               </p>
-            </div>
+            <p className="text-[9px] font-bold text-zinc-500 uppercase tracking-[0.4em] mt-2 italic flex items-center gap-2">
+               <Fingerprint size={12} className="text-emerald-500" /> Mode Simulation Active (Mock Data)
+            </p>
           </div>
 
           <div className="flex gap-4">
-             <button onClick={loadAnalytics} className="p-4 bg-white/5 border border-white/10 rounded-2xl hover:bg-emerald-500/20 transition-all text-zinc-400 hover:text-white">
+             <button onClick={loadAnalytics} className="p-4 bg-white/5 border border-white/10 rounded-2xl hover:bg-emerald-500/20 transition-all text-zinc-400">
                 <RefreshCcw size={20} />
              </button>
              <button 
                 onClick={() => router.push('/rh/workspace')}
-                className="group flex items-center gap-4 px-10 py-5 bg-white text-black rounded-[2rem] font-black uppercase text-[11px] tracking-widest hover:bg-emerald-500 transition-all shadow-2xl active:scale-95"
+                className="group flex items-center gap-4 px-10 py-5 bg-white text-black rounded-[2rem] font-black uppercase text-[11px] tracking-widest hover:bg-emerald-500 transition-all shadow-2xl"
              >
-                <Layout size={18} /> ESPACE TRAVAIL <ArrowUpRight size={16} className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+                <Layout size={18} /> ESPACE TRAVAIL <ArrowUpRight size={16} />
              </button>
           </div>
         </header>
 
-        {/* --- KPI MINIATURES (GLASS) --- */}
+        {/* --- KPI GLASS --- */}
         <div className="grid grid-cols-3 gap-6 mb-8">
           {[
-            { label: "Vecteur Humain", val: employees.length, sub: "Agents actifs", icon: Users, color: THEME.blue },
-            { label: "Masse Salariale", val: `${(stats.totalPayroll/1000).toFixed(1)}k€`, sub: "Budget prévisionnel", icon: Wallet, color: THEME.emerald },
-            { label: "Secteurs", val: stats.deptCount, sub: "Unités opérationnelles", icon: Database, color: THEME.gold }
+            { label: "Vecteur Humain", val: employees.length, icon: Users, color: THEME.blue },
+            { label: "Masse Salariale", val: `${(stats.totalPayroll/1000).toFixed(1)}k€`, icon: Wallet, color: THEME.emerald },
+            { label: "Secteurs", val: stats.deptCount, icon: Database, color: THEME.gold }
           ].map((kpi, i) => (
             <div key={i} className="p-8 bg-white/[0.03] border border-white/10 backdrop-blur-xl rounded-[2.5rem] flex items-center justify-between group hover:border-white/20 transition-all">
                <div>
@@ -147,21 +152,20 @@ export default function RHAnalyticsRobust() {
           ))}
         </div>
 
-        {/* --- GRID ANALYTIQUE SUPÉRIEUR --- */}
+        {/* --- GRAPHIQUES SUPÉRIEURS --- */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-8">
           
-          {/* PERF AGENTS (GLASS) */}
-          <div className="lg:col-span-8 bg-white/[0.04] border border-white/10 backdrop-blur-3xl rounded-[3.5rem] p-10 shadow-2xl relative group">
+          <div className="lg:col-span-8 bg-white/[0.04] border border-white/10 backdrop-blur-3xl rounded-[3.5rem] p-10 shadow-2xl">
             <h3 className="text-[10px] font-black uppercase italic tracking-[0.4em] mb-10 flex items-center gap-3">
-              <Activity size={16} className="text-emerald-500" /> Rendement & PCO Individuel
+              <Activity size={16} className="text-emerald-500" /> Flux Performance Individuelle
             </h3>
-            <div className="h-[300px] w-full">
+            <div className="h-[280px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <ComposedChart data={stats.chartData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" vertical={false} />
                   <XAxis dataKey="name" stroke="#555" fontSize={9} fontWeight="bold" />
                   <YAxis hide />
-                  <Tooltip contentStyle={{backgroundColor: '#050505', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '20px', fontSize: '10px'}} />
+                  <Tooltip contentStyle={{backgroundColor: '#050505', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '20px'}} />
                   <Area type="monotone" dataKey="aura" fill={THEME.emerald} fillOpacity={0.1} stroke={THEME.emerald} strokeWidth={4} />
                   <Bar dataKey="pco" barSize={10} fill={THEME.blue} radius={[5, 5, 0, 0]} />
                 </ComposedChart>
@@ -169,20 +173,19 @@ export default function RHAnalyticsRobust() {
             </div>
           </div>
 
-          {/* DISTRIBUTION (GLASS) */}
           <div className="lg:col-span-4 bg-white/[0.04] border border-white/10 backdrop-blur-3xl rounded-[3.5rem] p-10 shadow-2xl flex flex-col items-center">
             <h3 className="text-[10px] font-black uppercase text-zinc-500 mb-8 tracking-[0.4em]">Densité Secteurs</h3>
-            <div className="h-[240px] w-full">
+            <div className="h-[220px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
-                  <Pie data={stats.pieData} innerRadius={65} outerRadius={95} paddingAngle={10} dataKey="value">
+                  <Pie data={stats.pieData} innerRadius={60} outerRadius={90} paddingAngle={10} dataKey="value">
                     {stats.pieData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} stroke="none" />)}
                   </Pie>
                   <Tooltip />
                 </PieChart>
               </ResponsiveContainer>
             </div>
-            <div className="flex flex-wrap justify-center gap-4 mt-6">
+            <div className="flex flex-wrap justify-center gap-3 mt-6">
               {stats.pieData.map((d, i) => (
                 <div key={i} className="flex items-center gap-2">
                   <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: COLORS[i % COLORS.length] }}></div>
@@ -193,17 +196,11 @@ export default function RHAnalyticsRobust() {
           </div>
         </div>
 
-        {/* --- NOUVEAU GRAPHIQUE : RENTABILITÉ PAR PÔLE --- */}
-        <div className="bg-white/[0.04] border border-white/10 backdrop-blur-3xl rounded-[3.5rem] p-10 shadow-2xl mb-12 relative overflow-hidden">
-            <div className="flex justify-between items-center mb-10">
-              <h3 className="text-[10px] font-black uppercase italic tracking-[0.4em] flex items-center gap-3">
-                <BarChart3 size={16} className="text-amber-500" /> Analyse Comparative de Rentabilité par Pôle
-              </h3>
-              <div className="flex gap-4">
-                 <div className="flex items-center gap-2 text-[8px] font-bold text-zinc-500 uppercase"><div className="w-3 h-3 bg-emerald-500 rounded-sm"></div> Perf %</div>
-                 <div className="flex items-center gap-2 text-[8px] font-bold text-zinc-500 uppercase"><div className="w-3 h-3 bg-blue-500 rounded-sm"></div> Charge (PCO)</div>
-              </div>
-            </div>
+        {/* --- GRAPH RENTABILITÉ PAR PÔLE (NEW) --- */}
+        <div className="bg-white/[0.04] border border-white/10 backdrop-blur-3xl rounded-[3.5rem] p-10 shadow-2xl mb-12">
+            <h3 className="text-[10px] font-black uppercase italic tracking-[0.4em] mb-10 flex items-center gap-3">
+              <BarChart3 size={16} className="text-amber-500" /> Analyse de Rentabilité par Pôle
+            </h3>
             <div className="h-[300px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={stats.profitabilityData}>
@@ -218,7 +215,7 @@ export default function RHAnalyticsRobust() {
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" vertical={false} />
-                  <XAxis dataKey="name" stroke="#555" fontSize={10} fontWeight="black" tickLine={false} axisLine={false} />
+                  <XAxis dataKey="name" stroke="#555" fontSize={10} fontWeight="black" />
                   <YAxis hide domain={[0, 100]} />
                   <Tooltip contentStyle={{backgroundColor: '#050505', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '20px'}} />
                   <Area type="stepAfter" dataKey="performance" stroke={THEME.emerald} strokeWidth={3} fillOpacity={1} fill="url(#colorPerf)" />
@@ -235,17 +232,15 @@ export default function RHAnalyticsRobust() {
                  <ShieldCheck size={28} />
               </div>
               <div>
-                 <h4 className="text-xl font-black italic uppercase tracking-tighter">Sécurité des Données Active</h4>
-                 <p className="text-[9px] font-medium text-zinc-500 uppercase tracking-widest mt-1">
-                   Registre complet disponible uniquement via le terminal sécurisé de l'Espace de Travail.
-                 </p>
+                 <h4 className="text-xl font-black italic uppercase tracking-tighter">Accès Sécurisé</h4>
+                 <p className="text-[9px] font-medium text-zinc-500 uppercase tracking-widest mt-1">Le registre complet des agents est réservé à l'Espace de Travail.</p>
               </div>
            </div>
            <button 
              onClick={() => router.push('/rh/workspace')}
              className="px-10 py-5 bg-white/5 border border-white/10 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] hover:bg-white hover:text-black transition-all"
            >
-             Accéder au registre détaillé
+             Voir les agents
            </button>
         </div>
 
