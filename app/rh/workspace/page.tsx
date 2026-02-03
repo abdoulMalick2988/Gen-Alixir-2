@@ -8,7 +8,8 @@ import {
   Layout, CheckCircle2, Clock, ListTodo, Briefcase, 
   Star, History, Calendar, User, ArrowRightCircle,
   Zap, ChevronLeft, Search, Filter, MoreVertical,
-  Target, ShieldCheck, Activity, Terminal, AlertCircle
+  Target, ShieldCheck, Activity, Terminal, AlertCircle,
+  RefreshCcw, X 
 } from 'lucide-react';
 
 // --- DESIGN SYSTEM : WORKSPACE PRO ---
