@@ -75,8 +75,13 @@ export default function RHDashboardRobust() {
           <Icon size={20} className={color} />
         </div>
         <div className="text-right">
-          <p className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em] mb-1">{label}</p>
-          <p className={`text-4xl font-black italic tracking-tighter ${color} leading-none`}>{value}</p>
+          {/* TITRE MIS EN VALEUR : text-zinc-300, tracking-widest et font-black */}
+          <p className="text-[10px] font-black text-zinc-200 uppercase tracking-[0.3em] mb-2 opacity-90 drop-shadow-[0_1px_3px_rgba(0,0,0,0.5)]">
+            {label}
+          </p>
+          <p className={`text-4xl font-black italic tracking-tighter ${color} leading-none`}>
+            {value}
+          </p>
         </div>
       </div>
       <div className="mt-4 pt-4 border-t border-white/10">
