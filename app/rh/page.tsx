@@ -302,14 +302,16 @@ export default function RHDashboardRobust() {
                   <div className="w-28 h-28 rounded-full border-[6px] border-white/5 flex flex-col items-center justify-center relative transition-transform group-hover/item:scale-105">
                     <span className="text-3xl font-black italic">{s.p}%</span>
                     <span className="text-[8px] text-zinc-500 font-bold uppercase tracking-tighter">{s.v} PERSONNES</span>
-                    <svg className="absolute inset-0 w-full h-full -rotate-90 pointer-events-none scale-95">
+                    <svg className="absolute inset-0 w-full h-full -rotate-90 pointer-events-none">
                       <circle 
-                        cx="64" cy="64" r="60" 
-                        fill="none" stroke={s.color} strokeWidth="6" 
-                        strokeDasharray="377" 
-                        strokeDashoffset={377 - (377 * s.p) / 100}
+                        cx="56" cy="56" r="52" 
+                        fill="none" 
+                        stroke={s.color} 
+                        strokeWidth="6" 
+                        strokeDasharray="326.7" 
+                        strokeDashoffset={326.7 - (326.7 * s.p) / 100}
                         strokeLinecap="round"
-                        className="opacity-40"
+                        className="opacity-60"
                       />
                     </svg>
                   </div>
