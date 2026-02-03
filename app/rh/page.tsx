@@ -67,19 +67,23 @@ export default function RHDashboardRobust() {
   // --- COMPOSANTS UI HAUTE PRÉCISION ---
   
   // KPI Top Line - Taille augmentée (Ref demande)
+  // KPI Top Line - Visibilité des légendes améliorée
   const HighVisibilityKPI = ({ label, value, sub, icon: Icon, color }: any) => (
-    <div className="bg-white/[0.02] border border-white/5 p-6 rounded-[2rem] hover:bg-white/[0.04] transition-all group flex flex-col justify-between h-full">
+    <div className="bg-white/[0.02] border border-white/5 p-6 rounded-[2rem] hover:bg-white/[0.04] transition-all group flex flex-col justify-between h-full shadow-inner shadow-white/[0.02]">
       <div className="flex justify-between items-start">
         <div className="p-3 bg-white/5 rounded-2xl group-hover:scale-110 transition-transform">
           <Icon size={20} className={color} />
         </div>
         <div className="text-right">
-          <p className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] mb-1">{label}</p>
+          <p className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em] mb-1">{label}</p>
           <p className={`text-4xl font-black italic tracking-tighter ${color} leading-none`}>{value}</p>
         </div>
       </div>
-      <div className="mt-4 pt-4 border-t border-white/5">
-        <p className="text-[8px] font-bold text-zinc-600 uppercase tracking-widest">{sub}</p>
+      <div className="mt-4 pt-4 border-t border-white/10">
+        {/* LA RECTIFICATION EST ICI : text-zinc-400 et font-black */}
+        <p className="text-[9px] font-black text-zinc-400 uppercase tracking-[0.2em] leading-tight">
+          {sub}
+        </p>
       </div>
     </div>
   );
