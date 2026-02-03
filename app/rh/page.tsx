@@ -189,7 +189,16 @@ export default function RHDashboardRobust() {
                   {stats.contrats.map((entry, i) => <Cell key={i} fill={entry.color} stroke="none" />)}
                 </Pie>
                 <Tooltip />
-                <Legend verticalAlign="bottom" height={36} wrapperStyle={{fontSize: '9px', textTransform: 'uppercase'}} />
+                <Legend 
+                  verticalAlign="bottom" 
+                  height={45} 
+                  wrapperStyle={{ 
+                    paddingTop: '25px', 
+                    fontSize: '10px', 
+                    textTransform: 'uppercase',
+                    fontWeight: '900'
+                  }} 
+                />
               </PieChart>
             </ResponsiveContainer>
           </AnalyticsModule>
