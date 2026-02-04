@@ -168,22 +168,27 @@ status: (item.status === 'En ligne' ? 'Actif' : 'En pause') as Employee['status'
     setIsExporting(true);
     setTimeout(() => setIsExporting(false), 2000);
   };
-// --- GESTION DU CHARGEMENT (À METTRE ICI, LIGNE 152 ENVIRON) ---
+// 1. Assure-toi que cette accolade ferme bien ta dernière fonction (ex: handleExport)
+  }; 
+
+  // 2. BLOC DE CHARGEMENT (Un seul return ici !)
   if (loading) {
     return (
       <div className="h-screen bg-[#010101] flex items-center justify-center">
         <div className="flex flex-col items-center gap-6">
           <div className="w-16 h-16 border-4 border-emerald-500/20 border-t-emerald-500 animate-spin rounded-full shadow-[0_0_20px_rgba(16,185,129,0.2)]"></div>
-          <div className="flex flex-col items-center">
-            <p className="text-[10px] font-black uppercase tracking-[0.5em] text-emerald-500 animate-pulse">Synchronisation Alpha-1</p>
-            <p className="text-[8px] font-bold text-zinc-600 uppercase mt-2 tracking-widest">Accès au serveur sécurisé...</p>
-          </div>
+          <p className="text-[10px] font-black uppercase tracking-[0.5em] text-emerald-500 animate-pulse">Synchronisation Alpha-1</p>
         </div>
       </div>
     );
   }
 
-  // Ton return principal commence juste après
+  // 3. TON RETURN PRINCIPAL (Vérifie qu'il n'y en a pas un deuxième en dessous !)
+  return (
+    <div className="flex h-screen bg-[#010101] text-white overflow-hidden font-sans">
+      <Sidebar />
+      <main className="flex-1 p-8 overflow-y-auto flex flex-col gap-6 custom-scroll">
+        {/* Le reste de ton code JSX... */}
   return (
     <div className="flex h-screen bg-[#010101] text-white overflow-hidden font-sans">
     ...
