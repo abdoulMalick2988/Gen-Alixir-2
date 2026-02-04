@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import Sidebar from "../../../components/Sidebar";
 import { supabase } from '@/lib/supabase';
 import { 
@@ -244,13 +245,13 @@ export default function RHRegistreGlobalUltraRobust() {
             <button onClick={handleExport} className="flex-1 bg-white/5 border border-white/10 rounded-3xl flex items-center justify-center gap-4 hover:bg-white/10 font-black uppercase tracking-widest text-[10px]">
               {isExporting ? <div className="w-4 h-4 border-2 border-emerald-500 border-t-transparent animate-spin rounded-full" /> : <Download size={18} />} Export CSV
             </button>
-            <button 
-              onClick={() => setIsModalOpen(true)}
-              className="flex-1 bg-emerald-500 text-black rounded-3xl flex items-center justify-center gap-2 hover:scale-105 transition-all font-black uppercase tracking-widest text-[10px] shadow-lg shadow-emerald-500/20 px-4"
-            >
-              <UserPlus size={18} className="shrink-0" /> 
-              <span>Nouveau Collaborateur</span>
-            </button>
+            <Link 
+  href="/rh/registre/contrat" 
+  className="flex-1 bg-emerald-500 text-black rounded-3xl flex items-center justify-center gap-2 hover:scale-105 transition-all font-black uppercase tracking-widest text-[10px] shadow-lg shadow-emerald-500/20 px-4 h-[60px]"
+>
+  <UserPlus size={18} className="shrink-0" /> 
+  <span>Nouveau Collaborateur</span>
+</Link>
           </div>
         </section>
 
