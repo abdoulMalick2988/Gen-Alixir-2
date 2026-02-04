@@ -329,16 +329,20 @@ new Paragraph({
               <AlertTriangle size={16} />
               <p className="text-[8px] font-black uppercase tracking-widest">Responsabilité</p>
             </div>
+            <div className="p-8 bg-zinc-900/50 border border-white/5 rounded-[2.5rem] opacity-60">
+            <div className="flex items-center gap-3 text-zinc-500 mb-4">
+              <AlertTriangle size={16} />
+              <p className="text-[8px] font-black uppercase tracking-widest">Responsabilité</p>
+            </div>
             <p className="text-[9px] text-zinc-500 leading-relaxed font-medium uppercase">
               Les modèles de contrats fournis sont conformes aux législations OHADA et locales. Toutefois, la responsabilité d'ECODREUM ne saurait être engagée en cas de litige suite à une modification manuelle des clauses générées.
             </p>
           </div>
-        </div>
-      </div>
-     {/* ESPACE DE SÉCURITÉ POUR LE SCROLL */}
+        </div> {/* Fin de la colonne droite */}
+
+        {/* ESPACE DE SÉCURITÉ POUR LE SCROLL */}
         <div className="h-40 w-full col-span-12"></div>
-      </div> {/* Fin du grid */}
-    </div> // Fin du container principal
-    </div>
+      </div> {/* Fin du grid (lg:grid-cols-12) */}
+    </div> // Fin du container principal (min-h-screen)
   );
 }
