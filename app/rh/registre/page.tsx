@@ -124,16 +124,6 @@ status: (item.status === 'En ligne' ? 'Actif' : 'En pause') as Employee['status'
 
   // --- FILTRAGE ---
   const filteredData = useMemo(() => {
-    if (loading) {
-    return (
-      <div className="h-screen bg-black flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-4 border-emerald-500 border-t-transparent animate-spin rounded-full"></div>
-          <p className="text-[10px] font-black uppercase tracking-[0.5em] text-emerald-500">Synchronisation Alpha-1...</p>
-        </div>
-      </div>
-    );
-  }
     return employees.filter(emp => {
       const matchSearch = emp.name.toLowerCase().includes(search.toLowerCase()) || 
                           emp.id.toLowerCase().includes(search.toLowerCase()) ||
@@ -178,7 +168,25 @@ status: (item.status === 'En ligne' ? 'Actif' : 'En pause') as Employee['status'
     setIsExporting(true);
     setTimeout(() => setIsExporting(false), 2000);
   };
+// --- GESTION DU CHARGEMENT (À METTRE ICI, LIGNE 152 ENVIRON) ---
+  if (loading) {
+    return (
+      <div className="h-screen bg-[#010101] flex items-center justify-center">
+        <div className="flex flex-col items-center gap-6">
+          <div className="w-16 h-16 border-4 border-emerald-500/20 border-t-emerald-500 animate-spin rounded-full shadow-[0_0_20px_rgba(16,185,129,0.2)]"></div>
+          <div className="flex flex-col items-center">
+            <p className="text-[10px] font-black uppercase tracking-[0.5em] text-emerald-500 animate-pulse">Synchronisation Alpha-1</p>
+            <p className="text-[8px] font-bold text-zinc-600 uppercase mt-2 tracking-widest">Accès au serveur sécurisé...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
+  // Ton return principal commence juste après
+  return (
+    <div className="flex h-screen bg-[#010101] text-white overflow-hidden font-sans">
+    ...
   return (
     <div className="flex h-screen bg-[#010101] text-white overflow-hidden font-sans">
       <Sidebar />
