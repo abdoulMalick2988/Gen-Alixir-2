@@ -165,7 +165,7 @@ new Paragraph({
   }
 
   return (
-    <div className="min-h-screen bg-[#020202] text-white font-sans p-4 md:p-8">
+   <div className="w-full min-h-screen bg-[#020202] text-white font-sans p-4 md:p-8 overflow-y-auto overflow-x-hidden">
       {/* HEADER DE LA PAGE */}
       <div className="max-w-6xl mx-auto flex justify-between items-center mb-12">
         <button onClick={() => router.back()} className="p-4 bg-white/5 rounded-2xl hover:bg-white/10 transition-all">
