@@ -1,14 +1,9 @@
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Sidebar from "../../../components/Sidebar";
-import { useEffect } from 'react'; // Ajoute useEffect ici
-import { supabase } from '@/lib/supabase'; // Ajoute cette ligne
-
-/** * ARCHITECTURE MINE D'OR - REGISTRE GLOBAL & MASSE SALARIALE v2.0
- * Focus : Robustesse TypeScript, Calculs Financiers, UX Dense
- */
+import { supabase } from '@/lib/supabase';
 import { 
   Search, Filter, DownloadCloud, ArrowLeft, 
   ShieldCheck, UserPlus, ChevronLeft, ChevronRight, 
@@ -30,70 +25,16 @@ interface Employee {
   joinDate: string;
   nation: string;
   aura: number;
-  // Nouveaux champs
   age?: number;
   genre?: 'M' | 'F';
-  pco?: string; // Point de Contact Opérationnel
+  pco?: string;
 }
-
-// --- DATA SOURCE ---
-const EMPLOYEES_MASTER: Employee[] = [
-  { id: 'WKD-001', name: 'Malick Thiam', dept: 'IT & Système', post: 'Lead Developer', contract: 'CDI', salary: 1850000, status: 'Actif', email: 'm.thiam@wakanda.tech', joinDate: '2021-05-12', nation: 'Sénégal', aura: 98 },
-  { id: 'WKD-002', name: 'Awa Diop', dept: 'Marketing', post: 'Brand Manager', contract: 'CDD', salary: 950000, status: 'Actif', email: 'a.diop@wakanda.tech', joinDate: '2024-02-01', nation: 'Mali', aura: 85 },
-  { id: 'WKD-003', name: 'Jean-Luc Gila', dept: 'Production', post: 'Technicien Sup.', contract: 'Stage', salary: 350000, status: 'En pause', email: 'jl.gila@wakanda.tech', joinDate: '2024-06-15', nation: 'France', aura: 72 },
-  { id: 'WKD-004', name: 'Sarah Kone', dept: 'Direction', post: 'Directrice RH', contract: 'CDI', salary: 3200000, status: 'Actif', email: 's.kone@wakanda.tech', joinDate: '2020-11-10', nation: 'Côte d\'Ivoire', aura: 94 },
-  { id: 'WKD-005', name: 'Omar Sy', dept: 'Logistique', post: 'Chef de quai', contract: 'CDI', salary: 1100000, status: 'Actif', email: 'o.sy@wakanda.tech', joinDate: '2012-01-05', nation: 'Sénégal', aura: 99 },
-  { id: 'WKD-006', name: 'Fatou Ndiaye', dept: 'IT & Système', post: 'DevOps Engineer', contract: 'CDI', salary: 1450000, status: 'Actif', email: 'f.ndiaye@wakanda.tech', joinDate: '2022-03-20', nation: 'Sénégal', aura: 91 },
-  { id: 'WKD-007', name: 'Moussa Fofana', dept: 'Finance', post: 'Contrôleur de Gestion', contract: 'CDI', salary: 1600000, status: 'Actif', email: 'm.fofana@wakanda.tech', joinDate: '2019-08-15', nation: 'Guinée', aura: 88 },
-  { id: 'WKD-008', name: 'Isabelle Traoré', dept: 'Marketing', post: 'Social Media Expert', contract: 'CDD', salary: 750000, status: 'Congé', email: 'i.traore@wakanda.tech', joinDate: '2023-12-01', nation: 'Burkina Faso', aura: 82 },
-  { id: 'WKD-009', name: 'Bakary Sow', dept: 'Production', post: 'Opérateur Machine', contract: 'CDI', salary: 850000, status: 'Actif', email: 'b.sow@wakanda.tech', joinDate: '2018-05-10', nation: 'Sénégal', aura: 95 },
-  { id: 'WKD-010', name: 'Elena Rossi', dept: 'Direction', post: 'Consultante Stratégie', contract: 'CDI', salary: 2800000, status: 'Actif', email: 'e.rossi@wakanda.tech', joinDate: '2021-01-10', nation: 'Italie', aura: 89 }
-];
 
 export default function RHRegistreGlobalUltraRobust() {
   const router = useRouter();
   
-  const [employees, setEmployees] = useState<Employee[]>([]); // On initialise à vide
-  const [loading, setLoading] = useState(true); // On active le chargement
-
-  // --- RÉCUPÉRATION SUPABASE ---
-  useEffect(() => {
-    const fetchStaff = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('staff')
-          .select('*');
-
-        if (error) throw error;
-
-        if (data) {
-          const formattedData = data.map((item: any) => ({
-            id: item.id_key ? `WKD-${item.id_key}` : item.id,
-            name: item.full_name || 'Inconnu',
-            dept: item.department || 'Non assigné',
-            post: item.role || 'Collaborateur',
-            contract: 'CDI', // Valeur par défaut
-            salary: item.salary || 0,
-            // Remplace ton ancienne ligne status par celle-ci :
-status: (item.status === 'En ligne' ? 'Actif' : 'En pause') as Employee['status'],
-            email: item.email || '',
-            joinDate: new Date(item.created_at).toISOString().split('T')[0],
-            nation: 'Sénégal',
-            aura: 100,
-            age: item.age,
-            genre: item.genre,
-            pco: item.pco
-          }));
-          setEmployees(formattedData);
-        }
-      } catch (err) {
-        console.error("Erreur:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchStaff();
-  }, []);
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [activeDept, setActiveDept] = useState("Tous");
   const [showPayroll, setShowPayroll] = useState(false);
@@ -106,6 +47,41 @@ status: (item.status === 'En ligne' ? 'Actif' : 'En pause') as Employee['status'
   });
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const itemsPerPage = 8;
+
+  // --- RÉCUPÉRATION SUPABASE ---
+  useEffect(() => {
+    const fetchStaff = async () => {
+      try {
+        const { data, error } = await supabase.from('staff').select('*');
+        if (error) throw error;
+
+        if (data) {
+          const formattedData: Employee[] = data.map((item: any) => ({
+            id: item.id_key ? `WKD-${item.id_key}` : String(item.id),
+            name: item.full_name || 'Inconnu',
+            dept: item.department || 'Non assigné',
+            post: item.role || 'Collaborateur',
+            contract: 'CDI',
+            salary: Number(item.salary) || 0,
+            status: (item.status === 'En ligne' ? 'Actif' : 'En pause') as Employee['status'],
+            email: item.email || '',
+            joinDate: item.created_at ? new Date(item.created_at).toISOString().split('T')[0] : '',
+            nation: 'Sénégal',
+            aura: 100,
+            age: item.age,
+            genre: item.genre as Employee['genre'],
+            pco: item.pco
+          }));
+          setEmployees(formattedData);
+        }
+      } catch (err) {
+        console.error("Erreur:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchStaff();
+  }, []);
 
   // --- CALCULS STATISTIQUES ---
   const payrollStats = useMemo(() => {
@@ -150,13 +126,13 @@ status: (item.status === 'En ligne' ? 'Actif' : 'En pause') as Employee['status'
 
   const handleAddCollab = (e: React.FormEvent) => {
     e.preventDefault();
-    const id = `WKD-${Math.floor(100 + Math.random() * 900)}`; // Génère un ID type WKD-452
+    const id = `WKD-${Math.floor(100 + Math.random() * 900)}`;
     const collabToAdd: Employee = {
       ...newCollab,
       id,
       status: 'Actif',
       email: `${newCollab.name.toLowerCase().replace(' ', '.')}@wakanda.tech`,
-      nation: 'Sénégal', // Par défaut
+      nation: 'Sénégal',
       aura: 100
     };
     setEmployees([collabToAdd, ...employees]);
@@ -168,10 +144,8 @@ status: (item.status === 'En ligne' ? 'Actif' : 'En pause') as Employee['status'
     setIsExporting(true);
     setTimeout(() => setIsExporting(false), 2000);
   };
-// 1. Assure-toi que cette accolade ferme bien ta dernière fonction (ex: handleExport)
-  }; 
 
-  // 2. BLOC DE CHARGEMENT (Un seul return ici !)
+  // --- BLOC DE CHARGEMENT ---
   if (loading) {
     return (
       <div className="h-screen bg-[#010101] flex items-center justify-center">
@@ -183,15 +157,7 @@ status: (item.status === 'En ligne' ? 'Actif' : 'En pause') as Employee['status'
     );
   }
 
-  // 3. TON RETURN PRINCIPAL (Vérifie qu'il n'y en a pas un deuxième en dessous !)
-  return (
-    <div className="flex h-screen bg-[#010101] text-white overflow-hidden font-sans">
-      <Sidebar />
-      <main className="flex-1 p-8 overflow-y-auto flex flex-col gap-6 custom-scroll">
-        {/* Le reste de ton code JSX... */}
-  return (
-    <div className="flex h-screen bg-[#010101] text-white overflow-hidden font-sans">
-    ...
+  // --- RETURN PRINCIPAL ---
   return (
     <div className="flex h-screen bg-[#010101] text-white overflow-hidden font-sans">
       <Sidebar />
@@ -279,12 +245,12 @@ status: (item.status === 'En ligne' ? 'Actif' : 'En pause') as Employee['status'
               {isExporting ? <div className="w-4 h-4 border-2 border-emerald-500 border-t-transparent animate-spin rounded-full" /> : <Download size={18} />} Export CSV
             </button>
             <button 
-  onClick={() => setIsModalOpen(true)}
-  className="flex-1 bg-emerald-500 text-black rounded-3xl flex items-center justify-center gap-2 hover:scale-105 transition-all font-black uppercase tracking-widest text-[10px] shadow-lg shadow-emerald-500/20 px-4"
->
-  <UserPlus size={18} className="shrink-0" /> 
-  <span>Nouveau Collaborateur</span>
-</button>
+              onClick={() => setIsModalOpen(true)}
+              className="flex-1 bg-emerald-500 text-black rounded-3xl flex items-center justify-center gap-2 hover:scale-105 transition-all font-black uppercase tracking-widest text-[10px] shadow-lg shadow-emerald-500/20 px-4"
+            >
+              <UserPlus size={18} className="shrink-0" /> 
+              <span>Nouveau Collaborateur</span>
+            </button>
           </div>
         </section>
 
@@ -306,29 +272,27 @@ status: (item.status === 'En ligne' ? 'Actif' : 'En pause') as Employee['status'
                 {paginatedData.map((emp) => (
                   <tr key={emp.id} className="group hover:bg-white/[0.02] transition-all">
                     <td className="p-8">
-  <div className="flex items-center gap-5">
-    {/* Avatar cliquable */}
-    <div 
-      onClick={() => setSelectedEmployee(emp)}
-      className="w-14 h-14 rounded-2xl bg-zinc-800 border border-white/10 flex items-center justify-center font-black text-2xl text-zinc-500 hover:text-emerald-500 hover:border-emerald-500/50 transition-all cursor-pointer relative group/avatar"
-    >
-      {emp.name.charAt(0)}
-      <div className="absolute inset-0 bg-emerald-500/5 opacity-0 group-hover/avatar:opacity-100 rounded-2xl transition-opacity" />
-    </div>
-    <div>
-      {/* Nom cliquable */}
-      <p 
-        onClick={() => setSelectedEmployee(emp)}
-        className="font-black uppercase text-sm text-white hover:text-emerald-500 cursor-pointer transition-colors"
-      >
-        {emp.name}
-      </p>
-      <p className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest flex items-center gap-2">
-        <Fingerprint size={10} /> {emp.id}
-      </p>
-    </div>
-  </div>
-</td>
+                      <div className="flex items-center gap-5">
+                        <div 
+                          onClick={() => setSelectedEmployee(emp)}
+                          className="w-14 h-14 rounded-2xl bg-zinc-800 border border-white/10 flex items-center justify-center font-black text-2xl text-zinc-500 hover:text-emerald-500 hover:border-emerald-500/50 transition-all cursor-pointer relative group/avatar"
+                        >
+                          {emp.name.charAt(0)}
+                          <div className="absolute inset-0 bg-emerald-500/5 opacity-0 group-hover/avatar:opacity-100 rounded-2xl transition-opacity" />
+                        </div>
+                        <div>
+                          <p 
+                            onClick={() => setSelectedEmployee(emp)}
+                            className="font-black uppercase text-sm text-white hover:text-emerald-500 cursor-pointer transition-colors"
+                          >
+                            {emp.name}
+                          </p>
+                          <p className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest flex items-center gap-2">
+                            <Fingerprint size={10} /> {emp.id}
+                          </p>
+                        </div>
+                      </div>
+                    </td>
                     <td className="p-8">
                       <p className="text-[10px] font-black uppercase text-zinc-300 italic">{emp.dept}</p>
                       <p className="text-[9px] font-bold text-zinc-600 uppercase">{emp.post}</p>
@@ -420,132 +384,117 @@ status: (item.status === 'En ligne' ? 'Actif' : 'En pause') as Employee['status'
         @keyframes subtle-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
         .animate-pulse { animation: subtle-pulse 2s infinite; }
       `}</style>
+
       {/* MODAL NOUVEAU COLLABORATEUR */}
-        {isModalOpen && (
-          <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[100] flex items-center justify-center p-4">
-            <div className="bg-[#0a0a0a] border border-white/10 w-full max-w-2xl rounded-[3rem] p-10 shadow-2xl animate-in zoom-in duration-300">
-              <h2 className="text-2xl font-black italic uppercase mb-8 text-emerald-500">Recruter un Collaborateur</h2>
-              
-              <form onSubmit={handleAddCollab} className="grid grid-cols-2 gap-6">
-                <div className="col-span-2">
-                  <label className="text-[10px] font-black uppercase text-zinc-500 mb-2 block">Nom Complet</label>
-                  <input required type="text" className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 outline-none focus:border-emerald-500" 
-                    onChange={e => setNewCollab({...newCollab, name: e.target.value})} />
-                </div>
-
-                <div>
-                  <label className="text-[10px] font-black uppercase text-zinc-500 mb-2 block">Pôle / Département</label>
-                  <select className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 outline-none appearance-none"
-                    onChange={e => setNewCollab({...newCollab, dept: e.target.value})}>
-                    {payrollStats.depts.map(d => <option key={d} value={d}>{d}</option>)}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="text-[10px] font-black uppercase text-zinc-500 mb-2 block">Poste Occupé</label>
-                  <input required type="text" className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 outline-none focus:border-emerald-500"
-                    onChange={e => setNewCollab({...newCollab, post: e.target.value})} />
-                </div>
-
-                <div>
-                  <label className="text-[10px] font-black uppercase text-zinc-500 mb-2 block">Salaire Mensuel (FCFA)</label>
-                  <input required type="number" className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 outline-none focus:border-emerald-500"
-                    onChange={e => setNewCollab({...newCollab, salary: Number(e.target.value)})} />
-                </div>
-
-                <div>
-                  <label className="text-[10px] font-black uppercase text-zinc-500 mb-2 block">Type de Contrat</label>
-                  <select className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 outline-none appearance-none"
-                    onChange={e => setNewCollab({...newCollab, contract: e.target.value})}>
-                    <option value="CDI">CDI</option>
-                    <option value="CDD">CDD</option>
-                    <option value="Freelance">Freelance</option>
-                    <option value="Stage">Stage</option>
-                  </select>
-                </div>
-
-                <div className="col-span-2 flex gap-4 mt-6">
-  <button type="submit" className="flex-[2] bg-emerald-500 text-black py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-emerald-400 transition-colors shadow-lg shadow-emerald-500/10">
-    Confirmer le recrutement
-  </button>
-  <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 bg-white/5 border border-white/10 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-white/10 transition-all">
-    Annuler
-  </button>
-</div>
-              </form>
-            </div>
-          </div>
-        )}
-      {/* MODAL FICHE TECHNIQUE COLLABORATEUR */}
-        {selectedEmployee && (
-          <div className="fixed inset-0 bg-black/90 backdrop-blur-xl z-[110] flex items-center justify-center p-4">
-            <div className="bg-[#050505] border border-white/10 w-full max-w-xl rounded-[3.5rem] overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-300">
-              
-              {/* Header de la Fiche */}
-              <div className="relative h-32 bg-gradient-to-r from-emerald-900/20 to-zinc-900 p-8 flex items-end">
-                <button 
-                  onClick={() => setSelectedEmployee(null)}
-                  className="absolute top-6 right-6 p-3 bg-black/50 hover:bg-white/10 rounded-full text-white transition-all"
-                >
-                  <ArrowLeft size={20} />
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[100] flex items-center justify-center p-4">
+          <div className="bg-[#0a0a0a] border border-white/10 w-full max-w-2xl rounded-[3rem] p-10 shadow-2xl animate-in zoom-in duration-300">
+            <h2 className="text-2xl font-black italic uppercase mb-8 text-emerald-500">Recruter un Collaborateur</h2>
+            <form onSubmit={handleAddCollab} className="grid grid-cols-2 gap-6">
+              <div className="col-span-2">
+                <label className="text-[10px] font-black uppercase text-zinc-500 mb-2 block">Nom Complet</label>
+                <input required type="text" className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 outline-none focus:border-emerald-500" 
+                  onChange={e => setNewCollab({...newCollab, name: e.target.value})} />
+              </div>
+              <div>
+                <label className="text-[10px] font-black uppercase text-zinc-500 mb-2 block">Pôle / Département</label>
+                <select className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 outline-none appearance-none"
+                  onChange={e => setNewCollab({...newCollab, dept: e.target.value})}>
+                  {payrollStats.depts.map(d => <option key={d} value={d}>{d}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="text-[10px] font-black uppercase text-zinc-500 mb-2 block">Poste Occupé</label>
+                <input required type="text" className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 outline-none focus:border-emerald-500"
+                  onChange={e => setNewCollab({...newCollab, post: e.target.value})} />
+              </div>
+              <div>
+                <label className="text-[10px] font-black uppercase text-zinc-500 mb-2 block">Salaire Mensuel (FCFA)</label>
+                <input required type="number" className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 outline-none focus:border-emerald-500"
+                  onChange={e => setNewCollab({...newCollab, salary: Number(e.target.value)})} />
+              </div>
+              <div>
+                <label className="text-[10px] font-black uppercase text-zinc-500 mb-2 block">Type de Contrat</label>
+                <select className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 outline-none appearance-none"
+                  onChange={e => setNewCollab({...newCollab, contract: e.target.value})}>
+                  <option value="CDI">CDI</option>
+                  <option value="CDD">CDD</option>
+                  <option value="Freelance">Freelance</option>
+                  <option value="Stage">Stage</option>
+                </select>
+              </div>
+              <div className="col-span-2 flex gap-4 mt-6">
+                <button type="submit" className="flex-[2] bg-emerald-500 text-black py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-emerald-400 transition-colors shadow-lg shadow-emerald-500/10">
+                  Confirmer le recrutement
                 </button>
-                <div className="flex items-center gap-6 translate-y-12">
-                   <div className="w-24 h-24 rounded-[2rem] bg-zinc-800 border-4 border-[#050505] flex items-center justify-center text-4xl font-black text-emerald-500 shadow-2xl">
-                    {selectedEmployee.name.charAt(0)}
-                   </div>
-                   <div>
-                     <h2 className="text-2xl font-black uppercase italic tracking-tighter text-white">{selectedEmployee.name}</h2>
-                     <span className="px-3 py-1 bg-emerald-500 text-black text-[8px] font-black uppercase rounded-full tracking-[0.2em]">
-                       {selectedEmployee.id}
-                     </span>
-                   </div>
-                </div>
+                <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 bg-white/5 border border-white/10 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-white/10 transition-all">
+                  Annuler
+                </button>
               </div>
+            </form>
+          </div>
+        </div>
+      )}
 
-              {/* Corps de la Fiche */}
-              <div className="p-10 pt-16 grid grid-cols-2 gap-8">
-                <div>
-                  <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-2">Poste Actuel</p>
-                  <p className="text-sm font-bold text-white uppercase italic">{selectedEmployee.post}</p>
+      {/* MODAL FICHE TECHNIQUE COLLABORATEUR */}
+      {selectedEmployee && (
+        <div className="fixed inset-0 bg-black/90 backdrop-blur-xl z-[110] flex items-center justify-center p-4">
+          <div className="bg-[#050505] border border-white/10 w-full max-w-xl rounded-[3.5rem] overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-300">
+            <div className="relative h-32 bg-gradient-to-r from-emerald-900/20 to-zinc-900 p-8 flex items-end">
+              <button onClick={() => setSelectedEmployee(null)} className="absolute top-6 right-6 p-3 bg-black/50 hover:bg-white/10 rounded-full text-white transition-all">
+                <ArrowLeft size={20} />
+              </button>
+              <div className="flex items-center gap-6 translate-y-12">
+                <div className="w-24 h-24 rounded-[2rem] bg-zinc-800 border-4 border-[#050505] flex items-center justify-center text-4xl font-black text-emerald-500 shadow-2xl">
+                  {selectedEmployee.name.charAt(0)}
                 </div>
                 <div>
-                  <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-2">PCO (Référent)</p>
-                  <p className="text-sm font-bold text-emerald-500 uppercase">{selectedEmployee.pco || "Non assigné"}</p>
-                </div>
-                
-                <div className="h-px bg-white/5 col-span-2" />
-
-                <div className="space-y-6">
-                  <div>
-                    <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-1">Date d'entrée</p>
-                    <p className="text-xs font-bold text-zinc-300">{selectedEmployee.joinDate}</p>
-                  </div>
-                  <div>
-                    <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-1">Âge & Genre</p>
-                    <p className="text-xs font-bold text-zinc-300">{selectedEmployee.age || "--"} ans • {selectedEmployee.genre || "--"}</p>
-                  </div>
-                </div>
-
-                <div className="space-y-6">
-                  <div>
-                    <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-1">Email Pro</p>
-                    <p className="text-xs font-bold text-zinc-300">{selectedEmployee.email}</p>
-                  </div>
-                  <div>
-                    <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-1">Contrat</p>
-                    <p className="text-xs font-black text-emerald-500 uppercase">{selectedEmployee.contract}</p>
-                  </div>
-                </div>
-
-                <div className="col-span-2 pt-6">
-                   <button className="w-full py-4 bg-white/5 border border-white/10 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-500 hover:text-black transition-all">
-                     Télécharger le Dossier Complet
-                   </button>
+                  <h2 className="text-2xl font-black uppercase italic tracking-tighter text-white">{selectedEmployee.name}</h2>
+                  <span className="px-3 py-1 bg-emerald-500 text-black text-[8px] font-black uppercase rounded-full tracking-[0.2em]">
+                    {selectedEmployee.id}
+                  </span>
                 </div>
               </div>
             </div>
+            <div className="p-10 pt-16 grid grid-cols-2 gap-8">
+              <div>
+                <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-2">Poste Actuel</p>
+                <p className="text-sm font-bold text-white uppercase italic">{selectedEmployee.post}</p>
+              </div>
+              <div>
+                <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-2">PCO (Référent)</p>
+                <p className="text-sm font-bold text-emerald-500 uppercase">{selectedEmployee.pco || "Non assigné"}</p>
+              </div>
+              <div className="h-px bg-white/5 col-span-2" />
+              <div className="space-y-6">
+                <div>
+                  <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-1">Date d'entrée</p>
+                  <p className="text-xs font-bold text-zinc-300">{selectedEmployee.joinDate}</p>
+                </div>
+                <div>
+                  <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-1">Âge & Genre</p>
+                  <p className="text-xs font-bold text-zinc-300">{selectedEmployee.age || "--"} ans • {selectedEmployee.genre || "--"}</p>
+                </div>
+              </div>
+              <div className="space-y-6">
+                <div>
+                  <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-1">Email Pro</p>
+                  <p className="text-xs font-bold text-zinc-300">{selectedEmployee.email}</p>
+                </div>
+                <div>
+                  <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-1">Contrat</p>
+                  <p className="text-xs font-black text-emerald-500 uppercase">{selectedEmployee.contract}</p>
+                </div>
+              </div>
+              <div className="col-span-2 pt-6">
+                <button className="w-full py-4 bg-white/5 border border-white/10 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-500 hover:text-black transition-all">
+                  Télécharger le Dossier Complet
+                </button>
+              </div>
+            </div>
           </div>
-        )}
+        </div>
+      )}
     </div>
   );
 }
