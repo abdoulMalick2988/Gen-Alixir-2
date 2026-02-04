@@ -1,249 +1,334 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import Sidebar from "@/components/Sidebar";
 import { 
-  FileText, Download, ArrowLeft, 
-  Building, User, Briefcase, Globe, Scale, ShieldAlert 
+  ArrowLeft, Building, User, Briefcase, Globe, Scale, 
+  ShieldAlert, Download, FileText, CheckCircle, AlertTriangle, 
+  Clock, Landmark, Fingerprint, Coins
 } from 'lucide-react';
 import { saveAs } from 'file-saver';
-import { Packer, Document, Paragraph, TextRun, AlignmentType, HeadingLevel } from 'docx';
+import { 
+  Packer, Document, Paragraph, TextRun, AlignmentType, 
+  HeadingLevel, Header, Footer, PageNumber, NumberFormat 
+} from 'docx';
 
-// --- CONFIGURATION JURIDIQUE VERROUILLÉE ---
-const LEGAL_TEMPLATES = {
-  Burundi: {
-    tribunal: "Tribunal du Travail de Bujumbura",
-    idLabel: "NIF",
-    codeLabel: "Code du Travail du Burundi",
-    ref: "Loi n°1/11 du 24 novembre 2020",
-    jurisdiction: "Tout litige né de l’exécution du présent contrat relèvera de la compétence exclusive du Tribunal de Bujumbura."
-  },
-  Sénégal: {
-    tribunal: "Tribunal du Travail de Dakar",
-    idLabel: "NINEA",
+// --- CONFIGURATION JURIDIQUE ALPHA-1 (VERROUILLÉE) ---
+const LEGAL_CONFIG = {
+  SENEGAL: {
+    label: "Sénégal",
     codeLabel: "Code du Travail Sénégalais",
     ref: "Loi n° 97-17 du 1er décembre 1997",
-    jurisdiction: "Tout litige relatif à la validité ou l'exécution du présent contrat sera soumis à la juridiction du Tribunal du Travail de Dakar."
+    jurisdiction: "Tribunal du Travail de Dakar",
+    idLabel: "NINEA",
+    articles: "Articles L.23 à L.37 et L.44",
+  },
+  BURUNDI: {
+    label: "Burundi",
+    codeLabel: "Code du Travail du Burundi",
+    ref: "Loi n° 1/11 du 24 novembre 2020",
+    jurisdiction: "Tribunal du Travail de Bujumbura",
+    idLabel: "NIF",
+    articles: "Articles 34 à 60 et 85",
   }
 };
 
-export default function ContractArchitectPage() {
+export default function GenerateurContratLegalPro() {
   const router = useRouter();
-  const [country, setCountry] = useState<'Burundi' | 'Sénégal'>('Sénégal');
   const [step, setStep] = useState(1);
+  const [country, setCountry] = useState<'SENEGAL' | 'BURUNDI'>('SENEGAL');
   
   const [formData, setFormData] = useState({
-    companyName: '', companyType: 'SARL', hasCapital: false, capitalAmount: '',
-    address: '', rccm: '', idLegal: '', repName: '', repFunction: '',
-    empName: '', empBirth: '', empNation: '', empAddress: '', empID: '',
-    type: 'CDI', post: '', startDate: '', endDate: '', 
-    workPlace: '', hours: '40', salary: '', trialPeriod: '3',
-    hasNonCompete: false, nonCompeteDuration: '12'
+    // Entreprise
+    companyName: '', companyType: 'SARL', address: '', 
+    rccm: '', idLegal: '', repName: '', repPost: '',
+    hasCapital: false, capitalAmount: '',
+    // Salarié
+    empName: '', empBirth: '', empNation: 'Sénégalaise', 
+    empAddress: '', empID: '', isForeigner: false, workPermit: '',
+    // Contrat
+    type: 'CDI', post: '', salary: '', joinDate: '', 
+    endDate: '', cddReason: '', workTime: '40', trialPeriod: '1',
+    hasNonCompete: false, nonCompeteDuration: '12', 
+    hasBonus: false, bonusDetail: ''
   });
 
-  const activeLegal = LEGAL_TEMPLATES[country];
+  const activeLegal = LEGAL_CONFIG[country];
 
-  // --- GÉNÉRATION WORD (DOCX) ---
-  const exportToWord = async () => {
+  // --- MOTEUR DE GÉNÉRATION DOCX ---
+  const generateDocument = async () => {
     const doc = new Document({
       sections: [{
+        headers: {
+          default: new Header({
+            children: [
+              new Paragraph({
+                children: [
+                  new TextRun({ text: "CONFIDENTIEL - RESSOURCES HUMAINES", color: "888888", size: 16, bold: true })
+                ],
+                alignment: AlignmentType.RIGHT
+              })
+            ]
+          })
+        },
+        footers: {
+          default: new Footer({
+            children: [
+              new Paragraph({
+                children: [
+                  new TextRun({ text: `Document généré via ECODREUM Intelligence Engine v2.0 - Page `, size: 16 }),
+                  new PageNumber({ format: NumberFormat.DECIMAL }),
+                ],
+                alignment: AlignmentType.CENTER
+              }),
+              new Paragraph({
+                children: [new TextRun({ text: "Ce document est une base juridique et ne remplace pas l'avis d'un avocat.", size: 14, italic: true })],
+                alignment: AlignmentType.CENTER
+              })
+            ]
+          })
+        },
         children: [
-          new Paragraph({ 
-            children: [new TextRun({ text: "CONTRAT DE TRAVAIL", bold: true, size: 32 })],
+          // TITRE
+          new Paragraph({
+            children: [new TextRun({ text: "CONTRAT DE TRAVAIL", bold: true, size: 40, underline: {} })],
             alignment: AlignmentType.CENTER,
-            heading: HeadingLevel.HEADING_1 
-          }),
-          new Paragraph({ 
-            children: [new TextRun({ text: `Régime : ${formData.type}`, italics: true })],
-            alignment: AlignmentType.CENTER 
-          }),
-          
-          new Paragraph({ 
-            children: [new TextRun({ text: "\nENTRE LES SOUSSIGNÉS :", bold: true })],
-            spacing: { before: 400 } 
+            spacing: { after: 400 }
           }),
           new Paragraph({
-            text: `L'entreprise ${formData.companyName}, ${formData.companyType} au capital de ${formData.hasCapital ? formData.capitalAmount : 'X'} F, sise à ${formData.address}, immatriculée au RCCM sous le n° ${formData.rccm} et au ${activeLegal.idLabel} n° ${formData.idLegal}, représentée par ${formData.repName}.`
+            children: [new TextRun({ text: `RÉGIME : CONTRAT À DURÉE ${formData.type === 'CDI' ? 'INDÉTERMINÉE' : 'DÉTERMINÉE'}`, bold: true, size: 24 })],
+            alignment: AlignmentType.CENTER,
+            spacing: { after: 600 }
           }),
+
+          // PARTIES
+          new Paragraph({ children: [new TextRun({ text: "ENTRE LES SOUSSIGNÉS :", bold: true })] }),
+          new Paragraph({
+            text: `L'entreprise ${formData.companyName}, ${formData.companyType} ${formData.hasCapital ? `au capital de ${formData.capitalAmount} F` : ''}, sise à ${formData.address}, immatriculée au RCCM sous le n° ${formData.rccm} et au ${activeLegal.idLabel} n° ${formData.idLegal}, représentée par M./Mme ${formData.repName} en sa qualité de ${formData.repPost}.`,
+            spacing: { after: 200 }
+          }),
+          new Paragraph({ children: [new TextRun({ text: "Ci-après désignée « L'Employeur »", italics: true })], spacing: { after: 300 } }),
+
+          new Paragraph({ children: [new TextRun({ text: "ET :", bold: true })] }),
+          new Paragraph({
+            text: `M./Mme ${formData.empName}, né(e) le ${formData.empBirth}, de nationalité ${formData.empNation}, demeurant à ${formData.empAddress}, titulaire de la pièce d'identité n° ${formData.empID} ${formData.isForeigner ? `et du Permis de Travail n° ${formData.workPermit}` : ''}.`,
+            spacing: { after: 200 }
+          }),
+          new Paragraph({ children: [new TextRun({ text: "Ci-après désigné(e) « Le Salarié »", italics: true })], spacing: { after: 600 } }),
+
+          // ARTICLES
+          ...createArticle("ARTICLE 1 : CADRE LÉGAL", `Le présent contrat est conclu en conformité avec les dispositions du ${activeLegal.codeLabel} (${activeLegal.ref}), notamment les ${activeLegal.articles}.`),
           
-          new Paragraph({ 
-            children: [new TextRun({ text: "\nET :", bold: true })],
-            spacing: { before: 200 } 
+          ...createArticle("ARTICLE 2 : NATURE ET DURÉE", `Le présent contrat est un ${formData.type}. Il prendra effet le ${formData.joinDate}. ${formData.type === 'CDD' ? `Il prendra fin le ${formData.endDate} pour le motif suivant : ${formData.cddReason}.` : ''}`),
+          
+          ...createArticle("ARTICLE 3 : PÉRIODE D'ESSAI", `Le contrat ne deviendra définitif qu'à l'issue d'une période d'essai de ${formData.trialPeriod} mois, durant laquelle chaque partie pourra rompre sans préavis ni indemnité.`),
+          
+          ...createArticle("ARTICLE 4 : FONCTIONS", `Le Salarié est engagé en qualité de ${formData.post}. Il exercera ses fonctions à ${formData.address} ou tout autre lieu nécessaire à l'activité.`),
+
+          ...createArticle("ARTICLE 5 : RÉMUNÉRATION", `En contrepartie, le Salarié percevra un salaire mensuel brut de ${formData.salary} F CFA. ${formData.hasBonus ? `S'y ajoute la prime suivante : ${formData.bonusDetail}.` : ''}`),
+
+          ...(formData.hasNonCompete ? createArticle("ARTICLE 6 : NON-CONCURRENCE", `Compte tenu de ses fonctions, le Salarié s'interdit d'exercer une activité concurrente pendant ${formData.nonCompeteDuration} mois après la rupture, dans un rayon lié aux activités de l'Employeur.`) : []),
+
+          ...createArticle("ARTICLE FINAL : LITIGES", `Tout différend relatif à la validité ou l'exécution du présent contrat, faute d'accord amiable, sera porté devant le ${activeLegal.jurisdiction}.`),
+
+          // SIGNATURES
+          new Paragraph({
+            children: [new TextRun({ text: `\n\nFait à ______________, le ${new Date().toLocaleDateString()}`, italics: true })],
+            alignment: AlignmentType.RIGHT,
+            spacing: { before: 800 }
           }),
           new Paragraph({
-            text: `M./Mme ${formData.empName}, né(e) le ${formData.empBirth}, de nationalité ${formData.empNation}, titulaire de la pièce n° ${formData.empID}.`
-          }),
-
-          new Paragraph({ 
-            children: [new TextRun({ text: "\nARTICLE 1 : CADRE LÉGAL", bold: true })],
-            spacing: { before: 400 } 
-          }),
-          new Paragraph({ text: `Le présent contrat est régi par le ${activeLegal.codeLabel} (${activeLegal.ref}).` }),
-
-          new Paragraph({ 
-            children: [new TextRun({ text: "\nARTICLE 2 : POSTE ET RÉMUNÉRATION", bold: true })] 
-          }),
-          new Paragraph({ text: `Le salarié est recruté en tant que ${formData.post} pour un salaire brut de ${formData.salary} F par mois.` }),
-
-          ...(formData.hasNonCompete ? [
-            new Paragraph({ 
-              children: [new TextRun({ text: "\nARTICLE 3 : NON-CONCURRENCE", bold: true })] 
-            }),
-            new Paragraph({ text: `Le salarié s'engage, en cas de rupture, à ne pas exercer d'activité concurrente pendant une durée de ${formData.nonCompeteDuration} mois dans la zone géographique d'activité de l'entreprise.` })
-          ] : []),
-
-          new Paragraph({ 
-            children: [new TextRun({ text: "\nARTICLE FINAL : LITIGES", bold: true })],
-            spacing: { before: 400 } 
-          }),
-          new Paragraph({ text: activeLegal.jurisdiction }),
-
-          new Paragraph({ 
-            text: "\n\nFait à ______________, le ______________", 
-            alignment: AlignmentType.RIGHT 
-          }),
-          new Paragraph({ 
-            text: "\n\nSignature Employeur (précédée de 'Lu et approuvé')          Signature Salarié", 
-            spacing: { before: 400 } 
-          }),
-        ],
-      }],
+            children: [
+              new TextRun({ text: "\nL'Employeur (Signature & Cachet)                     Le Salarié (Signature précédée de 'Lu et approuvé')" })
+            ],
+            spacing: { before: 400 }
+          })
+        ]
+      }]
     });
 
     const blob = await Packer.toBlob(doc);
-    saveAs(blob, `Contrat_${formData.empName}.docx`);
+    saveAs(blob, `Contrat_${formData.empName.replace(' ', '_')}.docx`);
   };
 
+  function createArticle(title: string, content: string) {
+    return [
+      new Paragraph({ children: [new TextRun({ text: title, bold: true })], spacing: { before: 200 } }),
+      new Paragraph({ text: content, spacing: { after: 200 } })
+    ];
+  }
+
+  // --- RENDU UI ---
   return (
-    <div className="flex h-screen bg-[#010101] text-white overflow-hidden">
-      <Sidebar />
-      <main className="flex-1 p-8 overflow-y-auto custom-scroll">
+    <div className="min-h-screen bg-[#020202] text-white font-sans p-4 md:p-8">
+      {/* HEADER */}
+      <div className="max-w-6xl mx-auto flex justify-between items-center mb-12">
+        <button onClick={() => router.back()} className="p-4 bg-white/5 rounded-2xl hover:bg-white/10 transition-all group">
+          <ArrowLeft className="group-hover:-translate-x-1 transition-transform" />
+        </button>
+        <div className="text-center">
+          <h1 className="text-4xl font-black italic tracking-tighter uppercase">Legal <span className="text-emerald-500">Engine</span></h1>
+          <p className="text-[10px] font-black text-zinc-500 tracking-[0.4em] uppercase">Générateur de Contrats Alpha-2</p>
+        </div>
+        <div className="w-12 h-12 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl flex items-center justify-center">
+          <Scale className="text-emerald-500" size={24} />
+        </div>
+      </div>
+
+      <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
         
-        {/* HEADER MODERNE */}
-        <div className="flex justify-between items-center mb-10 bg-white/[0.03] p-8 rounded-[2.5rem] border border-white/5">
-          <div className="flex flex-col gap-1">
-            <h1 className="text-3xl font-black italic tracking-tighter text-emerald-500 uppercase">Générateur Légal</h1>
-            <p className="text-[10px] font-bold text-zinc-500 tracking-[0.4em]">ARCHITECTE RH / {country.toUpperCase()}</p>
+        {/* FORMULAIRE (GAUCHE) */}
+        <div className="lg:col-span-7 space-y-6">
+          
+          {/* SÉLECTEUR DE PAYS */}
+          <div className="bg-white/[0.03] border border-white/10 p-8 rounded-[2.5rem]">
+            <label className="text-[10px] font-black uppercase text-emerald-500 tracking-widest mb-4 block">1. Juridiction de Référence</label>
+            <div className="grid grid-cols-2 gap-4">
+              {['SENEGAL', 'BURUNDI'].map((p) => (
+                <button 
+                  key={p}
+                  onClick={() => setCountry(p as any)}
+                  className={`py-4 rounded-2xl font-black uppercase text-xs transition-all border ${country === p ? 'bg-emerald-500 text-black border-emerald-500' : 'bg-white/5 border-white/10 text-zinc-500 hover:bg-white/10'}`}
+                >
+                  {p}
+                </button>
+              ))}
+            </div>
           </div>
-          <button onClick={() => router.back()} className="p-4 bg-white/5 rounded-2xl hover:bg-white/10 transition-all border border-white/10 group">
-             <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
-          </button>
+
+          {/* ÉTAPE 1 : ENTREPRISE */}
+          <div className="bg-white/[0.03] border border-white/10 p-8 rounded-[2.5rem] space-y-6">
+            <div className="flex items-center gap-4 mb-2">
+              <Building className="text-emerald-500" />
+              <h2 className="text-xl font-black italic uppercase">L'Employeur</h2>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="col-span-2">
+                <input placeholder="Nom de l'entreprise" className="w-full bg-black/40 border border-white/10 rounded-xl p-4 text-sm outline-none focus:border-emerald-500" 
+                  onChange={e => setFormData({...formData, companyName: e.target.value})} />
+              </div>
+              <input placeholder={`Numéro ${activeLegal.idLabel}`} className="bg-black/40 border border-white/10 rounded-xl p-4 text-sm outline-none" 
+                onChange={e => setFormData({...formData, idLegal: e.target.value})} />
+              <input placeholder="RCCM" className="bg-black/40 border border-white/10 rounded-xl p-4 text-sm outline-none" 
+                onChange={e => setFormData({...formData, rccm: e.target.value})} />
+              <div className="col-span-2 flex items-center gap-4 p-4 bg-white/5 rounded-xl">
+                <input type="checkbox" className="w-5 h-5 accent-emerald-500" onChange={e => setFormData({...formData, hasCapital: e.target.checked})} />
+                <span className="text-xs font-bold uppercase text-zinc-400">Mentionner le Capital Social</span>
+                {formData.hasCapital && <input placeholder="Montant (ex: 1 000 000)" className="flex-1 bg-black/20 border-b border-white/20 outline-none text-xs" onChange={e => setFormData({...formData, capitalAmount: e.target.value})} />}
+              </div>
+              <input placeholder="Nom du Représentant" className="bg-black/40 border border-white/10 rounded-xl p-4 text-sm outline-none" 
+                onChange={e => setFormData({...formData, repName: e.target.value})} />
+              <input placeholder="Fonction (ex: Gérant)" className="bg-black/40 border border-white/10 rounded-xl p-4 text-sm outline-none" 
+                onChange={e => setFormData({...formData, repPost: e.target.value})} />
+            </div>
+          </div>
+
+          {/* ÉTAPE 2 : SALARIÉ */}
+          <div className="bg-white/[0.03] border border-white/10 p-8 rounded-[2.5rem] space-y-6">
+            <div className="flex items-center gap-4 mb-2">
+              <User className="text-emerald-500" />
+              <h2 className="text-xl font-black italic uppercase">Le Salarié</h2>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <input placeholder="Nom Complet" className="col-span-2 bg-black/40 border border-white/10 rounded-xl p-4 text-sm outline-none" 
+                onChange={e => setFormData({...formData, empName: e.target.value})} />
+              <input placeholder="Nationalité" className="bg-black/40 border border-white/10 rounded-xl p-4 text-sm outline-none" 
+                onChange={e => setFormData({...formData, empNation: e.target.value})} />
+              <input placeholder="N° Pièce d'identité" className="bg-black/40 border border-white/10 rounded-xl p-4 text-sm outline-none" 
+                onChange={e => setFormData({...formData, empID: e.target.value})} />
+              
+              <div className="col-span-2 flex items-center justify-between p-4 bg-amber-500/5 border border-amber-500/20 rounded-xl">
+                <div className="flex items-center gap-3">
+                  <Globe size={18} className="text-amber-500" />
+                  <span className="text-xs font-bold uppercase text-amber-500">Salarié étranger ?</span>
+                </div>
+                <input type="checkbox" className="w-5 h-5 accent-amber-500" onChange={e => setFormData({...formData, isForeigner: e.target.checked})} />
+              </div>
+
+              {formData.isForeigner && (
+                <div className="col-span-2 animate-in slide-in-from-top-2 duration-300">
+                  <input placeholder="Numéro du Permis de Travail (Obligatoire)" className="w-full bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 text-sm outline-none text-amber-200 placeholder:text-amber-500/50" 
+                    onChange={e => setFormData({...formData, workPermit: e.target.value})} />
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* ÉTAPE 3 : CONTRAT */}
+          <div className="bg-white/[0.03] border border-white/10 p-8 rounded-[2.5rem] space-y-6">
+            <div className="flex items-center gap-4 mb-2">
+              <Briefcase className="text-emerald-500" />
+              <h2 className="text-xl font-black italic uppercase">Conditions de Travail</h2>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <select className="bg-black/40 border border-white/10 rounded-xl p-4 text-sm outline-none" onChange={e => setFormData({...formData, type: e.target.value})}>
+                <option value="CDI">CDI (Indéterminé)</option>
+                <option value="CDD">CDD (Déterminé)</option>
+              </select>
+              <input placeholder="Poste occupé" className="bg-black/40 border border-white/10 rounded-xl p-4 text-sm outline-none" 
+                onChange={e => setFormData({...formData, post: e.target.value})} />
+              
+              {formData.type === 'CDD' && (
+                <input placeholder="Motif du CDD (ex: Remplacement)" className="col-span-2 bg-rose-500/5 border border-rose-500/20 rounded-xl p-4 text-sm outline-none" 
+                  onChange={e => setFormData({...formData, cddReason: e.target.value})} />
+              )}
+
+              <input placeholder="Salaire Brut (FCFA)" type="number" className="bg-black/40 border border-white/10 rounded-xl p-4 text-sm outline-none" 
+                onChange={e => setFormData({...formData, salary: e.target.value})} />
+              <input placeholder="Essai (mois)" type="number" className="bg-black/40 border border-white/10 rounded-xl p-4 text-sm outline-none" 
+                onChange={e => setFormData({...formData, trialPeriod: e.target.value})} />
+            </div>
+          </div>
         </div>
 
-        {step === 1 ? (
-          <div className="max-w-5xl mx-auto grid grid-cols-12 gap-8 pb-20">
-            
-            {/* PANNEAU GAUCHE : CONFIGURATION */}
-            <div className="col-span-8 space-y-6">
-              {/* SÉLECTION PAYS */}
-              <div className="bg-white/[0.02] border border-white/5 p-6 rounded-[2rem] flex gap-4">
-                {['Sénégal', 'Burundi'].map((p) => (
-                  <button key={p} onClick={() => setCountry(p as any)} 
-                    className={`flex-1 p-4 rounded-xl border transition-all font-black text-xs ${country === p ? 'bg-emerald-500 text-black border-emerald-500' : 'bg-white/5 border-white/10 text-zinc-500'}`}>
-                    {p.toUpperCase()}
-                  </button>
-                ))}
-              </div>
-
-              {/* FORMULAIRE SECTIONS */}
-              <div className="grid grid-cols-2 gap-6">
-                <div className="bg-white/[0.02] border border-white/5 p-8 rounded-[2rem] space-y-4">
-                  <h3 className="text-[10px] font-black text-emerald-500 flex items-center gap-2 uppercase tracking-widest mb-4"><Building size={14}/> Entreprise</h3>
-                  <input placeholder="Nom de l'entreprise" className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-xs outline-none focus:border-emerald-500" onChange={e => setFormData({...formData, companyName: e.target.value})} />
-                  <input placeholder={activeLegal.idLabel} className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-xs outline-none" onChange={e => setFormData({...formData, idLegal: e.target.value})} />
+        {/* APERÇU & EXPORT (DROITE) */}
+        <div className="lg:col-span-5 sticky top-8 h-fit space-y-6">
+          <div className="bg-emerald-500/[0.03] border border-emerald-500/20 p-8 rounded-[3rem] relative overflow-hidden">
+            <div className="relative z-10">
+              <h3 className="text-2xl font-black italic uppercase mb-6">Validation Juridique</h3>
+              <div className="space-y-4">
+                <div className="flex items-start gap-4">
+                  <CheckCircle className="text-emerald-500 shrink-0" size={20} />
+                  <p className="text-[11px] text-zinc-300 font-bold uppercase leading-relaxed">Conformité {activeLegal.codeLabel} vérifiée.</p>
                 </div>
-                
-                <div className="bg-white/[0.02] border border-white/5 p-8 rounded-[2rem] space-y-4">
-                  <h3 className="text-[10px] font-black text-emerald-500 flex items-center gap-2 uppercase tracking-widest mb-4"><User size={14}/> Salarié</h3>
-                  <input placeholder="Nom complet" className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-xs outline-none focus:border-emerald-500" onChange={e => setFormData({...formData, empName: e.target.value})} />
-                  <input placeholder="N° Pièce d'identité" className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-xs outline-none" onChange={e => setFormData({...formData, empID: e.target.value})} />
+                <div className="flex items-start gap-4">
+                  <CheckCircle className="text-emerald-500 shrink-0" size={20} />
+                  <p className="text-[11px] text-zinc-300 font-bold uppercase leading-relaxed">Juridiction : {activeLegal.jurisdiction}.</p>
                 </div>
-              </div>
-
-              <div className="bg-white/[0.02] border border-white/5 p-8 rounded-[2rem] space-y-6">
-                <h3 className="text-[10px] font-black text-emerald-500 flex items-center gap-2 uppercase tracking-widest"><Briefcase size={14}/> Détails Contrat</h3>
-                <div className="grid grid-cols-3 gap-4">
-                   <select className="bg-white/5 border border-white/10 rounded-xl p-4 text-xs outline-none" onChange={e => setFormData({...formData, type: e.target.value})}>
-                     <option value="CDI">CDI</option>
-                     <option value="CDD">CDD</option>
-                   </select>
-                   <input placeholder="Poste" className="bg-white/5 border border-white/10 rounded-xl p-4 text-xs outline-none" onChange={e => setFormData({...formData, post: e.target.value})} />
-                   <input placeholder="Salaire Brut" className="bg-white/5 border border-white/10 rounded-xl p-4 text-xs outline-none" onChange={e => setFormData({...formData, salary: e.target.value})} />
-                </div>
-              </div>
-            </div>
-
-            {/* PANNEAU DROIT : OPTIONS AVANCÉES */}
-            <div className="col-span-4 space-y-6">
-               <div className="bg-white/[0.02] border border-white/5 p-8 rounded-[2rem] space-y-6">
-                 <h3 className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Options Juridiques</h3>
-                 
-                 <label className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/10 cursor-pointer">
-                    <span className="text-[10px] font-bold">Non-concurrence</span>
-                    <input type="checkbox" checked={formData.hasNonCompete} onChange={e => setFormData({...formData, hasNonCompete: e.target.checked})} className="accent-emerald-500" />
-                 </label>
-
-                 {formData.hasNonCompete && (
-                   <div className="animate-in slide-in-from-top-2 duration-300">
-                     <p className="text-[9px] text-zinc-500 mb-2 uppercase font-bold">Durée (mois)</p>
-                     <input type="number" value={formData.nonCompeteDuration} className="w-full bg-white/5 border border-emerald-500/30 rounded-xl p-4 text-xs outline-none" onChange={e => setFormData({...formData, nonCompeteDuration: e.target.value})} />
-                   </div>
-                 )}
-
-                 <div className="p-4 bg-emerald-500/5 border border-emerald-500/20 rounded-xl">
-                   <p className="text-[9px] text-emerald-500 leading-relaxed italic">
-                     <ShieldAlert size={12} className="inline mr-2" />
-                     Les clauses sont verrouillées selon le Code du Travail {country}.
-                   </p>
-                 </div>
-               </div>
-
-               <button onClick={() => setStep(2)} className="w-full py-6 bg-emerald-500 text-black rounded-3xl font-black uppercase text-xs tracking-widest hover:scale-105 transition-all shadow-xl shadow-emerald-500/20">
-                 Générer l'aperçu
-               </button>
-            </div>
-          </div>
-        ) : (
-          /* ÉTAPE 2 : APERÇU ET EXPORT */
-          <div className="max-w-4xl mx-auto space-y-8 animate-in zoom-in duration-500">
-             <div className="bg-white text-black p-20 shadow-2xl font-serif text-[12px] leading-loose min-h-[1000px] rounded-sm">
-                <h1 className="text-center font-bold text-2xl border-b-2 border-black pb-4 mb-10">CONTRAT DE TRAVAIL</h1>
-                <p><strong>Employeur :</strong> {formData.companyName}, {formData.companyType}, RCCM {formData.rccm}, {activeLegal.idLabel} {formData.idLegal}.</p>
-                <p><strong>Salarié :</strong> {formData.empName}, titulaire de la pièce n° {formData.empID}.</p>
-                
-                <h4 className="font-bold mt-8">ARTICLE 1 : CADRE JURIDIQUE</h4>
-                <p>Le présent contrat est conclu en respect des dispositions du <strong>{activeLegal.codeLabel}</strong>.</p>
-                
-                <h4 className="font-bold mt-4">ARTICLE 2 : FONCTIONS</h4>
-                <p>Le salarié exercera les fonctions de {formData.post}.</p>
-
-                {formData.hasNonCompete && (
-                  <>
-                    <h4 className="font-bold mt-4">ARTICLE 3 : CLAUSE DE NON-CONCURRENCE</h4>
-                    <p>En raison de la nature des fonctions exercées, le salarié s'interdit d'exercer une activité concurrente pour une durée de {formData.nonCompeteDuration} mois.</p>
-                  </>
+                {formData.isForeigner && !formData.workPermit && (
+                  <div className="flex items-start gap-4 p-4 bg-rose-500/10 border border-rose-500/20 rounded-2xl animate-pulse">
+                    <ShieldAlert className="text-rose-500 shrink-0" size={20} />
+                    <p className="text-[9px] text-rose-500 font-black uppercase">Attention : Permis de travail manquant pour salarié étranger.</p>
+                  </div>
                 )}
+              </div>
 
-                <h4 className="font-bold mt-4">ARTICLE FINAL : COMPÉTENCE</h4>
-                <p>{activeLegal.jurisdiction}</p>
-
-                <p className="mt-20 text-center text-[9px] text-gray-400 italic">Document généré via ECODREUM RH Engine v2.0</p>
-             </div>
-
-             <div className="flex gap-4 pb-10">
-               <button onClick={() => setStep(1)} className="flex-1 py-5 bg-white/5 border border-white/10 rounded-2xl font-bold uppercase text-[10px]">Modifier</button>
-               <button onClick={exportToWord} className="flex-1 py-5 bg-blue-600 rounded-2xl font-black uppercase text-[10px] flex items-center justify-center gap-3"><Download size={16}/> Word (.docx)</button>
-               <button className="flex-1 py-5 bg-emerald-500 text-black rounded-2xl font-black uppercase text-[10px] flex items-center justify-center gap-3"><FileText size={16}/> PDF</button>
-             </div>
+              <div className="mt-10 space-y-3">
+                <button 
+                  onClick={generateDocument}
+                  className="w-full bg-emerald-500 text-black py-6 rounded-2xl font-black uppercase text-xs tracking-widest hover:scale-[1.02] transition-all flex items-center justify-center gap-3 shadow-lg shadow-emerald-500/20"
+                >
+                  <Download size={20} /> Générer le contrat (.DOCX)
+                </button>
+                <button className="w-full bg-white/5 border border-white/10 py-6 rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-white/10 transition-all flex items-center justify-center gap-3">
+                  <FileText size={20} /> Aperçu PDF (Coming Soon)
+                </button>
+              </div>
+            </div>
+            <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 blur-[100px] -mr-32 -mt-32" />
           </div>
-        )}
-      </main>
 
-      <style jsx global>{`
-        .custom-scroll::-webkit-scrollbar { width: 3px; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: #10b981; }
-      `}</style>
+          <div className="p-8 bg-zinc-900/50 border border-white/5 rounded-[2.5rem]">
+            <div className="flex items-center gap-3 text-zinc-500 mb-4">
+              <AlertTriangle size={16} />
+              <p className="text-[8px] font-black uppercase tracking-widest">Avertissement</p>
+            </div>
+            <p className="text-[9px] text-zinc-500 leading-relaxed font-medium uppercase">
+              Ce module génère des documents basés sur des templates standards africains. ECODREUM ne peut être tenu responsable d'une mauvaise utilisation des clauses. Faites relire vos contrats par un juriste local.
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
