@@ -75,13 +75,17 @@ export default function GenerateurContratLegalPro() {
         footers: {
           default: new Footer({
             children: [
-              new Paragraph({
-                children: [
-                  new TextRun({ text: `Document généré via ECODREUM Intelligence Engine - Page `, size: 16 }),
-                  new PageNumber({ format: NumberFormat.DECIMAL }),
-                ],
-                alignment: AlignmentType.CENTER
-              }),
+              // --- Remplace le paragraphe de la ligne 77 à 84 par celui-ci ---
+new Paragraph({
+  children: [
+    new TextRun({ text: `Document généré via ECODREUM Intelligence Engine - Page `, size: 16 }),
+    new TextRun({
+      children: [PageNumber.CURRENT], // Correction ici : On utilise la propriété statique
+      size: 16
+    }),
+  ],
+  alignment: AlignmentType.CENTER
+}),
               new Paragraph({
                 children: [new TextRun({ text: "Ce document est une base juridique et ne remplace pas l'avis d'un avocat.", size: 14, italics: true })],
                 alignment: AlignmentType.CENTER
