@@ -141,16 +141,24 @@ styles: {
             }),
 
             // PARTIES
-            new Paragraph({ text: "ENTRE LES SOUSSIGNÉS :", bold: true, spacing: { before: 200 } }),
+            new Paragraph({ 
+  children: [new TextRun({ text: "ENTRE LES SOUSSIGNÉS :", bold: true })], 
+  spacing: { before: 200 } 
+}),
             new Paragraph({
               text: `La société ${formData.companyName}, ${formData.companyType} au capital social, immatriculée sous le RCCM ${formData.rccm} et le ${legal.id_label} n° ${formData.idLegal}, dont le siège est situé à ${formData.address}, représentée par ${formData.repName} agissant en qualité de ${formData.repPost}.`,
               spacing: { after: 200 }
             }),
             new Paragraph({ text: "Ci-après désignée « L'Employeur »", italics: true, alignment: AlignmentType.RIGHT }),
 
-            new Paragraph({ text: "D'UNE PART,", bold: true, alignment: AlignmentType.CENTER }),
+            new Paragraph({ 
+  children: [new TextRun({ text: "D'UNE PART,", bold: true })], 
+  alignment: AlignmentType.CENTER 
+}),
 
-            new Paragraph({ text: "ET :", bold: true }),
+            new Paragraph({ 
+  children: [new TextRun({ text: "ET :", bold: true })] 
+}),
             new Paragraph({
               text: `M./Mme ${formData.empName}, né(e) le ${formData.empBirth}, de nationalité ${formData.empNation}, demeurant à ${formData.empAddress}, titulaire de la pièce d'identité n° ${formData.empID}.`,
               spacing: { after: 200 }
