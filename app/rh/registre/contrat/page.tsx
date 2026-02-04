@@ -328,7 +328,6 @@ new Paragraph({
             <div className="flex items-center gap-3 text-zinc-500 mb-4">
               <AlertTriangle size={16} />
               <p className="text-[8px] font-black uppercase tracking-widest">Responsabilité</p>
-            </div>
             <div className="p-8 bg-zinc-900/50 border border-white/5 rounded-[2.5rem] opacity-60">
             <div className="flex items-center gap-3 text-zinc-500 mb-4">
               <AlertTriangle size={16} />
