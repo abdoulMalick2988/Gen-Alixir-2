@@ -49,32 +49,64 @@ export default function ContractArchitectPage() {
     const doc = new Document({
       sections: [{
         children: [
-          new Paragraph({ text: "CONTRAT DE TRAVAIL", heading: HeadingLevel.HEADING_1, alignment: AlignmentType.CENTER }),
-          new Paragraph({ text: `Régime : ${formData.type}`, alignment: AlignmentType.CENTER }),
+          new Paragraph({ 
+            children: [new TextRun({ text: "CONTRAT DE TRAVAIL", bold: true, size: 32 })],
+            alignment: AlignmentType.CENTER,
+            heading: HeadingLevel.HEADING_1 
+          }),
+          new Paragraph({ 
+            children: [new TextRun({ text: `Régime : ${formData.type}`, italic: true })],
+            alignment: AlignmentType.CENTER 
+          }),
           
-          new Paragraph({ text: "\nENTRE LES SOUSSIGNÉS :", bold: true, spacing: { before: 400 } }),
-          new Paragraph(`L'entreprise ${formData.companyName}, ${formData.companyType} au capital de ${formData.hasCapital ? formData.capitalAmount : 'X'} F, sise à ${formData.address}, immatriculée au RCCM sous le n° ${formData.rccm} et au ${activeLegal.idLabel} n° ${formData.idLegal}, représentée par ${formData.repName}.`),
+          new Paragraph({ 
+            children: [new TextRun({ text: "\nENTRE LES SOUSSIGNÉS :", bold: true })],
+            spacing: { before: 400 } 
+          }),
+          new Paragraph({
+            text: `L'entreprise ${formData.companyName}, ${formData.companyType} au capital de ${formData.hasCapital ? formData.capitalAmount : 'X'} F, sise à ${formData.address}, immatriculée au RCCM sous le n° ${formData.rccm} et au ${activeLegal.idLabel} n° ${formData.idLegal}, représentée par ${formData.repName}.`
+          }),
           
-          new Paragraph({ text: "\nET :", bold: true, spacing: { before: 200 } }),
-          new Paragraph(`M./Mme ${formData.empName}, né(e) le ${formData.empBirth}, de nationalité ${formData.empNation}, titulaire de la pièce n° ${formData.empID}.`),
+          new Paragraph({ 
+            children: [new TextRun({ text: "\nET :", bold: true })],
+            spacing: { before: 200 } 
+          }),
+          new Paragraph({
+            text: `M./Mme ${formData.empName}, né(e) le ${formData.empBirth}, de nationalité ${formData.empNation}, titulaire de la pièce n° ${formData.empID}.`
+          }),
 
-          new Paragraph({ text: "\nARTICLE 1 : CADRE LÉGAL", bold: true, spacing: { before: 400 } }),
-          new Paragraph(`Le présent contrat est régi par le ${activeLegal.codeLabel} (${activeLegal.ref}).`),
+          new Paragraph({ 
+            children: [new TextRun({ text: "\nARTICLE 1 : CADRE LÉGAL", bold: true })],
+            spacing: { before: 400 } 
+          }),
+          new Paragraph({ text: `Le présent contrat est régi par le ${activeLegal.codeLabel} (${activeLegal.ref}).` }),
 
-          new Paragraph({ text: "\nARTICLE 2 : POSTE ET RÉMUNÉRATION", bold: true }),
-          new Paragraph(`Le salarié est recruté en tant que ${formData.post} pour un salaire brut de ${formData.salary} F par mois.`),
+          new Paragraph({ 
+            children: [new TextRun({ text: "\nARTICLE 2 : POSTE ET RÉMUNÉRATION", bold: true })] 
+          }),
+          new Paragraph({ text: `Le salarié est recruté en tant que ${formData.post} pour un salaire brut de ${formData.salary} F par mois.` }),
 
-          // Clause dynamique de non-concurrence
           ...(formData.hasNonCompete ? [
-            new Paragraph({ text: "\nARTICLE 3 : NON-CONCURRENCE", bold: true }),
-            new Paragraph(`Le salarié s'engage, en cas de rupture, à ne pas exercer d'activité concurrente pendant une durée de ${formData.nonCompeteDuration} mois dans la zone géographique d'activité de l'entreprise.`)
+            new Paragraph({ 
+              children: [new TextRun({ text: "\nARTICLE 3 : NON-CONCURRENCE", bold: true })] 
+            }),
+            new Paragraph({ text: `Le salarié s'engage, en cas de rupture, à ne pas exercer d'activité concurrente pendant une durée de ${formData.nonCompeteDuration} mois dans la zone géographique d'activité de l'entreprise.` })
           ] : []),
 
-          new Paragraph({ text: "\nARTICLE FINAL : LITIGES", bold: true, spacing: { before: 400 } }),
-          new Paragraph(activeLegal.jurisdiction),
+          new Paragraph({ 
+            children: [new TextRun({ text: "\nARTICLE FINAL : LITIGES", bold: true })],
+            spacing: { before: 400 } 
+          }),
+          new Paragraph({ text: activeLegal.jurisdiction }),
 
-          new Paragraph({ text: "\n\nFait à ______________, le ______________", alignment: AlignmentType.RIGHT }),
-          new Paragraph({ text: "\n\nSignature Employeur (précédée de 'Lu et approuvé')          Signature Salarié", spacing: { before: 400 } }),
+          new Paragraph({ 
+            text: "\n\nFait à ______________, le ______________", 
+            alignment: AlignmentType.RIGHT 
+          }),
+          new Paragraph({ 
+            text: "\n\nSignature Employeur (précédée de 'Lu et approuvé')          Signature Salarié", 
+            spacing: { before: 400 } 
+          }),
         ],
       }],
     });
