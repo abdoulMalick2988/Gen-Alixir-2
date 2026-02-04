@@ -91,12 +91,18 @@ export default function UltimateContractEngine() {
     try {
       const legal = LEGAL_CONFIG[country];
       const doc = new Document({
-        styles: {
-          default: {
-            heading1: { run: { font: "Calibri", size: 28, bold: true, color: "000000" }, paragraph: { spacing: { before: 240, after: 120 } } },
-            paragraph: { run: { font: "Calibri", size: 22 } } // Size 22 = 11pt
-          }
-        },
+        // --- Remplace le bloc styles (Lignes 94 à 99) par celui-ci ---
+styles: {
+  default: {
+    heading1: { 
+      run: { font: "Calibri", size: 28, bold: true, color: "000000" }, 
+      paragraph: { spacing: { before: 240, after: 120 } } 
+    },
+    document: { // Correction ici : On utilise 'document' pour le style par défaut
+      run: { font: "Calibri", size: 22 }
+    }
+  }
+},
         sections: [{
           properties: {},
           headers: {
