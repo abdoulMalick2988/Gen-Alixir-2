@@ -3,6 +3,8 @@
 import React, { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Sidebar from "../../../components/Sidebar";
+import { useEffect } from 'react'; // Ajoute useEffect ici
+import { supabase } from '@/lib/supabase'; // Ajoute cette ligne
 
 /** * ARCHITECTURE MINE D'OR - REGISTRE GLOBAL & MASSE SALARIALE v2.0
  * Focus : Robustesse TypeScript, Calculs Financiers, UX Dense
@@ -51,7 +53,46 @@ const EMPLOYEES_MASTER: Employee[] = [
 export default function RHRegistreGlobalUltraRobust() {
   const router = useRouter();
   
-  const [employees, setEmployees] = useState<Employee[]>(EMPLOYEES_MASTER);
+  const [employees, setEmployees] = useState<Employee[]>([]); // On initialise à vide
+  const [loading, setLoading] = useState(true); // On active le chargement
+
+  // --- RÉCUPÉRATION SUPABASE ---
+  useEffect(() => {
+    const fetchStaff = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('staff')
+          .select('*');
+
+        if (error) throw error;
+
+        if (data) {
+          const formattedData = data.map((item: any) => ({
+            id: item.id_key ? `WKD-${item.id_key}` : item.id,
+            name: item.full_name || 'Inconnu',
+            dept: item.department || 'Non assigné',
+            post: item.role || 'Collaborateur',
+            contract: 'CDI', // Valeur par défaut
+            salary: item.salary || 0,
+            status: item.status === 'En ligne' ? 'Actif' : 'En pause',
+            email: item.email || '',
+            joinDate: new Date(item.created_at).toISOString().split('T')[0],
+            nation: 'Sénégal',
+            aura: 100,
+            age: item.age,
+            genre: item.genre,
+            pco: item.pco
+          }));
+          setEmployees(formattedData);
+        }
+      } catch (err) {
+        console.error("Erreur:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchStaff();
+  }, []);
   const [search, setSearch] = useState("");
   const [activeDept, setActiveDept] = useState("Tous");
   const [showPayroll, setShowPayroll] = useState(false);
@@ -82,6 +123,16 @@ export default function RHRegistreGlobalUltraRobust() {
 
   // --- FILTRAGE ---
   const filteredData = useMemo(() => {
+    if (loading) {
+    return (
+      <div className="h-screen bg-black flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-emerald-500 border-t-transparent animate-spin rounded-full"></div>
+          <p className="text-[10px] font-black uppercase tracking-[0.5em] text-emerald-500">Synchronisation Alpha-1...</p>
+        </div>
+      </div>
+    );
+  }
     return employees.filter(emp => {
       const matchSearch = emp.name.toLowerCase().includes(search.toLowerCase()) || 
                           emp.id.toLowerCase().includes(search.toLowerCase()) ||
