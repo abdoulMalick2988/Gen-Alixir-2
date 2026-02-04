@@ -55,7 +55,7 @@ export default function ContractArchitectPage() {
             heading: HeadingLevel.HEADING_1 
           }),
           new Paragraph({ 
-            children: [new TextRun({ text: `Régime : ${formData.type}`, italic: true })],
+            children: [new TextRun({ text: `Régime : ${formData.type}`, italics: true })],
             alignment: AlignmentType.CENTER 
           }),
           
