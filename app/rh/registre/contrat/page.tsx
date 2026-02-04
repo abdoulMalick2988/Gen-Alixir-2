@@ -335,6 +335,10 @@ new Paragraph({
           </div>
         </div>
       </div>
+     {/* ESPACE DE SÉCURITÉ POUR LE SCROLL */}
+        <div className="h-40 w-full col-span-12"></div>
+      </div> {/* Fin du grid */}
+    </div> // Fin du container principal
     </div>
   );
 }
