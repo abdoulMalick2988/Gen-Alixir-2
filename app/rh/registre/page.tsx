@@ -74,7 +74,8 @@ export default function RHRegistreGlobalUltraRobust() {
             post: item.role || 'Collaborateur',
             contract: 'CDI', // Valeur par défaut
             salary: item.salary || 0,
-            status: item.status === 'En ligne' ? 'Actif' : 'En pause',
+            // Remplace ton ancienne ligne status par celle-ci :
+status: (item.status === 'En ligne' ? 'Actif' : 'En pause') as Employee['status'],
             email: item.email || '',
             joinDate: new Date(item.created_at).toISOString().split('T')[0],
             nation: 'Sénégal',
