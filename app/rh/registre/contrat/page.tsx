@@ -314,37 +314,69 @@ export default function GenerateurContratFinal() {
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const file = e.target.files?.[0];
+  if (!file) return;
 
-    const fileType = file.type;
-    const fileName = file.name;
+  const fileType = file.type;
+  const fileName = file.name;
 
-    // Si c'est un fichier JSON (ancien format)
-    if (fileType === 'application/json') {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        try {
-          const contract = JSON.parse(event.target?.result as string);
-          const updated = [contract, ...savedContracts];
-          setSavedContracts(updated);
-          localStorage.setItem('ecodreum_contracts', JSON.stringify(updated));
-          showNotif('Contrat importé avec succès', 's');
-        } catch (error) {
-          showNotif("Erreur lors de l'import JSON", 'e');
-        }
-      };
-      reader.readAsText(file);
+  const reader = new FileReader();
+
+  reader.onload = () => {
+    const base64Data = reader.result as string;
+
+    // 🖼️ CAS IMAGE (logo entreprise)
+    if (fileType.startsWith('image/')) {
+      updateData('companyLogo', base64Data); // stocké dans data
+      showNotif('Logo importé avec succès', 's');
+      return;
     }
-    // Si c'est un PDF ou Word
-    else if (
+
+    // 📄 CAS DOCUMENT (PDF / WORD)
+    if (
       fileType === 'application/pdf' ||
       fileType === 'application/msword' ||
-      fileType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+      fileType ===
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
     ) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const base64Data = event.target?.result as string;
+      const contract: SavedContract = {
+        id: Date.now().toString(),
+        employeeName: fileName.replace(/\.(pdf|doc|docx)$/i, ''),
+        jobTitle: 'Document importé',
+        contractType: 'CDI',
+        mode: 'PRINT',
+        createdAt: new Date().toISOString(),
+        data: {
+          ...data,
+          empName: fileName.replace(/\.(pdf|doc|docx)$/i, ''),
+          jobTitle: 'Document importé',
+        },
+        signed: false,
+        importedFile: {
+          name: fileName,
+          type: fileType,
+          data: base64Data,
+        },
+      };
+
+      const updated = [contract, ...savedContracts];
+      setSavedContracts(updated);
+      localStorage.setItem('ecodreum_contracts', JSON.stringify(updated));
+
+      showNotif(`${fileName} importé avec succès`, 's');
+      return;
+    }
+
+    // ❌ Format non supporté
+    showNotif('Format non supporté. Utilisez PDF, Word ou image.', 'e');
+  };
+
+  reader.readAsDataURL(file);
+
+  // reset input pour permettre re-upload du même fichier
+  e.target.value = '';
+};
+
         
         // Créer une entrée d'archive pour ce fichier
         const contract: SavedContract = {
@@ -934,10 +966,11 @@ export default function GenerateurContratFinal() {
                             <span className="text-xs text-zinc-500">Charger</span>
                             <input
   type="file"
-  accept="image/*"
+  accept=".pdf,.doc,.docx,image/*"
   onChange={handleFileUpload}
   className="hidden"
 />
+
 
                           </label>
                         )}
