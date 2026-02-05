@@ -883,6 +883,10 @@ export default function GenerateurContratFinal() {
 
   // --- ENVOI EMAIL ---
   const sendEmail = async () => {
+    console.log('🔵 Début sendEmail');
+    console.log('📧 Email destinataire:', emailRecipient);
+    console.log('✅ Validation:', validateForm());
+
     if (!emailRecipient || !validateForm()) {
       showNotif("Email invalide ou formulaire incomplet", "e");
       return;
@@ -898,10 +902,12 @@ export default function GenerateurContratFinal() {
         throw new Error("Référence du contrat non trouvée");
       }
 
+      console.log('🔵 Génération QR Code...');
       const qrCode = await generateQRCode(data);
       setQrCodeData(qrCode);
       await new Promise(resolve => setTimeout(resolve, 300));
 
+      console.log('🔵 Conversion en canvas...');
       const canvas = await html2canvas(contractRef.current, {
         scale: 2,
         useCORS: true,
@@ -910,10 +916,12 @@ export default function GenerateurContratFinal() {
       });
 
       const pdfBase64 = canvas.toDataURL('image/png');
+      console.log('✅ PDF Base64 généré, taille:', pdfBase64.length);
       setShowPreview(false);
 
       showNotif("Envoi en cours...", "w");
 
+      console.log('🔵 Appel API /api/send-contract...');
       const response = await fetch('/api/send-contract', {
         method: 'POST',
         headers: {
@@ -929,7 +937,9 @@ export default function GenerateurContratFinal() {
         }),
       });
 
+      console.log('📡 Réponse API:', response.status);
       const result = await response.json();
+      console.log('📦 Résultat:', result);
 
       if (!response.ok) {
         throw new Error(result.error || 'Erreur lors de l\'envoi');
@@ -940,7 +950,7 @@ export default function GenerateurContratFinal() {
       setEmailRecipient('');
       
     } catch (error: any) {
-      console.error('Erreur envoi email:', error);
+      console.error('❌ Erreur envoi email:', error);
       showNotif(error.message || "Erreur lors de l'envoi", "e");
       setShowPreview(false);
     }
