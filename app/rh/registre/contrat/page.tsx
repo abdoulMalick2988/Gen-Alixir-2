@@ -2032,10 +2032,10 @@ return (
   );
 }
 
-// --- COMPOSANT PRÉVISUALISATION CONTRAT ---
-function ContractPreview({ data, config, signatures, qrCode }: { 
-  data: FormData; 
-  config: CountryConfig; 
+// ✅ CORRECT
+function ContractPreview({ data, config, signatures, qrCode }: {
+  data: FormData;
+  config: CountryConfig;
   signatures: { employer: string; employee: string };
   qrCode: string;
 }) {
