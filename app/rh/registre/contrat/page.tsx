@@ -1931,6 +1931,11 @@ return (
           </div>
         )}
 
+        </div>
+    </div>
+  );
+}
+
 // --- COMPOSANT PRÉVISUALISATION CONTRAT ---
 function ContractPreview({ data, config, signatures, qrCode }: { 
   data: FormData; 
