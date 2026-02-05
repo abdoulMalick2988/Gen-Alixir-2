@@ -307,25 +307,6 @@ export default function GenerateurContratFinal() {
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file && file.type === 'application/json') {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        try {
-          const contract = JSON.parse(event.target?.result as string);
-          const updated = [contract, ...savedContracts];
-          setSavedContracts(updated);
-          localStorage.setItem('ecodreum_contracts', JSON.stringify(updated));
-          showNotif('Contrat importé avec succès', 's');
-        } catch (error) {
-          showNotif("Erreur lors de l'import", 'e');
-        }
-      };
-      reader.readAsText(file);
-    }
-  };
-
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
     if (!file) return;
 
     const fileType = file.type;
