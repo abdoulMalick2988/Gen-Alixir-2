@@ -5,15 +5,27 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(request: Request) {
   try {
+    console.log('🔵 API /send-contract appelée');
+    
     const body = await request.json();
     const { to, employeeName, jobTitle, contractType, companyName, pdfBase64 } = body;
 
-    // Convertir base64 en buffer
-    const base64Data = pdfBase64.replace(/^data:image\/\w+;base64,/, '');
+    if (!to || !pdfBase64) {
+      return NextResponse.json({ error: 'Email ou PDF manquant' }, { status: 400 });
+    }
+
+    console.log('📧 Destinataire:', to);
+    console.log('📄 Taille PDF Base64:', pdfBase64.length);
+
+    // Convertir le PDF base64 en buffer
+    // Le format est: "data:application/pdf;base64,XXXXXX"
+    const base64Data = pdfBase64.split(',')[1] || pdfBase64;
     const buffer = Buffer.from(base64Data, 'base64');
 
+    console.log('✅ Buffer créé, taille:', buffer.length, 'bytes');
+
     const { data, error } = await resend.emails.send({
-      from: 'ECODREUM RH <onboarding@resend.dev>', // À MODIFIER avec votre domaine vérifié
+      from: 'ECODREUM RH <onboarding@resend.dev>',
       to: [to],
       subject: `Contrat de travail - ${employeeName}`,
       html: `
@@ -44,6 +56,10 @@ export async function POST(request: Request) {
             </div>
             
             <p style="color: #4b5563; line-height: 1.6; font-size: 16px;">
+              📎 Le contrat est joint à cet email au format PDF.
+            </p>
+            
+            <p style="color: #4b5563; line-height: 1.6; font-size: 16px;">
               Merci de lire attentivement ce document, de le signer et de nous le retourner dans les meilleurs délais.
             </p>
             
@@ -66,7 +82,7 @@ export async function POST(request: Request) {
       attachments: [
         {
           filename: `CONTRAT_${employeeName.replace(/\s/g, '_')}.pdf`,
-          content: buffer
+          content: buffer,
         }
       ]
     });
@@ -76,11 +92,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
-    console.log('✅ Email envoyé:', data);
+    console.log('✅ Email envoyé avec succès');
     return NextResponse.json({ success: true, data }, { status: 200 });
 
   } catch (error: any) {
     console.error('❌ Erreur serveur:', error);
-    return NextResponse.json({ error: error.message || 'Erreur serveur' }, { status: 500 });
+    return NextResponse.json({ 
+      error: error.message || 'Erreur serveur',
+      details: error.toString()
+    }, { status: 500 });
   }
 }
