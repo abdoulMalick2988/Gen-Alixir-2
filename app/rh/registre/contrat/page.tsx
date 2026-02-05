@@ -340,24 +340,26 @@ export default function GenerateurContratFinal() {
         
         // Créer une entrée d'archive pour ce fichier
         const contract: SavedContract = {
-          id: Date.now().toString(),
-          employeeName: fileName.replace(/\.(pdf|doc|docx)$/i, ''),
-          jobTitle: 'Document importé',
-          contractType: 'CDI',
-          mode: 'PRINT',
-          createdAt: new Date().toISOString(),
-          data: {
-            ...data,
-            empName: fileName.replace(/\.(pdf|doc|docx)$/i, ''),
-            jobTitle: 'Document importé'
-          },
-          signed: false,
-          importedFile: {
-            name: fileName,
-            type: fileType,
-            data: base64Data
-          }
-        };
+  id: Date.now().toString(),
+  employeeName: fileName.replace(/\.(pdf|doc|docx)$/i, ''),
+  jobTitle: 'Document importé',
+  contractType: 'CDI',
+  mode: 'PRINT',
+  createdAt: new Date().toISOString(),
+  data: {
+    ...data,
+    empName: fileName.replace(/\.(pdf|doc|docx)$/i, ''),
+    jobTitle: 'Document importé',
+  },
+  signed: false,
+
+  importedFile: {
+    name: fileName,
+    type: fileType,
+    data: base64Data
+  }
+};
+
         
         const updated = [contract, ...savedContracts];
         setSavedContracts(updated);
