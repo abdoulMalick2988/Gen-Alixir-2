@@ -932,7 +932,13 @@ export default function GenerateurContratFinal() {
                           <label className="flex flex-col items-center justify-center w-32 h-32 border-2 border-dashed border-white/20 rounded-xl cursor-pointer hover:border-emerald-500/50 hover:bg-emerald-500/5 transition-all">
                             <Upload size={24} className="text-zinc-500 mb-2" />
                             <span className="text-xs text-zinc-500">Charger</span>
-                            <input type="file" accept="image/*" onChange={handleLogoUpload} className="hidden" />
+                            <input
+  type="file"
+  accept="image/*"
+  onChange={handleFileUpload}
+  className="hidden"
+/>
+
                           </label>
                         )}
                       </div>
