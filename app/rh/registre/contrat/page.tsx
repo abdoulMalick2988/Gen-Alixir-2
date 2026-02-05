@@ -324,15 +324,72 @@ export default function GenerateurContratFinal() {
     }
   };
 
-  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
+    if (!file) return;
+
+    const fileType = file.type;
+    const fileName = file.name;
+
+    // Si c'est un fichier JSON (ancien format)
+    if (fileType === 'application/json') {
       const reader = new FileReader();
       reader.onload = (event) => {
-        updateData('compLogo', event.target?.result as string);
+        try {
+          const contract = JSON.parse(event.target?.result as string);
+          const updated = [contract, ...savedContracts];
+          setSavedContracts(updated);
+          localStorage.setItem('ecodreum_contracts', JSON.stringify(updated));
+          showNotif('Contrat importé avec succès', 's');
+        } catch (error) {
+          showNotif("Erreur lors de l'import JSON", 'e');
+        }
+      };
+      reader.readAsText(file);
+    }
+    // Si c'est un PDF ou Word
+    else if (
+      fileType === 'application/pdf' ||
+      fileType === 'application/msword' ||
+      fileType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    ) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const base64Data = event.target?.result as string;
+        
+        // Créer une entrée d'archive pour ce fichier
+        const contract: SavedContract = {
+          id: Date.now().toString(),
+          employeeName: fileName.replace(/\.(pdf|doc|docx)$/i, ''),
+          jobTitle: 'Document importé',
+          contractType: 'CDI',
+          mode: 'PRINT',
+          createdAt: new Date().toISOString(),
+          data: {
+            ...data,
+            empName: fileName.replace(/\.(pdf|doc|docx)$/i, ''),
+            jobTitle: 'Document importé'
+          },
+          signed: false,
+          importedFile: {
+            name: fileName,
+            type: fileType,
+            data: base64Data
+          }
+        };
+        
+        const updated = [contract, ...savedContracts];
+        setSavedContracts(updated);
+        localStorage.setItem('ecodreum_contracts', JSON.stringify(updated));
+        showNotif(`${fileName} importé avec succès`, 's');
       };
       reader.readAsDataURL(file);
+    } else {
+      showNotif('Format non supporté. Utilisez PDF, Word ou JSON.', 'e');
     }
+    
+    // Réinitialiser l'input pour permettre de réimporter le même fichier
+    e.target.value = '';
   };
 
   const generateQRCode = async (contractData: FormData): Promise<string> => {
@@ -1175,7 +1232,7 @@ export default function GenerateurContratFinal() {
                   <label className="flex items-center gap-2 px-4 py-3 bg-blue-500/10 border border-blue-500/30 text-blue-400 rounded-xl font-bold text-xs cursor-pointer hover:bg-blue-500/20 transition-all">
                     <Upload size={16} />
                     Importer
-                    <input type="file" accept=".json" onChange={handleFileUpload} className="hidden" />
+                    <input type="file" accept=".json,.pdf,.doc,.docx" onChange={handleFileUpload} className="hidden" />
                   </label>
                 </div>
                 {filteredContracts.length === 0 ? (
