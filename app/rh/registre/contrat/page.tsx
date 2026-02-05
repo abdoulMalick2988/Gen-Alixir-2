@@ -130,7 +130,15 @@ interface SavedContract {
   employerSignature?: string;
   employeeSignature?: string;
   qrCode?: string;
+
+  // ✅ AJOUT OBLIGATOIRE
+  importedFile?: {
+    name: string;
+    type: string;
+    data: string;
+  };
 }
+
 
 // --- CONFIGURATION JURIDIQUE ---
 const COUNTRIES: Record<'SENEGAL' | 'BURUNDI', CountryConfig> = {
