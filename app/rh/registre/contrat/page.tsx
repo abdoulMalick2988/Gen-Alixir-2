@@ -563,7 +563,7 @@ export default function GenerateurContratFinal() {
     }
   };
 
-  // --- EXPORT WORD ---
+// --- EXPORT WORD ---
   const generateWord = async () => {
     if (!validateForm()) {
       showNotif("Veuillez corriger les erreurs", "e");
@@ -576,7 +576,7 @@ export default function GenerateurContratFinal() {
           properties: {},
           children: [
             new Paragraph({
-              text: "CONTRAT DE TRAVAIL",
+              text: data.jobType === 'STAGE' ? 'CONVENTION DE STAGE' : 'CONTRAT DE TRAVAIL',
               heading: HeadingLevel.HEADING_1,
               alignment: AlignmentType.CENTER,
             }),
@@ -599,8 +599,12 @@ export default function GenerateurContratFinal() {
               spacing: { after: 200 }
             }),
             new Paragraph({
-              text: 'Ci-après dénommée « L\'EMPLOYEUR »',
-              italics: true,
+              children: [
+                new TextRun({
+                  text: `Ci-après dénommée « ${data.jobType === 'STAGE' ? "L'ENTREPRISE D'ACCUEIL" : "L'EMPLOYEUR"} »`,
+                  italics: true,
+                })
+              ],
               alignment: AlignmentType.RIGHT,
               spacing: { after: 200 }
             }),
@@ -625,10 +629,100 @@ export default function GenerateurContratFinal() {
               spacing: { after: 200 }
             }),
             new Paragraph({
-              text: 'Ci-après dénommé(e) « LE SALARIÉ »',
-              italics: true,
+              children: [
+                new TextRun({
+                  text: `Ci-après dénommé(e) « ${data.jobType === 'STAGE' ? 'LE STAGIAIRE' : 'LE SALARIÉ'} »`,
+                  italics: true,
+                })
+              ],
               alignment: AlignmentType.RIGHT,
               spacing: { after: 400 }
+            }),
+            new Paragraph({
+              text: "D'AUTRE PART,",
+              alignment: AlignmentType.CENTER,
+              bold: true,
+              spacing: { after: 400 }
+            }),
+            new Paragraph({
+              text: "IL A ÉTÉ ARRÊTÉ ET CONVENU CE QUI SUIT :",
+              heading: HeadingLevel.HEADING_2,
+              spacing: { before: 200, after: 200 }
+            }),
+            new Paragraph({
+              text: "ARTICLE 1 : OBJET ET CADRE LÉGAL",
+              heading: HeadingLevel.HEADING_3,
+              spacing: { before: 200, after: 100 }
+            }),
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: data.jobType === 'STAGE' 
+                    ? `La présente convention de stage est conclue dans le cadre de la formation de ${data.empName} et s'inscrit dans le parcours pédagogique de l'établissement ${data.stageSchool || '[établissement]'}. Elle est régie par les dispositions légales et réglementaires en vigueur au ${config.name} relatives aux stages en entreprise.`
+                    : `Le présent contrat est conclu sous le régime du ${config.code}. ${config.articles.intro} ${config.articles.engagement} Le présent contrat définit les conditions d'engagement et d'emploi du Salarié au sein de la société ${data.compName}.`
+                })
+              ],
+              spacing: { after: 200 }
+            }),
+            new Paragraph({
+              text: "ARTICLE 2 : NATURE ET FONCTIONS",
+              heading: HeadingLevel.HEADING_3,
+              spacing: { before: 200, after: 100 }
+            }),
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: `${data.jobType === 'STAGE' ? 'Le Stagiaire' : 'Le Salarié'} est ${data.jobType === 'STAGE' ? 'accueilli' : 'recruté'} en qualité de ${data.jobTitle} au sein du département ${data.jobDept}. ${data.jobType === 'STAGE' ? 'Le Stagiaire' : 'Le Salarié'} exercera ses fonctions au sein de l'établissement situé à ${data.jobLocation}.`
+                })
+              ],
+              spacing: { after: 200 }
+            }),
+            new Paragraph({
+              text: `ARTICLE 3 : ${data.jobType === 'STAGE' ? 'GRATIFICATION' : 'RÉMUNÉRATION'}`,
+              heading: HeadingLevel.HEADING_3,
+              spacing: { before: 200, after: 100 }
+            }),
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: `En contrepartie de l'exécution de ses fonctions, ${data.jobType === 'STAGE' ? 'le Stagiaire' : 'le Salarié'} percevra une ${data.jobType === 'STAGE' ? 'gratification' : 'rémunération'} mensuelle ${data.jobType === 'STAGE' ? '' : 'brute '}de ${data.salary} ${config.currency} (${salaryToWords(data.salary, config.currency)}). Cette ${data.jobType === 'STAGE' ? 'gratification est' : 'rémunération est'} versée mensuellement par virement bancaire${data.jobType === 'STAGE' ? '' : ', sous réserve des retenues légales et conventionnelles applicables'}.${data.bonus ? ` En sus de cette rémunération de base, ${data.jobType === 'STAGE' ? 'le stagiaire' : 'le Salarié'} pourra percevoir les primes et avantages suivants : ${data.bonus}.` : ''}`
+                })
+              ],
+              spacing: { after: 200 }
+            }),
+            new Paragraph({
+              text: "ARTICLE 4 : DURÉE ET PÉRIODE D'ESSAI",
+              heading: HeadingLevel.HEADING_3,
+              spacing: { before: 200, after: 100 }
+            }),
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: `${data.jobType === 'STAGE' ? 'La présente convention de stage' : 'Le présent contrat de travail'} prend effet à compter du ${new Date(data.startDate).toLocaleDateString('fr-FR')}${(data.jobType === 'CDD' || data.jobType === 'STAGE') && data.endDate ? ` et prendra fin le ${new Date(data.endDate).toLocaleDateString('fr-FR')}` : ''}.${data.jobType !== 'STAGE' ? ` Une période d'essai de ${data.trial} mois est prévue. Durant cette période, chacune des parties peut mettre fin au contrat sans préavis ni indemnité, conformément aux dispositions légales en vigueur.` : ''}`
+                })
+              ],
+              spacing: { after: 200 }
+            }),
+            new Paragraph({
+              text: "Signatures",
+              heading: HeadingLevel.HEADING_2,
+              spacing: { before: 400, after: 200 }
+            }),
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: `Fait à ${data.compAddr.split(',')[0].trim()}, le ${new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}`
+                })
+              ],
+              spacing: { after: 400 }
+            }),
+            new Paragraph({
+              text: `${data.jobType === 'STAGE' ? "L'ENTREPRISE D'ACCUEIL" : "L'EMPLOYEUR"}: ${data.bossName} (${data.bossTitle})`,
+              spacing: { after: 100 }
+            }),
+            new Paragraph({
+              text: `${data.jobType === 'STAGE' ? 'LE STAGIAIRE' : 'LE SALARIÉ'}: ${data.empName}`,
+              spacing: { after: 100 }
             }),
           ]
         }]
