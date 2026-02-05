@@ -2032,13 +2032,14 @@ return (
   );
 }
 
-// ✅ CORRECT
-function ContractPreview({ data, config, signatures, qrCode }: {
+interface ContractPreviewProps {
   data: FormData;
   config: CountryConfig;
   signatures: { employer: string; employee: string };
   qrCode: string;
-}) {
+}
+
+function ContractPreview({ data, config, signatures, qrCode }: ContractPreviewProps) {
   const capitalClause = data.showCapital && data.compCapital ? `, au capital social de ${data.compCapital} ${config.currency}` : '';
   const foreignerClause = data.isForeigner && data.empWorkPermit ? `, titulaire du permis de travail n°${data.empWorkPermit}` : '';
   const cddClause = data.jobType === 'CDD' && data.cddReason ? `\n\nLe présent contrat est conclu pour les besoins suivants : ${data.cddReason}.` : '';
