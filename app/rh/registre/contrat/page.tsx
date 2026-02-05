@@ -2138,8 +2138,6 @@ function ContractPreview({ data, config, signatures, qrCode }: ContractPreviewPr
               data.jobType === 'CDD' ? 'un contrat à durée déterminée (CDD)' :
               'une convention de stage'
             }.{cddClause}
-            <br /><br />
-            <strong>{data.jobType === 'STAGE' ? 'Le Stagiaire' : 'Le Salarié'} s'engage à</strong> exercer ses fonctions avec diligence, compétence et loyauté, conformément aux directives de {data.jobType === 'STAGE' ? "l'Entreprise d'Accueil" : "l'Employeur"} et aux usages de la profession.
           </Article>
 
           <Article title={`ARTICLE 3 : ${data.jobType === 'STAGE' ? 'GRATIFICATION' : 'RÉMUNÉRATION'}`}>
@@ -2150,25 +2148,19 @@ function ContractPreview({ data, config, signatures, qrCode }: ContractPreviewPr
             {config.articles.workDuration} la durée hebdomadaire de travail est fixée à <strong>{data.hours} heures</strong>.
           </Article>
 
-          <Article title="ARTICLE 4 : DURÉE ET PÉRIODE D'ESSAI">
+          <Article title="ARTICLE 4 : DURÉE">
             {data.jobType === 'STAGE' ? 'La présente convention de stage' : 'Le présent contrat de travail'} prend effet à compter du <strong>{new Date(data.startDate).toLocaleDateString('fr-FR')}</strong>{endDateClause}.
-            <br /><br />
             {data.jobType !== 'STAGE' && (
               <>
-                Une période d'essai de <strong>{data.trial} mois</strong> est prévue. Durant cette période, chacune des parties peut mettre fin au contrat sans préavis ni indemnité, conformément aux dispositions légales en vigueur.
                 <br /><br />
-                À l'issue de la période d'essai, si aucune des parties n'a manifesté sa volonté de rompre le contrat, celui-ci se poursuivra dans les conditions définies aux présentes.
+                Une période d'essai de <strong>{data.trial} mois</strong> est prévue.
               </>
             )}
           </Article>
 
           {data.hasNonCompete && data.jobType !== 'STAGE' && (
             <Article title="ARTICLE 5 : CLAUSE DE NON-CONCURRENCE">
-              Le Salarié s'engage, pendant une durée de <strong>{data.nonCompeteDuration}</strong> suivant la cessation du présent contrat, quelle qu'en soit la cause, à ne pas exercer, directement ou indirectement, une activité concurrente à celle de l'Employeur.
-              <br /><br />
-              Cette obligation s'applique sur le territoire du {config.name} et concerne toute activité similaire ou connexe à celle exercée au sein de la société {data.compName}.
-              <br /><br />
-              En contrepartie de cette clause, le Salarié percevra une indemnité compensatrice dont les modalités seront définies conformément aux dispositions légales applicables.
+              Le Salarié s'engage, pendant une durée de <strong>{data.nonCompeteDuration}</strong> suivant la cessation du présent contrat, à ne pas exercer une activité concurrente.
             </Article>
           )}
         </div>
@@ -2179,14 +2171,14 @@ function ContractPreview({ data, config, signatures, qrCode }: ContractPreviewPr
             Fait à <strong>{data.compAddr.split(',')[0].trim()}</strong>, le <strong>{new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}</strong>
           </p>
           
-          <p className="text-sm">En deux exemplaires originaux, dont un remis {data.jobType === 'STAGE' ? 'au Stagiaire' : 'au Salarié'}.</p>
+          <p className="text-sm">En deux exemplaires originaux.</p>
 
           <div className="grid grid-cols-2 gap-8 mt-12">
             <div className="text-center space-y-4">
-              <p className="font-bold">{data.jobType === 'STAGE' ? "L'ENTREPRISE D'ACCUEIL" : "L'EMPLOYEUR"}</p>
+              <p className="font-bold">{data.jobType === 'STAGE' ? "L'ENTREPRISE" : "L'EMPLOYEUR"}</p>
               {data.documentMode === 'ELECTRONIC' && signatures.employer ? (
                 <div className="flex flex-col items-center">
-                  <img src={signatures.employer} alt="Signature Employeur" className="h-24 border-b-2 border-black" />
+                  <img src={signatures.employer} alt="Signature" className="h-24 border-b-2 border-black" />
                   <p className="text-xs text-gray-600 mt-2">Signature électronique</p>
                 </div>
               ) : (
@@ -2204,12 +2196,12 @@ function ContractPreview({ data, config, signatures, qrCode }: ContractPreviewPr
               <p className="font-bold">{data.jobType === 'STAGE' ? 'LE STAGIAIRE' : 'LE SALARIÉ'}</p>
               {data.documentMode === 'ELECTRONIC' && signatures.employee ? (
                 <div className="flex flex-col items-center">
-                  <img src={signatures.employee} alt="Signature Salarié" className="h-24 border-b-2 border-black" />
+                  <img src={signatures.employee} alt="Signature" className="h-24 border-b-2 border-black" />
                   <p className="text-xs text-gray-600 mt-2">Signature électronique</p>
                 </div>
               ) : (
                 <div className="h-24 border-b-2 border-black flex items-end justify-center pb-2">
-                  <p className="text-xs text-gray-500">(Lu et approuvé, signature)</p>
+                  <p className="text-xs text-gray-500">(Lu et approuvé)</p>
                 </div>
               )}
               <div className="text-sm">
@@ -2223,7 +2215,7 @@ function ContractPreview({ data, config, signatures, qrCode }: ContractPreviewPr
           {qrCode && (
             <div className="flex justify-center mt-12">
               <div className="text-center">
-                <p className="text-xs text-gray-600 mb-2">Code de vérification du document</p>
+                <p className="text-xs text-gray-600 mb-2">Code de vérification</p>
                 <img src={qrCode} alt="QR Code" className="w-32 h-32 mx-auto" />
               </div>
             </div>
@@ -2234,15 +2226,14 @@ function ContractPreview({ data, config, signatures, qrCode }: ContractPreviewPr
         <div className="mt-16 pt-8 border-t-2 border-gray-300 text-center text-xs text-gray-600">
           {data.documentMode === 'ELECTRONIC' ? (
             <>
-              <p className="mb-2">Document généré via la plateforme <strong>ECODREUM Intelligence</strong></p>
-              <p>Ce document ne se substitue pas à un conseil juridique personnalisé</p>
+              <p className="mb-2">Document généré via <strong>ECODREUM Intelligence</strong></p>
+              <p>Ce document ne se substitue pas à un conseil juridique</p>
             </>
           ) : (
             <p className="font-semibold">{data.compName}</p>
           )}
         </div>
       </div>
-    </div>
     </div>
   );
 }
