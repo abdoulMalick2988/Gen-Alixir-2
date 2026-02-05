@@ -325,14 +325,14 @@ export default function GenerateurContratFinal() {
   reader.onload = () => {
     const base64Data = reader.result as string;
 
-    // 🖼️ CAS IMAGE (logo entreprise)
+    // 🖼️ IMAGE (logo)
     if (fileType.startsWith('image/')) {
-      updateData('companyLogo', base64Data); // stocké dans data
+      updateData('companyLogo', base64Data);
       showNotif('Logo importé avec succès', 's');
       return;
     }
 
-    // 📄 CAS DOCUMENT (PDF / WORD)
+    // 📄 DOCUMENT (PDF / WORD)
     if (
       fileType === 'application/pdf' ||
       fileType === 'application/msword' ||
@@ -367,53 +367,15 @@ export default function GenerateurContratFinal() {
       return;
     }
 
-    // ❌ Format non supporté
+    // ❌ FORMAT NON SUPPORTÉ
     showNotif('Format non supporté. Utilisez PDF, Word ou image.', 'e');
   };
 
   reader.readAsDataURL(file);
 
-  // reset input pour permettre re-upload du même fichier
+  // reset input
   e.target.value = '';
 };
-
-        
-        // Créer une entrée d'archive pour ce fichier
-        const contract: SavedContract = {
-  id: Date.now().toString(),
-  employeeName: fileName.replace(/\.(pdf|doc|docx)$/i, ''),
-  jobTitle: 'Document importé',
-  contractType: 'CDI',
-  mode: 'PRINT',
-  createdAt: new Date().toISOString(),
-  data: {
-    ...data,
-    empName: fileName.replace(/\.(pdf|doc|docx)$/i, ''),
-    jobTitle: 'Document importé',
-  },
-  signed: false,
-
-  importedFile: {
-    name: fileName,
-    type: fileType,
-    data: base64Data
-  }
-};
-
-        
-        const updated = [contract, ...savedContracts];
-        setSavedContracts(updated);
-        localStorage.setItem('ecodreum_contracts', JSON.stringify(updated));
-        showNotif(`${fileName} importé avec succès`, 's');
-      };
-      reader.readAsDataURL(file);
-    } else {
-      showNotif('Format non supporté. Utilisez PDF, Word ou JSON.', 'e');
-    }
-    
-    // Réinitialiser l'input pour permettre de réimporter le même fichier
-    e.target.value = '';
-  };
 
   const generateQRCode = async (contractData: FormData): Promise<string> => {
     const qrData = JSON.stringify({
