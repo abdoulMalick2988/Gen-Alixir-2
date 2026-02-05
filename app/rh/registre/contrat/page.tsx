@@ -889,21 +889,62 @@ export default function GenerateurContratFinal() {
     }
 
     try {
+      showNotif("Génération du PDF...", "w");
+      
+      setShowPreview(true);
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      if (!contractRef.current) {
+        throw new Error("Référence du contrat non trouvée");
+      }
+
+      const qrCode = await generateQRCode(data);
+      setQrCodeData(qrCode);
+      await new Promise(resolve => setTimeout(resolve, 300));
+
+      const canvas = await html2canvas(contractRef.current, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#ffffff',
+        logging: false
+      });
+
+      const pdfBase64 = canvas.toDataURL('image/png');
+      setShowPreview(false);
+
       showNotif("Envoi en cours...", "w");
-      // Ici vous pouvez intégrer votre API d'envoi d'email
-      // Par exemple avec SendGrid, Resend, ou votre propre backend
+
+      const response = await fetch('/api/send-contract', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          to: emailRecipient,
+          employeeName: data.empName,
+          jobTitle: data.jobTitle,
+          contractType: data.jobType,
+          companyName: data.compName,
+          pdfBase64: pdfBase64,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Erreur lors de l\'envoi');
+      }
+
+      showNotif(`Contrat envoyé à ${emailRecipient} ✅`, "s");
+      setShowEmailModal(false);
+      setEmailRecipient('');
       
-      setTimeout(() => {
-        showNotif(`Contrat envoyé à ${emailRecipient}`, "s");
-        setShowEmailModal(false);
-        setEmailRecipient('');
-      }, 2000);
-      
-    } catch (error) {
-      showNotif("Erreur lors de l'envoi", "e");
+    } catch (error: any) {
+      console.error('Erreur envoi email:', error);
+      showNotif(error.message || "Erreur lors de l'envoi", "e");
+      setShowPreview(false);
     }
   };
-
   // --- UTILITAIRES ---
   const showNotif = (m: string, t: 's' | 'e' | 'w') => {
     setNotif({ m, t });
