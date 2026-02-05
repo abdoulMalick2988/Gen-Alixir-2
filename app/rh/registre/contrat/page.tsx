@@ -2243,6 +2243,7 @@ function ContractPreview({ data, config, signatures, qrCode }: ContractPreviewPr
         </div>
       </div>
     </div>
+    </div>
   );
 }
 
