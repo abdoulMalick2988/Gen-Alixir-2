@@ -885,18 +885,29 @@ export default function GenerateurContratFinal() {
   const sendEmail = async () => {
     console.log('🔵 Début sendEmail');
     console.log('📧 Email destinataire:', emailRecipient);
-    console.log('✅ Validation:', validateForm());
+    
+    // Vérifier l'email
+    if (!emailRecipient.trim()) {
+      showNotif("Veuillez saisir une adresse email", "e");
+      return;
+    }
 
-    if (!emailRecipient || !validateForm()) {
-      showNotif("Email invalide ou formulaire incomplet", "e");
+    // Valider le formulaire et afficher les erreurs
+    if (!validateForm()) {
+      // La fonction validateForm() a déjà rempli validationErrors
+      // On affiche une notification supplémentaire
+      showNotif(`❌ ${validationErrors.length} champ(s) manquant(s) - Vérifiez le formulaire`, "e");
+      
+      // Scroll vers le haut pour voir les erreurs
+      window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
 
     try {
-      showNotif("Génération du PDF...", "w");
+      showNotif("Préparation du PDF...", "w");
       
       setShowPreview(true);
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise(resolve => setTimeout(resolve, 800));
       
       if (!contractRef.current) {
         throw new Error("Référence du contrat non trouvée");
@@ -905,23 +916,31 @@ export default function GenerateurContratFinal() {
       console.log('🔵 Génération QR Code...');
       const qrCode = await generateQRCode(data);
       setQrCodeData(qrCode);
-      await new Promise(resolve => setTimeout(resolve, 300));
+      await new Promise(resolve => setTimeout(resolve, 500));
 
-      console.log('🔵 Conversion en canvas...');
+      console.log('🔵 Conversion HTML en Canvas...');
+      showNotif("Génération du PDF...", "w");
+      
       const canvas = await html2canvas(contractRef.current, {
         scale: 2,
         useCORS: true,
         backgroundColor: '#ffffff',
-        logging: false
+        logging: false,
+        windowWidth: 1200,
+        windowHeight: 1600
       });
 
-      const pdfBase64 = canvas.toDataURL('image/png');
-      console.log('✅ PDF Base64 généré, taille:', pdfBase64.length);
+      console.log('🔵 Canvas créé, dimensions:', canvas.width, 'x', canvas.height);
+      
+      const imgData = canvas.toDataURL('image/png');
+      console.log('✅ PDF Base64 généré, taille:', imgData.length);
+      
       setShowPreview(false);
 
       showNotif("Envoi en cours...", "w");
 
       console.log('🔵 Appel API /api/send-contract...');
+
       const response = await fetch('/api/send-contract', {
         method: 'POST',
         headers: {
@@ -933,25 +952,36 @@ export default function GenerateurContratFinal() {
           jobTitle: data.jobTitle,
           contractType: data.jobType,
           companyName: data.compName,
-          pdfBase64: pdfBase64,
+          pdfBase64: imgData,
         }),
       });
 
-      console.log('📡 Réponse API:', response.status);
-      const result = await response.json();
-      console.log('📦 Résultat:', result);
-
+      console.log('📡 Réponse API statut:', response.status);
+      
       if (!response.ok) {
-        throw new Error(result.error || 'Erreur lors de l\'envoi');
+        const errorData = await response.json();
+        console.error('❌ Erreur API:', errorData);
+        throw new Error(errorData.error || `Erreur ${response.status}`);
       }
 
-      showNotif(`Contrat envoyé à ${emailRecipient} ✅`, "s");
+      const result = await response.json();
+      console.log('✅ Résultat API:', result);
+
+      showNotif(`✅ Email envoyé à ${emailRecipient}`, "s");
       setShowEmailModal(false);
       setEmailRecipient('');
       
     } catch (error: any) {
-      console.error('❌ Erreur envoi email:', error);
-      showNotif(error.message || "Erreur lors de l'envoi", "e");
+      console.error('❌ Erreur complète:', error);
+      
+      let errorMessage = "Erreur lors de l'envoi du contrat";
+      if (error.message.includes('fetch')) {
+        errorMessage = "Impossible de contacter le serveur";
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      showNotif(errorMessage, "e");
       setShowPreview(false);
     }
   };
