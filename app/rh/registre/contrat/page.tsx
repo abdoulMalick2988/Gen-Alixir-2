@@ -934,9 +934,83 @@ export default function GenerateurContratFinal() {
       
       const imgData = canvas.toDataURL('image/png');
       console.log('✅ PDF Base64 généré, taille:', imgData.length);
+// --- ENVOI EMAIL ---
+  const sendEmail = async () => {
+    console.log('🔵 Début sendEmail');
+    
+    if (!emailRecipient.trim()) {
+      showNotif("Veuillez saisir une adresse email", "e");
+      return;
+    }
+
+    if (!validateForm()) {
+      showNotif(`❌ ${validationErrors.length} champ(s) manquant(s)`, "e");
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
+    try {
+      showNotif("Préparation du contrat...", "w");
+      
+      // Générer l'aperçu
+      setShowPreview(true);
+      await new Promise(resolve => setTimeout(resolve, 800));
+      
+      if (!contractRef.current) {
+        throw new Error("Référence du contrat non trouvée");
+      }
+
+      // Générer QR Code
+      console.log('🔵 Génération QR Code...');
+      const qrCode = await generateQRCode(data);
+      setQrCodeData(qrCode);
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      console.log('🔵 Conversion HTML en Canvas...');
+      showNotif("Génération du PDF...", "w");
+      
+      const canvas = await html2canvas(contractRef.current, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#ffffff',
+        logging: false,
+        windowWidth: 1200,
+        windowHeight: 1600
+      });
+
+      console.log('✅ Canvas créé:', canvas.width, 'x', canvas.height);
+
+      // CRÉER UN VRAI PDF avec jsPDF
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+      });
+
+      const imgData = canvas.toDataURL('image/png');
+      const imgWidth = 210; // A4 width in mm
+      const pageHeight = 297; // A4 height in mm
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      let heightLeft = imgHeight;
+      let position = 0;
+
+      // Ajouter l'image au PDF
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+
+      // Ajouter des pages supplémentaires si nécessaire
+      while (heightLeft > 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+      }
+
+      // Convertir le PDF en Base64
+      const pdfBase64 = pdf.output('datauristring');
+      console.log('✅ PDF Base64 généré, taille:', pdfBase64.length);
       
       setShowPreview(false);
-
       showNotif("Envoi en cours...", "w");
 
       console.log('🔵 Appel API /api/send-contract...');
@@ -952,11 +1026,11 @@ export default function GenerateurContratFinal() {
           jobTitle: data.jobTitle,
           contractType: data.jobType,
           companyName: data.compName,
-          pdfBase64: imgData,
+          pdfBase64: pdfBase64,
         }),
       });
 
-      console.log('📡 Réponse API statut:', response.status);
+      console.log('📡 Réponse API:', response.status);
       
       if (!response.ok) {
         const errorData = await response.json();
@@ -965,23 +1039,15 @@ export default function GenerateurContratFinal() {
       }
 
       const result = await response.json();
-      console.log('✅ Résultat API:', result);
+      console.log('✅ Email envoyé:', result);
 
       showNotif(`✅ Email envoyé à ${emailRecipient}`, "s");
       setShowEmailModal(false);
       setEmailRecipient('');
       
     } catch (error: any) {
-      console.error('❌ Erreur complète:', error);
-      
-      let errorMessage = "Erreur lors de l'envoi du contrat";
-      if (error.message.includes('fetch')) {
-        errorMessage = "Impossible de contacter le serveur";
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
-      
-      showNotif(errorMessage, "e");
+      console.error('❌ Erreur:', error);
+      showNotif(error.message || "Erreur lors de l'envoi", "e");
       setShowPreview(false);
     }
   };
