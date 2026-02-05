@@ -75,7 +75,6 @@ interface FormData {
   bossName: string;
   bossTitle: string;
   companyLogo?: string;
-  companyLogo: '',
   compDescription: string;
   empName: string;
   empBirth: string;
