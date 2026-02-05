@@ -1904,17 +1904,22 @@ return (
         {/* PRÉVISUALISATION CONTRAT */}
         {showPreview && (
           <div className="fixed inset-0 bg-black/95 backdrop-blur-sm z-40 overflow-y-auto">
-            <div className="min-h-screen flex items-center justify-center p-8">
+            {/* BOUTON RETOUR */}
+            <button
+              onClick={() => setShowPreview(false)}
+              className="fixed top-8 left-8 z-50 flex items-center gap-3 px-6 py-4 bg-white/10 hover:bg-white/20 backdrop-blur-xl border border-white/20 text-white rounded-2xl font-bold transition-all hover:scale-105 active:scale-95"
+            >
+              <ArrowLeft size={20} />
+              Retour
+            </button>
+
+            <div className="min-h-screen flex items-center justify-center p-8 pt-24">
               <div ref={contractRef} className="bg-white text-black w-[210mm] min-h-[297mm] p-16 shadow-2xl">
                 <ContractPreview data={data} config={config} signatures={signatures} qrCode={qrCodeData} />
               </div>
             </div>
           </div>
         )}
-      </div>
-    </div>
-  );
-}
 
 // --- COMPOSANT PRÉVISUALISATION CONTRAT ---
 function ContractPreview({ data, config, signatures, qrCode }: { 
