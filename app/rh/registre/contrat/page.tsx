@@ -463,9 +463,6 @@ export default function GenerateurContratFinal() {
     return errors.length === 0;
   };
 
-// ========== FIN PARTIE 1 ==========
-// ========== DÉBUT PARTIE 2 ==========
-// COLLEZ CECI JUSTE APRÈS LA PARTIE 1
 
   const generatePDF = async () => {
     if (!validateForm()) {
@@ -963,9 +960,7 @@ export default function GenerateurContratFinal() {
               </div>
             )}
 
-// ========== FIN PARTIE 2 ==========
-// ========== DÉBUT PARTIE 3 ==========
-// COLLEZ CECI JUSTE APRÈS LA PARTIE 2
+
 
             {activeSection === 'contract' && (
               <div className="bg-zinc-900/50 border border-white/10 p-8 rounded-3xl space-y-6">
