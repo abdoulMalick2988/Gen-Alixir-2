@@ -367,11 +367,14 @@ export default function GenerateurContratFinal() {
   useEffect(() => {
     if (showSignatureModal) {
       document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden';
     } else {
-      document.body.style.overflow = '';
+      document.body.style.overflow = 'auto';
+      document.documentElement.style.overflow = 'auto';
     }
     return () => {
-      document.body.style.overflow = '';
+      document.body.style.overflow = 'auto';
+      document.documentElement.style.overflow = 'auto';
     };
   }, [showSignatureModal]);
 
