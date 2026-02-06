@@ -278,6 +278,7 @@ export default function GenerateurContratFinal() {
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
   const [qrCodeData, setQrCodeData] = useState('');
   const [currentVerificationId, setCurrentVerificationId] = useState('');
+  const [viewingContract, setViewingContract] = useState<SavedContract | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSyncing, setIsSyncing] = useState(false);
   
@@ -807,6 +808,88 @@ export default function GenerateurContratFinal() {
     setLastPoint(null);
   };
 
+// --- VISUALISER UN CONTRAT ARCHIVÉ ---
+  const viewArchivedContract = (contract: SavedContract) => {
+    setViewingContract(contract);
+    setShowArchives(false);
+    
+    // Mettre à jour le QR code et l'ID de vérification pour l'affichage
+    if (contract.qrCode) {
+      setQrCodeData(contract.qrCode);
+    }
+    if (contract.verificationId) {
+      setCurrentVerificationId(contract.verificationId);
+    }
+  };
+
+  // --- REGÉNÉRER LE PDF D'UN CONTRAT ARCHIVÉ ---
+  const regeneratePDF = async (contract: SavedContract) => {
+    setIsGenerating(true);
+    
+    try {
+      // Si on visualise déjà le contrat, utiliser la ref actuelle
+      // Sinon, on doit d'abord afficher le contrat
+      if (!viewingContract || viewingContract.id !== contract.id) {
+        setViewingContract(contract);
+        setShowArchives(false);
+        
+        if (contract.qrCode) {
+          setQrCodeData(contract.qrCode);
+        }
+        if (contract.verificationId) {
+          setCurrentVerificationId(contract.verificationId);
+        }
+        
+        // Attendre que le composant soit rendu
+        await new Promise(resolve => setTimeout(resolve, 800));
+      }
+
+      if (!contractRef.current) {
+        throw new Error("Référence du contrat non trouvée");
+      }
+
+      const canvas = await html2canvas(contractRef.current, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#ffffff',
+        logging: false
+      });
+      
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+      });
+      
+      const imgWidth = 210;
+      const pageHeight = 297;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      let heightLeft = imgHeight;
+      let position = 0;
+      
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+      
+      while (heightLeft > 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+      }
+      
+      const fileName = `CONTRAT_${contract.employeeName.replace(/\s/g, '_')}_${contract.verificationId || contract.id}.pdf`;
+      pdf.save(fileName);
+      
+      showNotif("PDF téléchargé !", "s");
+    } catch (error) {
+      console.error("Erreur génération PDF:", error);
+      showNotif("Erreur lors de la génération", "e");
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+  
   const validateForm = (): boolean => {
     const errors: string[] = [];
     if (!data.compName.trim()) errors.push("Raison sociale requise");
@@ -1602,19 +1685,22 @@ export default function GenerateurContratFinal() {
                                 Télécharger
                               </button>
                             ) : (
-                              <button 
-                                onClick={() => {
-                                  if (contract.qrCode) {
-                                    setQrCodeData(contract.qrCode);
-                                    setCurrentVerificationId(contract.verificationId || contract.id);
-                                  }
-                                  showNotif('Contrat non modifiable', 'w');
-                                }} 
-                                className="flex-1 py-2 bg-blue-500/20 border border-blue-500/30 text-blue-400 rounded-md sm:rounded-lg text-[10px] sm:text-xs font-bold hover:bg-blue-500/30 transition-all flex items-center justify-center gap-1"
-                              >
-                                <Eye size={12} />
-                                Voir ID
-                              </button>
+                              <>
+                                <button 
+                                  onClick={() => viewArchivedContract(contract)} 
+                                  className="flex-1 py-2 bg-purple-500/20 border border-purple-500/30 text-purple-400 rounded-md sm:rounded-lg text-[10px] sm:text-xs font-bold hover:bg-purple-500/30 transition-all flex items-center justify-center gap-1"
+                                >
+                                  <Eye size={12} />
+                                  Voir
+                                </button>
+                                <button 
+                                  onClick={() => regeneratePDF(contract)} 
+                                  className="flex-1 py-2 bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 rounded-md sm:rounded-lg text-[10px] sm:text-xs font-bold hover:bg-emerald-500/30 transition-all flex items-center justify-center gap-1"
+                                >
+                                  <Download size={12} />
+                                  PDF
+                                </button>
+                              </>
                             )}
                             <button 
                               onClick={() => deleteContract(contract.verificationId || contract.id)} 
@@ -1633,21 +1719,41 @@ export default function GenerateurContratFinal() {
           </div>
         )}
 
-        {/* APERÇU CONTRAT */}
-        {showPreview && (
-          <div className="fixed inset-0 bg-black/95 z-40 overflow-y-auto">
-            <button onClick={() => setShowPreview(false)} className="fixed top-4 left-4 z-50 flex items-center gap-2 px-4 py-3 bg-white/10 hover:bg-white/20 backdrop-blur-xl border border-white/20 text-white rounded-xl font-bold text-xs transition-all">
-              <ArrowLeft size={16} />
-              Retour
-            </button>
-            <div className="min-h-screen flex items-start justify-center p-4 pt-20 pb-8">
+        {/* MODAL VISUALISATION CONTRAT ARCHIVÉ */}
+        {viewingContract && (
+          <div className="fixed inset-0 bg-black/95 z-50 overflow-y-auto">
+            <div className="sticky top-0 z-10 flex items-center justify-between p-4 bg-zinc-900/90 backdrop-blur-xl border-b border-white/10">
+              <div className="flex items-center gap-3">
+                <button onClick={() => setViewingContract(null)} className="p-2 bg-white/10 rounded-lg hover:bg-white/20 transition-all">
+                  <ArrowLeft size={18} />
+                </button>
+                <div>
+                  <h3 className="font-bold text-sm sm:text-base">{viewingContract.employeeName}</h3>
+                  <p className="text-[10px] text-zinc-500">{viewingContract.jobTitle} • {viewingContract.contractType}</p>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <button 
+                  onClick={() => regeneratePDF(viewingContract)} 
+                  className="flex items-center gap-2 px-4 py-2 bg-emerald-500 text-black rounded-lg font-bold text-xs hover:bg-emerald-400 transition-all"
+                >
+                  <Download size={14} />
+                  <span className="hidden sm:inline">Télécharger PDF</span>
+                </button>
+              </div>
+            </div>
+            
+            <div className="min-h-screen flex items-start justify-center p-4 pt-8 pb-8">
               <div ref={contractRef} className="bg-white text-black w-full max-w-[210mm] min-h-[297mm] p-6 sm:p-10 md:p-16 shadow-2xl">
                 <ContractPreview 
-                  data={data} 
-                  config={config} 
-                  signatures={signatures} 
-                  qrCode={qrCodeData} 
-                  verificationId={currentVerificationId}
+                  data={viewingContract.data} 
+                  config={COUNTRIES[viewingContract.data.country]} 
+                  signatures={{
+                    employer: viewingContract.employerSignature || '',
+                    employee: viewingContract.employeeSignature || ''
+                  }} 
+                  qrCode={viewingContract.qrCode || ''} 
+                  verificationId={viewingContract.verificationId || viewingContract.id}
                 />
               </div>
             </div>
