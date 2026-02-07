@@ -1889,10 +1889,12 @@ export default function GenerateurContratFinal() {
                   {isGenerating ? <Loader2 size={18} className="animate-spin" /> : <Download size={18} />}
                   {isGenerating ? 'Génération...' : 'Générer PDF'}
                 </button>
-                <button onClick={generateWord} className="w-full py-3 sm:py-4 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 text-blue-400 rounded-lg sm:rounded-xl font-black uppercase text-[10px] sm:text-xs flex items-center justify-center gap-2 sm:gap-3 transition-all">
-                  <FileDown size={16} />
-                  Exporter Word
-                </button>
+                {data.documentMode === 'PRINT' && (
+  <button onClick={generateWord} className="w-full py-3 sm:py-4 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 text-blue-400 rounded-lg sm:rounded-xl font-black uppercase text-[10px] sm:text-xs flex items-center justify-center gap-2 sm:gap-3 transition-all">
+    <FileDown size={16} />
+    Exporter Word
+  </button>
+)}
                 <button onClick={() => setShowPreview(true)} className="w-full py-3 sm:py-4 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 text-purple-400 rounded-lg sm:rounded-xl font-black uppercase text-[10px] sm:text-xs flex items-center justify-center gap-2 sm:gap-3 transition-all">
                   <Eye size={16} />
                   Aperçu du Contrat
@@ -2217,10 +2219,10 @@ function ContractPreview({ data, config, signatures, qrCode, verificationId }: C
         
         <p className="text-center font-bold my-3">D'AUTRE PART,</p>
 
-        <div className="border-t-2 border-gray-300 pt-4">
-          <p className="font-bold text-sm mb-3">{config.articles.intro}</p>
-          <p className="font-bold text-sm sm:text-base mb-4">IL A ÉTÉ ARRÊTÉ ET CONVENU CE QUI SUIT :</p>
-        </div>
+        <div className="mt-6 pt-4">
+  <p className="font-bold text-sm mb-3">{config.articles.intro}</p>
+  <p className="font-bold text-sm sm:text-base mb-4">IL A ÉTÉ ARRÊTÉ ET CONVENU CE QUI SUIT :</p>
+</div>
 
         <Article title="ARTICLE 1 : OBJET ET ENGAGEMENT">
           <p className="text-justify">
@@ -2300,7 +2302,7 @@ function ContractPreview({ data, config, signatures, qrCode, verificationId }: C
         </Article>
 
         {/* SIGNATURES */}
-        <div className="mt-8 pt-6 border-t-2 border-gray-300 space-y-4">
+        <div className="mt-10 pt-6 space-y-4">
           <p className="text-xs">
             <strong>Fait à</strong> {(data.compAddr || 'Bujumbura').split(',')[0].trim()}, <strong>le</strong> {formatDateFR(new Date().toISOString())}
           </p>
@@ -2346,7 +2348,7 @@ function ContractPreview({ data, config, signatures, qrCode, verificationId }: C
           
           {/* QR CODE */}
           {qrCode && (
-            <div className="flex justify-center mt-6 pt-4 border-t border-gray-200">
+            <div className="flex justify-center mt-8 pt-4">
               <div className="text-center">
                 <img src={qrCode} alt="QR" className="w-20 h-20 mx-auto mb-1" />
                 <p className="text-[8px] text-gray-500">Scanner pour vérifier</p>
@@ -2357,7 +2359,7 @@ function ContractPreview({ data, config, signatures, qrCode, verificationId }: C
         </div>
         
         {/* PIED DE PAGE */}
-        <div className="mt-6 pt-4 border-t border-gray-200 text-center text-[8px] text-gray-500">
+        <div className="mt-8 pt-4 text-center text-[8px] text-gray-500">
           <p className="mb-1">Document généré via <strong>ECODREUM INTELLIGENCE L1</strong></p>
           <p>Ce document ne se substitue pas à un conseil juridique personnalisé.</p>
           <p className="mt-1">Conforme à la {config.lawReference}.</p>
@@ -2369,9 +2371,9 @@ function ContractPreview({ data, config, signatures, qrCode, verificationId }: C
 
 function Article({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="mb-4">
-      <h3 className="font-bold text-xs sm:text-sm mb-2 uppercase border-b border-gray-300 pb-1">{title}</h3>
-      <div className="text-xs sm:text-sm leading-relaxed">{children}</div>
+    <div className="mb-6 page-break-inside-avoid">
+      <h3 className="font-bold text-xs sm:text-sm mb-3 uppercase tracking-wide text-gray-800 underline">{title}</h3>
+      <div className="text-xs sm:text-sm leading-relaxed text-justify">{children}</div>
     </div>
   );
 }
