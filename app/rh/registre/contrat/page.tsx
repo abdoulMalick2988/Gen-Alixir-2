@@ -982,7 +982,7 @@ export default function GenerateurContratFinal() {
     setTimeout(() => generatePDF(), 100);
   };
 
-  // --- GÉNÉRATION WORD (Mode Print uniquement) ---
+// --- GÉNÉRATION WORD (Mode Print uniquement) ---
   const generateWord = async () => {
     if (data.documentMode === 'ELECTRONIC') {
       showNotif("Word disponible en mode À Imprimer uniquement", "w");
@@ -996,71 +996,408 @@ export default function GenerateurContratFinal() {
     try {
       const verificationId = generateSecureId();
       const capitalClause = data.showCapital && data.compCapital ? `, au capital de ${data.compCapital} ${config.currency}` : '';
+      const foreignerClause = data.isForeigner && data.empWorkPermit ? `, titulaire du permis de travail n°${data.empWorkPermit}` : '';
       const trialPeriod = data.jobType === 'STAGE' ? null : (data.jobType === 'CDD' ? '3' : data.trial);
+      const contractTitle = data.jobType === 'STAGE' ? 'CONVENTION DE STAGE' : 'CONTRAT DE TRAVAIL';
+      const contractRegime = data.jobType === 'CDI' ? 'CONTRAT À DURÉE INDÉTERMINÉE' : data.jobType === 'CDD' ? 'CONTRAT À DURÉE DÉTERMINÉE' : 'CONVENTION DE STAGE';
+      const salarie = data.jobType === 'STAGE' ? 'LE/LA STAGIAIRE' : 'LE/LA SALARIÉ(E)';
+      const employeurLabel = data.jobType === 'STAGE' ? "L'ENTREPRISE D'ACCUEIL" : "L'EMPLOYEUR";
 
       const doc = new Document({
         sections: [{
-          properties: { page: { margin: { top: 1000, right: 1000, bottom: 1000, left: 1000 } } },
+          properties: { 
+            page: { 
+              margin: { top: 720, right: 720, bottom: 720, left: 720 } 
+            } 
+          },
           children: [
-            new Paragraph({ children: [new TextRun({ text: data.jobType === 'STAGE' ? 'CONVENTION DE STAGE' : 'CONTRAT DE TRAVAIL', bold: true, size: 32 })], alignment: AlignmentType.CENTER, spacing: { after: 150 } }),
-            new Paragraph({ children: [new TextRun({ text: `RÉGIME : ${data.jobType === 'CDI' ? 'CDI' : data.jobType === 'CDD' ? 'CDD' : 'STAGE'}`, bold: true, size: 22 })], alignment: AlignmentType.CENTER, spacing: { after: 100 } }),
-            new Paragraph({ children: [new TextRun({ text: config.lawReference, italics: true, size: 18 })], alignment: AlignmentType.CENTER, spacing: { after: 100 } }),
-            new Paragraph({ children: [new TextRun({ text: `ID : ${verificationId}`, size: 16, color: '888888' })], alignment: AlignmentType.CENTER, spacing: { after: 300 } }),
-            
-            new Paragraph({ children: [new TextRun({ text: 'ENTRE LES SOUSSIGNÉS :', bold: true, size: 22 })], spacing: { after: 150 } }),
-            new Paragraph({ children: [new TextRun({ text: `La société ${data.compName}, ${data.compType}${capitalClause}, siège à ${data.compAddr}, RCCM ${data.compRCCM}, ${config.idLabel} ${data.compID}, représentée par ${data.bossName}, ${data.bossTitle}.`, size: 20 })], spacing: { after: 100 } }),
-            new Paragraph({ children: [new TextRun({ text: `Ci-après « L'EMPLOYEUR »`, italics: true, size: 20 })], alignment: AlignmentType.RIGHT, spacing: { after: 150 } }),
-            new Paragraph({ children: [new TextRun({ text: "D'UNE PART,", bold: true, size: 20 })], alignment: AlignmentType.CENTER, spacing: { after: 150 } }),
-            new Paragraph({ children: [new TextRun({ text: 'ET :', bold: true, size: 20 })], alignment: AlignmentType.CENTER, spacing: { after: 150 } }),
-            new Paragraph({ children: [new TextRun({ text: `${data.empName}, né(e) le ${formatDateFR(data.empBirth)} à ${data.empBirthPlace}, ${data.empNation}, ID ${data.empID}, demeurant ${data.empAddr}, tél ${data.empPhone}.`, size: 20 })], spacing: { after: 100 } }),
-            new Paragraph({ children: [new TextRun({ text: `Ci-après « LE/LA SALARIÉ(E) »`, italics: true, size: 20 })], alignment: AlignmentType.RIGHT, spacing: { after: 150 } }),
-            new Paragraph({ children: [new TextRun({ text: "D'AUTRE PART,", bold: true, size: 20 })], alignment: AlignmentType.CENTER, spacing: { after: 250 } }),
-            
-            new Paragraph({ children: [new TextRun({ text: 'IL A ÉTÉ CONVENU CE QUI SUIT :', bold: true, size: 22 })], spacing: { after: 200 } }),
-            
-            new Paragraph({ children: [new TextRun({ text: 'ARTICLE 1 : ENGAGEMENT', bold: true, size: 20 })], spacing: { after: 100 } }),
-            new Paragraph({ children: [new TextRun({ text: `L'Employeur engage ${data.empName} en qualité de ${data.jobTitle}.`, size: 20 })], spacing: { after: 200 } }),
-            
-            new Paragraph({ children: [new TextRun({ text: 'ARTICLE 2 : FONCTIONS', bold: true, size: 20 })], spacing: { after: 100 } }),
-            new Paragraph({ children: [new TextRun({ text: `Poste : ${data.jobTitle}, Département : ${data.jobDept}, Lieu : ${data.jobLocation}.`, size: 20 })], spacing: { after: 50 } }),
-            new Paragraph({ children: [new TextRun({ text: `Missions : ${data.jobTasks}`, size: 20 })], spacing: { after: 200 } }),
-            
-            new Paragraph({ children: [new TextRun({ text: 'ARTICLE 3 : DURÉE', bold: true, size: 20 })], spacing: { after: 100 } }),
-            new Paragraph({ children: [new TextRun({ text: `Début : ${formatDateFR(data.startDate)}${data.endDate ? `, Fin : ${formatDateFR(data.endDate)}` : ''}.${trialPeriod ? ` Essai : ${trialPeriod} mois.` : ''}`, size: 20 })], spacing: { after: 200 } }),
-            
-            new Paragraph({ children: [new TextRun({ text: 'ARTICLE 4 : RÉMUNÉRATION', bold: true, size: 20 })], spacing: { after: 100 } }),
-            new Paragraph({ children: [new TextRun({ text: `${data.salary} ${config.currency}/mois (${salaryToWords(data.salary, config.currency)}).${data.bonus ? ` Avantages : ${data.bonus}.` : ''}`, size: 20 })], spacing: { after: 200 } }),
-            
-            new Paragraph({ children: [new TextRun({ text: 'ARTICLE 5 : HORAIRES', bold: true, size: 20 })], spacing: { after: 100 } }),
-            new Paragraph({ children: [new TextRun({ text: `${data.hours} heures/semaine.`, size: 20 })], spacing: { after: 200 } }),
-            
-            new Paragraph({ children: [new TextRun({ text: `Fait à ${data.compAddr.split(',')[0]}, le ${formatDateFR(new Date().toISOString())}`, size: 20 })], spacing: { before: 300, after: 300 } }),
-            
-            new Table({
-              width: { size: 100, type: WidthType.PERCENTAGE },
-              rows: [
-                new TableRow({
-                  children: [
-                    new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: "L'Employeur", bold: true })], alignment: AlignmentType.CENTER }), new Paragraph({ text: '' }), new Paragraph({ text: '' }), new Paragraph({ children: [new TextRun({ text: data.bossName })], alignment: AlignmentType.CENTER })], borders: { top: { style: BorderStyle.NONE }, bottom: { style: BorderStyle.NONE }, left: { style: BorderStyle.NONE }, right: { style: BorderStyle.NONE } } }),
-                    new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: "Le/La Salarié(e)", bold: true })], alignment: AlignmentType.CENTER }), new Paragraph({ text: '' }), new Paragraph({ text: '' }), new Paragraph({ children: [new TextRun({ text: data.empName })], alignment: AlignmentType.CENTER })], borders: { top: { style: BorderStyle.NONE }, bottom: { style: BorderStyle.NONE }, left: { style: BorderStyle.NONE }, right: { style: BorderStyle.NONE } } }),
-                  ],
-                }),
-              ],
+            // TITRE
+            new Paragraph({ 
+              children: [new TextRun({ text: contractTitle, bold: true, size: 32 })], 
+              alignment: AlignmentType.CENTER, 
+              spacing: { after: 200 } 
             }),
-            
-            new Paragraph({ children: [new TextRun({ text: 'ECODREUM INTELLIGENCE L1', size: 14, color: '888888' })], alignment: AlignmentType.CENTER, spacing: { before: 300 } }),
+            new Paragraph({ 
+              children: [new TextRun({ text: `RÉGIME : ${contractRegime}`, bold: true, size: 24 })], 
+              alignment: AlignmentType.CENTER, 
+              spacing: { after: 150 } 
+            }),
+            new Paragraph({ 
+              children: [new TextRun({ text: config.lawReference, italics: true, size: 20 })], 
+              alignment: AlignmentType.CENTER, 
+              spacing: { after: 100 } 
+            }),
+            new Paragraph({ 
+              children: [new TextRun({ text: `ID de vérification : ${verificationId}`, size: 16, color: '888888' })], 
+              alignment: AlignmentType.CENTER, 
+              spacing: { after: 400 } 
+            }),
+
+            // ENTRE LES SOUSSIGNÉS
+            new Paragraph({ 
+              children: [new TextRun({ text: 'ENTRE LES SOUSSIGNÉS :', bold: true, size: 24 })], 
+              spacing: { after: 200 } 
+            }),
+
+            // EMPLOYEUR
+            new Paragraph({ 
+              children: [
+                new TextRun({ text: `La société `, size: 22 }),
+                new TextRun({ text: data.compName, bold: true, size: 22 }),
+                new TextRun({ text: `, ${data.compType}${capitalClause}, dont le siège social est situé à `, size: 22 }),
+                new TextRun({ text: data.compAddr, bold: true, size: 22 }),
+                new TextRun({ text: `, immatriculée au RCCM sous le numéro `, size: 22 }),
+                new TextRun({ text: data.compRCCM, bold: true, size: 22 }),
+                new TextRun({ text: ` et identifiée au ${config.idLabel} sous le numéro `, size: 22 }),
+                new TextRun({ text: data.compID, bold: true, size: 22 }),
+                new TextRun({ text: `, représentée par `, size: 22 }),
+                new TextRun({ text: `M./Mme ${data.bossName}`, bold: true, size: 22 }),
+                new TextRun({ text: `, en qualité de `, size: 22 }),
+                new TextRun({ text: data.bossTitle, bold: true, size: 22 }),
+                new TextRun({ text: `.`, size: 22 }),
+              ], 
+              spacing: { after: 150 } 
+            }),
+            new Paragraph({ 
+              children: [new TextRun({ text: `Ci-après dénommée « ${employeurLabel} »`, italics: true, size: 22 })], 
+              alignment: AlignmentType.RIGHT, 
+              spacing: { after: 200 } 
+            }),
+            new Paragraph({ 
+              children: [new TextRun({ text: "D'UNE PART,", bold: true, size: 22 })], 
+              alignment: AlignmentType.CENTER, 
+              spacing: { after: 200 } 
+            }),
+            new Paragraph({ 
+              children: [new TextRun({ text: 'ET :', bold: true, size: 22 })], 
+              alignment: AlignmentType.CENTER, 
+              spacing: { after: 200 } 
+            }),
+
+            // SALARIÉ
+            new Paragraph({ 
+              children: [
+                new TextRun({ text: `M./Mme `, size: 22 }),
+                new TextRun({ text: data.empName, bold: true, size: 22 }),
+                new TextRun({ text: `, né(e) le `, size: 22 }),
+                new TextRun({ text: formatDateFR(data.empBirth), bold: true, size: 22 }),
+                new TextRun({ text: ` à `, size: 22 }),
+                new TextRun({ text: data.empBirthPlace, bold: true, size: 22 }),
+                new TextRun({ text: `, de nationalité `, size: 22 }),
+                new TextRun({ text: data.empNation, bold: true, size: 22 }),
+                new TextRun({ text: foreignerClause, size: 22 }),
+                new TextRun({ text: `, titulaire de la pièce d'identité n°`, size: 22 }),
+                new TextRun({ text: data.empID, bold: true, size: 22 }),
+                new TextRun({ text: `, demeurant à `, size: 22 }),
+                new TextRun({ text: data.empAddr, bold: true, size: 22 }),
+                new TextRun({ text: `, joignable au `, size: 22 }),
+                new TextRun({ text: data.empPhone, bold: true, size: 22 }),
+                new TextRun({ text: data.empEmail ? ` et par email à ${data.empEmail}` : '', size: 22 }),
+                new TextRun({ text: `.`, size: 22 }),
+              ], 
+              spacing: { after: 150 } 
+            }),
+
+            // Info stage si applicable
+            ...(data.jobType === 'STAGE' && data.stageSchool ? [
+              new Paragraph({ 
+                children: [
+                  new TextRun({ text: `Actuellement inscrit(e) en `, size: 22 }),
+                  new TextRun({ text: data.stageLevel, bold: true, size: 22 }),
+                  new TextRun({ text: ` à `, size: 22 }),
+                  new TextRun({ text: data.stageSchool, bold: true, size: 22 }),
+                  new TextRun({ text: `.`, size: 22 }),
+                ], 
+                spacing: { after: 150 } 
+              })
+            ] : []),
+
+            new Paragraph({ 
+              children: [new TextRun({ text: `Ci-après dénommé(e) « ${salarie} »`, italics: true, size: 22 })], 
+              alignment: AlignmentType.RIGHT, 
+              spacing: { after: 200 } 
+            }),
+            new Paragraph({ 
+              children: [new TextRun({ text: "D'AUTRE PART,", bold: true, size: 22 })], 
+              alignment: AlignmentType.CENTER, 
+              spacing: { after: 300 } 
+            }),
+
+            // IL A ÉTÉ CONVENU
+            new Paragraph({ 
+              children: [new TextRun({ text: config.articles.intro, bold: true, size: 22 })], 
+              spacing: { after: 200 } 
+            }),
+            new Paragraph({ 
+              children: [new TextRun({ text: 'IL A ÉTÉ ARRÊTÉ ET CONVENU CE QUI SUIT :', bold: true, size: 24 })], 
+              spacing: { after: 300 } 
+            }),
+
+            // ARTICLE 1
+            new Paragraph({ 
+              children: [new TextRun({ text: 'ARTICLE 1 : OBJET ET ENGAGEMENT', bold: true, size: 22 })], 
+              spacing: { after: 150 } 
+            }),
+            new Paragraph({ 
+              children: [new TextRun({ 
+                text: data.jobType === 'STAGE' 
+                  ? `La présente convention a pour objet de définir les conditions dans lesquelles ${data.empName} effectuera un stage au sein de ${data.compName}, dans le cadre de sa formation en ${data.stageLevel} à ${data.stageSchool}.`
+                  : `${config.articles.engagement} Par le présent contrat, l'Employeur engage ${data.empName} qui accepte, en qualité de ${data.jobTitle}. Le présent contrat est conclu sous le régime du ${data.jobType === 'CDI' ? 'contrat à durée indéterminée' : 'contrat à durée déterminée'}${data.jobType === 'CDD' && data.cddReason ? ` pour le motif suivant : ${data.cddReason}` : ''}.`, 
+                size: 22 
+              })], 
+              spacing: { after: 250 } 
+            }),
+
+            // ARTICLE 2
+            new Paragraph({ 
+              children: [new TextRun({ text: 'ARTICLE 2 : FONCTIONS ET TÂCHES', bold: true, size: 22 })], 
+              spacing: { after: 150 } 
+            }),
+            new Paragraph({ 
+              children: [
+                new TextRun({ text: `${data.jobType === 'STAGE' ? 'Le/La Stagiaire' : 'Le/La Salarié(e)'} exercera les fonctions de `, size: 22 }),
+                new TextRun({ text: data.jobTitle, bold: true, size: 22 }),
+                new TextRun({ text: ` au sein du département `, size: 22 }),
+                new TextRun({ text: data.jobDept, bold: true, size: 22 }),
+                new TextRun({ text: `, dans les locaux situés à `, size: 22 }),
+                new TextRun({ text: data.jobLocation, bold: true, size: 22 }),
+                new TextRun({ text: `.`, size: 22 }),
+              ], 
+              spacing: { after: 150 } 
+            }),
+            new Paragraph({ 
+              children: [new TextRun({ text: 'Tâches et missions confiées :', bold: true, size: 22 })], 
+              spacing: { after: 100 } 
+            }),
+            new Paragraph({ 
+              children: [new TextRun({ text: data.jobTasks, size: 22 })], 
+              spacing: { after: 250 } 
+            }),
+
+            // ARTICLE 3
+            new Paragraph({ 
+              children: [new TextRun({ text: "ARTICLE 3 : DURÉE ET PÉRIODE D'ESSAI", bold: true, size: 22 })], 
+              spacing: { after: 150 } 
+            }),
+            new Paragraph({ 
+              children: [
+                new TextRun({ text: `Le présent ${data.jobType === 'STAGE' ? 'stage' : 'contrat'} prend effet à compter du `, size: 22 }),
+                new TextRun({ text: formatDateFR(data.startDate), bold: true, size: 22 }),
+                new TextRun({ text: (data.jobType === 'CDD' || data.jobType === 'STAGE') && data.endDate ? ` et prendra fin le ${formatDateFR(data.endDate)}` : '', size: 22 }),
+                new TextRun({ text: `.`, size: 22 }),
+              ], 
+              spacing: { after: 150 } 
+            }),
+            ...(trialPeriod ? [
+              new Paragraph({ 
+                children: [
+                  new TextRun({ text: `Une période d'essai de `, size: 22 }),
+                  new TextRun({ text: `${trialPeriod} mois`, bold: true, size: 22 }),
+                  new TextRun({ text: ` est prévue, pendant laquelle chaque partie pourra rompre le contrat librement.`, size: 22 }),
+                ], 
+                spacing: { after: 250 } 
+              })
+            ] : []),
+
+            // ARTICLE 4
+            new Paragraph({ 
+              children: [new TextRun({ text: `ARTICLE 4 : ${data.jobType === 'STAGE' ? 'GRATIFICATION' : 'RÉMUNÉRATION'}`, bold: true, size: 22 })], 
+              spacing: { after: 150 } 
+            }),
+            new Paragraph({ 
+              children: [
+                new TextRun({ text: `${data.jobType === 'STAGE' ? 'Le/La Stagiaire' : 'Le/La Salarié(e)'} percevra une ${data.jobType === 'STAGE' ? 'gratification' : 'rémunération'} mensuelle ${data.jobType === 'STAGE' ? '' : 'brute '}de `, size: 22 }),
+                new TextRun({ text: `${data.salary} ${config.currency}`, bold: true, size: 22 }),
+                new TextRun({ text: ` (${salaryToWords(data.salary, config.currency)}).`, size: 22 }),
+              ], 
+              spacing: { after: 150 } 
+            }),
+            ...(data.bonus ? [
+              new Paragraph({ 
+                children: [new TextRun({ text: `Avantages complémentaires : ${data.bonus}.`, size: 22 })], 
+                spacing: { after: 250 } 
+              })
+            ] : []),
+
+            // ARTICLE 5
+            new Paragraph({ 
+              children: [new TextRun({ text: 'ARTICLE 5 : DURÉE DU TRAVAIL', bold: true, size: 22 })], 
+              spacing: { after: 150 } 
+            }),
+            new Paragraph({ 
+              children: [
+                new TextRun({ text: `La durée hebdomadaire de travail est fixée à `, size: 22 }),
+                new TextRun({ text: `${data.hours} heures`, bold: true, size: 22 }),
+                new TextRun({ text: `.`, size: 22 }),
+              ], 
+              spacing: { after: 250 } 
+            }),
+
+            // ARTICLE 6
+            new Paragraph({ 
+              children: [new TextRun({ text: 'ARTICLE 6 : OBLIGATIONS DES PARTIES', bold: true, size: 22 })], 
+              spacing: { after: 150 } 
+            }),
+            new Paragraph({ 
+              children: [new TextRun({ text: "6.1. Obligations de l'Employeur :", bold: true, size: 22 })], 
+              spacing: { after: 100 } 
+            }),
+            ...config.articles.employerObligations.map(ob => 
+              new Paragraph({ 
+                children: [new TextRun({ text: `• ${ob}`, size: 20 })], 
+                spacing: { after: 50 } 
+              })
+            ),
+            new Paragraph({ 
+              children: [new TextRun({ text: `6.2. Obligations du/de la ${data.jobType === 'STAGE' ? 'Stagiaire' : 'Salarié(e)'} :`, bold: true, size: 22 })], 
+              spacing: { before: 150, after: 100 } 
+            }),
+            ...config.articles.employeeObligations.map(ob => 
+              new Paragraph({ 
+                children: [new TextRun({ text: `• ${ob}`, size: 20 })], 
+                spacing: { after: 50 } 
+              })
+            ),
+
+            // ARTICLE 7
+            new Paragraph({ 
+              children: [new TextRun({ text: 'ARTICLE 7 : CONFIDENTIALITÉ', bold: true, size: 22 })], 
+              spacing: { before: 250, after: 150 } 
+            }),
+            new Paragraph({ 
+              children: [new TextRun({ text: `${data.jobType === 'STAGE' ? 'Le/La Stagiaire' : 'Le/La Salarié(e)'} s'engage à observer la plus stricte discrétion sur toutes les informations confidentielles de l'entreprise, pendant et après le ${data.jobType === 'STAGE' ? 'stage' : 'contrat'}.`, size: 22 })], 
+              spacing: { after: 250 } 
+            }),
+
+            // ARTICLE 8 (Non-concurrence si applicable)
+            ...(data.hasNonCompete && data.jobType !== 'STAGE' ? [
+              new Paragraph({ 
+                children: [new TextRun({ text: 'ARTICLE 8 : NON-CONCURRENCE', bold: true, size: 22 })], 
+                spacing: { after: 150 } 
+              }),
+              new Paragraph({ 
+                children: [
+                  new TextRun({ text: `Le/La Salarié(e) s'interdit d'exercer toute activité concurrente pendant une durée de `, size: 22 }),
+                  new TextRun({ text: data.nonCompeteDuration, bold: true, size: 22 }),
+                  new TextRun({ text: ` après la fin du contrat.`, size: 22 }),
+                ], 
+                spacing: { after: 250 } 
+              })
+            ] : []),
+
+            // ARTICLE RÉSILIATION
+            new Paragraph({ 
+              children: [new TextRun({ text: `ARTICLE ${data.hasNonCompete && data.jobType !== 'STAGE' ? '9' : '8'} : RÉSILIATION`, bold: true, size: 22 })], 
+              spacing: { after: 150 } 
+            }),
+            new Paragraph({ 
+              children: [new TextRun({ text: config.articles.termination, size: 22 })], 
+              spacing: { after: 250 } 
+            }),
+
+            // ARTICLE LITIGES
+            new Paragraph({ 
+              children: [new TextRun({ text: `ARTICLE ${data.hasNonCompete && data.jobType !== 'STAGE' ? '10' : '9'} : LITIGES`, bold: true, size: 22 })], 
+              spacing: { after: 150 } 
+            }),
+            new Paragraph({ 
+              children: [new TextRun({ text: config.articles.disputes, size: 22 })], 
+              spacing: { after: 400 } 
+            }),
+
+            // FAIT À
+            new Paragraph({ 
+              children: [
+                new TextRun({ text: `Fait à `, size: 22 }),
+                new TextRun({ text: data.compAddr.split(',')[0].trim(), bold: true, size: 22 }),
+                new TextRun({ text: `, le `, size: 22 }),
+                new TextRun({ text: formatDateFR(new Date().toISOString()), bold: true, size: 22 }),
+              ], 
+              spacing: { after: 150 } 
+            }),
+            new Paragraph({ 
+              children: [new TextRun({ text: 'En deux (2) exemplaires originaux.', size: 22 })], 
+              spacing: { after: 400 } 
+            }),
+
+            // SIGNATURES - Zone employeur
+            new Paragraph({ 
+              children: [
+                new TextRun({ text: data.jobType === 'STAGE' ? "Pour l'Entreprise d'Accueil" : "Pour l'Employeur", bold: true, size: 22 }),
+                new TextRun({ text: "\t\t\t\t\t\t\t", size: 22 }),
+                new TextRun({ text: data.jobType === 'STAGE' ? "Le/La Stagiaire" : "Le/La Salarié(e)", bold: true, size: 22 }),
+              ], 
+              spacing: { after: 100 } 
+            }),
+            new Paragraph({ 
+              children: [new TextRun({ text: '', size: 22 })], 
+              spacing: { after: 100 } 
+            }),
+            new Paragraph({ 
+              children: [new TextRun({ text: '', size: 22 })], 
+              spacing: { after: 100 } 
+            }),
+            new Paragraph({ 
+              children: [
+                new TextRun({ text: '(Signature et cachet)', italics: true, size: 18 }),
+                new TextRun({ text: "\t\t\t\t\t\t", size: 18 }),
+                new TextRun({ text: '(Lu et approuvé, signature)', italics: true, size: 18 }),
+              ], 
+              spacing: { after: 100 } 
+            }),
+            new Paragraph({ 
+              children: [new TextRun({ text: '', size: 22 })], 
+              spacing: { after: 100 } 
+            }),
+            new Paragraph({ 
+              children: [new TextRun({ text: '', size: 22 })], 
+              spacing: { after: 100 } 
+            }),
+            new Paragraph({ 
+              children: [
+                new TextRun({ text: data.bossName, bold: true, size: 22 }),
+                new TextRun({ text: "\t\t\t\t\t\t\t", size: 22 }),
+                new TextRun({ text: data.empName, bold: true, size: 22 }),
+              ], 
+              spacing: { after: 50 } 
+            }),
+            new Paragraph({ 
+              children: [
+                new TextRun({ text: data.bossTitle, size: 20 }),
+                new TextRun({ text: "\t\t\t\t\t\t\t\t", size: 20 }),
+                new TextRun({ text: data.jobTitle, size: 20 }),
+              ], 
+              spacing: { after: 400 } 
+            }),
+
+            // PIED DE PAGE
+            new Paragraph({ 
+              children: [new TextRun({ text: `ID de vérification : ${verificationId}`, size: 16, color: '888888' })], 
+              alignment: AlignmentType.CENTER, 
+              spacing: { after: 100 } 
+            }),
+            new Paragraph({ 
+              children: [new TextRun({ text: 'Document généré via ECODREUM INTELLIGENCE L1', size: 16, italics: true, color: '888888' })], 
+              alignment: AlignmentType.CENTER, 
+              spacing: { after: 50 } 
+            }),
+            new Paragraph({ 
+              children: [new TextRun({ text: 'Ce document ne se substitue pas à un conseil juridique personnalisé.', size: 14, color: '999999' })], 
+              alignment: AlignmentType.CENTER 
+            }),
           ]
         }]
       });
 
       const blob = await Packer.toBlob(doc);
       saveAs(blob, `CONTRAT_${data.empName.replace(/\s/g, '_')}_${verificationId}.docx`);
-      showNotif("Word généré !", "s");
+      showNotif("Word généré avec succès !", "s");
     } catch (error) {
       console.error(error);
       showNotif("Erreur de génération", "e");
     }
   };
+            
 
   const viewArchivedContract = (contract: SavedContract) => {
     setViewingContract(contract);
