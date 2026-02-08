@@ -405,25 +405,43 @@ export default function RegistrePersonnel() {
   return (
     <div className="h-screen text-white overflow-hidden relative" style={{ background: "#030303" }}>
 
-      {/* ═══════════════════════════════════════
-          FOND FUTURISTE — Émeraude / Or / Noir
-          ═══════════════════════════════════════ */}
+      /* ═══ Dans la Partie 2, remplacez la section FOND FLOU TECHNOLOGIQUE par ceci ═══ */
+
+      {/* ═══ FOND AVEC IMAGE OPTIMISÉE ═══ */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        {/* Grande nappe émeraude haut-droite */}
-        <div className="absolute rounded-full" style={{ top: "-200px", right: "-100px", width: 900, height: 900, background: "radial-gradient(circle, rgba(16,185,129,0.09) 0%, rgba(16,185,129,0.02) 60%, transparent 80%)", filter: "blur(60px)" }} />
-        {/* Nappe émeraude bas-gauche */}
-        <div className="absolute rounded-full" style={{ bottom: "-250px", left: "-200px", width: 800, height: 800, background: "radial-gradient(circle, rgba(16,185,129,0.06) 0%, transparent 70%)", filter: "blur(80px)" }} />
-        {/* Accent doré centre-droit */}
-        <div className="absolute rounded-full" style={{ top: "30%", right: "10%", width: 400, height: 400, background: "radial-gradient(circle, rgba(212,175,55,0.05) 0%, transparent 70%)", filter: "blur(100px)" }} />
-        {/* Accent doré bas */}
-        <div className="absolute rounded-full" style={{ bottom: "15%", left: "30%", width: 350, height: 350, background: "radial-gradient(circle, rgba(212,175,55,0.03) 0%, transparent 70%)", filter: "blur(90px)" }} />
-        {/* Nappe centrale émeraude très diffuse */}
-        <div className="absolute" style={{ top: "40%", left: "50%", transform: "translate(-50%,-50%) rotate(15deg)", width: 1200, height: 500, background: "radial-gradient(ellipse, rgba(16,185,129,0.03) 0%, transparent 60%)", filter: "blur(100px)" }} />
-        {/* Grille technique */}
-        <div className="absolute inset-0" style={{ opacity: 0.012, backgroundImage: "linear-gradient(rgba(16,185,129,0.4) 1px, transparent 1px), linear-gradient(90deg, rgba(16,185,129,0.4) 1px, transparent 1px)", backgroundSize: "60px 60px" }} />
-        {/* Ligne dorée horizontale subtile */}
-        <div className="absolute" style={{ top: "25%", left: 0, right: 0, height: 1, background: "linear-gradient(90deg, transparent 5%, rgba(212,175,55,0.06) 30%, rgba(212,175,55,0.08) 50%, rgba(212,175,55,0.06) 70%, transparent 95%)" }} />
-        <div className="absolute" style={{ top: "75%", left: 0, right: 0, height: 1, background: "linear-gradient(90deg, transparent 10%, rgba(16,185,129,0.05) 40%, rgba(16,185,129,0.07) 50%, rgba(16,185,129,0.05) 60%, transparent 90%)" }} />
+        {/* Image de fond */}
+        <div 
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-30"
+          style={{ 
+            backgroundImage: "url('/images/tech-bg.webp')",
+            filter: "blur(8px) brightness(0.4)"
+          }}
+        />
+        
+        {/* Overlay gradient pour foncer */}
+        <div 
+          className="absolute inset-0" 
+          style={{ 
+            background: "linear-gradient(135deg, rgba(10, 31, 26, 0.85) 0%, rgba(5, 21, 16, 0.9) 100%)"
+          }}
+        />
+        
+        {/* Gradients flous par-dessus */}
+        <div className="absolute rounded-full" style={{ top: "-10%", right: "-5%", width: 900, height: 900, background: "radial-gradient(circle, rgba(16,185,129,0.1) 0%, transparent 70%)", filter: "blur(100px)" }} />
+        <div className="absolute rounded-full" style={{ bottom: "-15%", left: "-8%", width: 800, height: 800, background: "radial-gradient(circle, rgba(16,185,129,0.08) 0%, transparent 65%)", filter: "blur(90px)" }} />
+        <div className="absolute rounded-full" style={{ top: "30%", right: "25%", width: 600, height: 600, background: "radial-gradient(circle, rgba(212,175,55,0.06) 0%, transparent 60%)", filter: "blur(85px)" }} />
+        
+        {/* Grille subtile */}
+        <div className="absolute inset-0" style={{ opacity: 0.02, backgroundImage: "linear-gradient(rgba(212,175,55,0.6) 1px, transparent 1px), linear-gradient(90deg, rgba(212,175,55,0.6) 1px, transparent 1px)", backgroundSize: "60px 60px" }} />
+        
+        {/* Lignes décoratives */}
+        <div className="absolute" style={{ top: "25%", left: 0, right: 0, height: 1, background: "linear-gradient(90deg, transparent, rgba(212,175,55,0.12) 30%, rgba(212,175,55,0.2) 50%, rgba(212,175,55,0.12) 70%, transparent)" }} />
+        <div className="absolute" style={{ bottom: "22%", left: 0, right: 0, height: 1, background: "linear-gradient(90deg, transparent, rgba(16,185,129,0.08) 35%, rgba(16,185,129,0.15) 50%, rgba(16,185,129,0.08) 65%, transparent)" }} />
+        
+        {/* Points lumineux dorés */}
+        <div className="absolute animate-pulse" style={{ top: "15%", left: "10%", width: 4, height: 4, borderRadius: "50%", background: "rgba(212,175,55,0.6)", boxShadow: "0 0 15px rgba(212,175,55,0.5)" }} />
+        <div className="absolute animate-pulse" style={{ top: "65%", right: "15%", width: 3, height: 3, borderRadius: "50%", background: "rgba(212,175,55,0.5)", boxShadow: "0 0 12px rgba(212,175,55,0.4)", animationDelay: "0.5s" }} />
+        <div className="absolute animate-pulse" style={{ bottom: "35%", left: "20%", width: 3, height: 3, borderRadius: "50%", background: "rgba(16,185,129,0.5)", boxShadow: "0 0 10px rgba(16,185,129,0.4)", animationDelay: "1s" }} />
       </div>
 
       {/* ═══ CONTENU ═══ */}
