@@ -382,4 +382,501 @@ export default function RegistrePersonnel() {
         </div>
       </div>
 
-  /* ═══ FIN PARTIE 2 ═══ */
+  /* ═══ PARTIE 3 FINALE — Coller après Partie 2 ═══ */
+
+      {/* ═══ MODAL CONFIRMATION PAIEMENT ═══ */}
+      {payConfirm && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 animate-fadeIn" style={{ background: "rgba(0,0,0,0.75)", backdropFilter: "blur(8px)" }}>
+          <div className="modal-glass w-full max-w-md rounded-2xl p-6 animate-scaleIn">
+            <div className="flex items-start gap-3 mb-4">
+              <div className={"w-10 h-10 rounded-xl flex items-center justify-center " + (payConfirm.current === "Payé" ? "bg-amber-500/20" : "bg-emerald-500/20")}>
+                {payConfirm.current === "Payé" ? <Clock size={18} className="text-amber-400" /> : <CheckCircle2 size={18} className="text-emerald-400" />}
+              </div>
+              <div className="flex-1">
+                <h3 className="text-sm font-bold text-white mb-1">Confirmer le changement</h3>
+                <p className="text-[11px] text-zinc-400">
+                  {payConfirm.current === "Payé" 
+                    ? `Marquer le salaire de ${payConfirm.name} comme "En attente" ?`
+                    : `Confirmer le paiement du salaire de ${payConfirm.name} ?`
+                  }
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <button onClick={() => setPayConfirm(null)} type="button" className="flex-1 px-4 py-2.5 rounded-xl text-[11px] font-semibold tab-btn-alt">
+                Annuler
+              </button>
+              <button onClick={confirmPayment} type="button" className={"flex-1 px-4 py-2.5 rounded-xl text-[11px] font-semibold transition-all " + (payConfirm.current === "Payé" ? "bg-amber-500 text-black hover:bg-amber-400" : "bg-emerald-500 text-black hover:bg-emerald-400")}>
+                Confirmer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ═══ MODAL NOUVEAU COLLABORATEUR ═══ */}
+      {showNewModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-y-auto animate-fadeIn" style={{ background: "rgba(0,0,0,0.75)", backdropFilter: "blur(8px)" }}>
+          <div className="modal-glass w-full max-w-2xl rounded-2xl p-6 my-8 animate-scaleIn">
+            <div className="flex items-center justify-between mb-5">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center">
+                  <UserPlus size={18} className="text-emerald-400" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-white">Nouveau Collaborateur</h3>
+                  <p className="text-[10px] text-zinc-500">Ajouter un membre à l'équipe</p>
+                </div>
+              </div>
+              <button onClick={() => setShowNewModal(false)} type="button" className="tab-btn">
+                <X size={16} />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-5">
+              <div className="md:col-span-2">
+                <label className="block text-[9px] font-semibold text-zinc-500 uppercase tracking-wider mb-1.5">Nom complet *</label>
+                <input type="text" value={newForm.name} onChange={(e) => setNewForm({ ...newForm, name: e.target.value })} placeholder="Ex: Aminata Diallo" className="w-full tab-input" />
+              </div>
+              
+              <div>
+                <label className="block text-[9px] font-semibold text-zinc-500 uppercase tracking-wider mb-1.5">Département *</label>
+                <input type="text" value={newForm.dept} onChange={(e) => setNewForm({ ...newForm, dept: e.target.value })} placeholder="Ex: Marketing" className="w-full tab-input" />
+              </div>
+
+              <div>
+                <label className="block text-[9px] font-semibold text-zinc-500 uppercase tracking-wider mb-1.5">Poste *</label>
+                <input type="text" value={newForm.post} onChange={(e) => setNewForm({ ...newForm, post: e.target.value })} placeholder="Ex: Designer UI/UX" className="w-full tab-input" />
+              </div>
+
+              <div>
+                <label className="block text-[9px] font-semibold text-zinc-500 uppercase tracking-wider mb-1.5">Type de contrat</label>
+                <select value={newForm.contract} onChange={(e) => setNewForm({ ...newForm, contract: e.target.value })} className="w-full tab-input">
+                  <option value="CDI">CDI</option>
+                  <option value="CDD">CDD</option>
+                  <option value="Stage">Stage</option>
+                  <option value="Freelance">Freelance</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-[9px] font-semibold text-zinc-500 uppercase tracking-wider mb-1.5">Genre</label>
+                <select value={newForm.genre} onChange={(e) => setNewForm({ ...newForm, genre: e.target.value })} className="w-full tab-input">
+                  <option value="">Sélectionner</option>
+                  <option value="M">Masculin</option>
+                  <option value="F">Féminin</option>
+                  <option value="Autre">Autre</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-[9px] font-semibold text-zinc-500 uppercase tracking-wider mb-1.5">Salaire mensuel (FCFA)</label>
+                <input type="number" value={newForm.salary} onChange={(e) => setNewForm({ ...newForm, salary: e.target.value })} placeholder="0" className="w-full tab-input" />
+              </div>
+
+              <div>
+                <label className="block text-[9px] font-semibold text-zinc-500 uppercase tracking-wider mb-1.5">Prime (FCFA)</label>
+                <input type="number" value={newForm.prime} onChange={(e) => setNewForm({ ...newForm, prime: e.target.value })} placeholder="0" className="w-full tab-input" />
+              </div>
+
+              <div>
+                <label className="block text-[9px] font-semibold text-zinc-500 uppercase tracking-wider mb-1.5">Libellé prime</label>
+                <input type="text" value={newForm.primeLabel} onChange={(e) => setNewForm({ ...newForm, primeLabel: e.target.value })} placeholder="Ex: Performance" className="w-full tab-input" />
+              </div>
+
+              <div>
+                <label className="block text-[9px] font-semibold text-zinc-500 uppercase tracking-wider mb-1.5">Âge</label>
+                <input type="number" value={newForm.age} onChange={(e) => setNewForm({ ...newForm, age: e.target.value })} placeholder="Ex: 28" className="w-full tab-input" />
+              </div>
+
+              <div className="md:col-span-2">
+                <label className="block text-[9px] font-semibold text-zinc-500 uppercase tracking-wider mb-1.5">Email</label>
+                <input type="email" value={newForm.email} onChange={(e) => setNewForm({ ...newForm, email: e.target.value })} placeholder="exemple@entreprise.com" className="w-full tab-input" />
+              </div>
+
+              <div>
+                <label className="block text-[9px] font-semibold text-zinc-500 uppercase tracking-wider mb-1.5">Nationalité</label>
+                <input type="text" value={newForm.nationality} onChange={(e) => setNewForm({ ...newForm, nationality: e.target.value })} className="w-full tab-input" />
+              </div>
+            </div>
+
+            <div className="flex gap-2">
+              <button onClick={() => setShowNewModal(false)} type="button" className="flex-1 px-4 py-2.5 rounded-xl text-[11px] font-semibold tab-btn-alt" disabled={savingNew}>
+                Annuler
+              </button>
+              <button onClick={handleAddEmployee} type="button" disabled={!newForm.name || !newForm.post || !newForm.dept || savingNew} className="flex-1 px-4 py-2.5 rounded-xl text-[11px] font-semibold gold-btn disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                {savingNew ? (
+                  <>
+                    <div className="w-3.5 h-3.5 border-2 border-black border-t-transparent animate-spin rounded-full" />
+                    <span>Enregistrement...</span>
+                  </>
+                ) : (
+                  <>
+                    <UserPlus size={14} />
+                    <span>Ajouter</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ═══ MODAL FICHE EMPLOYÉ ═══ */}
+      {selectedEmployee && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-y-auto animate-fadeIn" style={{ background: "rgba(0,0,0,0.75)", backdropFilter: "blur(8px)" }}>
+          <div className="modal-glass w-full max-w-4xl rounded-2xl p-6 my-8 animate-scaleIn">
+            <div className="flex items-start justify-between mb-6">
+              <div className="flex items-start gap-4">
+                <div className="relative">
+                  {renderAvatar(selectedEmployee, "lg")}
+                  <input ref={fileInputRef} type="file" accept="image/*" onChange={(e) => { if (e.target.files?.[0]) handlePhotoUpload(selectedEmployee.id, e.target.files[0]); }} className="hidden" />
+                  <button onClick={() => fileInputRef.current?.click()} disabled={uploadingPhoto} type="button" className="absolute -bottom-1 -right-1 w-7 h-7 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-black flex items-center justify-center transition-all disabled:opacity-50" title="Changer photo">
+                    {uploadingPhoto ? <div className="w-3 h-3 border-2 border-black border-t-transparent animate-spin rounded-full" /> : <Camera size={12} />}
+                  </button>
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-white mb-1">{selectedEmployee.name}</h3>
+                  <p className="text-[11px] text-zinc-400 mb-2">{selectedEmployee.post} • {selectedEmployee.dept}</p>
+                  <div className="flex flex-wrap gap-2">
+                    <span className={"inline-flex items-center gap-1 px-2 py-1 rounded-lg border text-[9px] font-semibold " + getStatusColor(selectedEmployee.status)}>
+                      <span className={"w-1.5 h-1.5 rounded-full bg-current" + (selectedEmployee.status === "Actif" ? " animate-pulse" : "")} />
+                      {selectedEmployee.status}
+                    </span>
+                    <span className={"inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[9px] font-semibold " + (selectedEmployee.paymentStatus === "Payé" ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30" : "bg-amber-500/20 text-amber-300 border border-amber-500/30")}>
+                      {selectedEmployee.paymentStatus === "Payé" ? <CheckCircle2 size={9} /> : <Clock size={9} />}
+                      {selectedEmployee.paymentStatus}
+                    </span>
+                    <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-white/5 border border-white/[0.06] text-[9px] font-semibold text-zinc-400">
+                      <Briefcase size={9} />
+                      {selectedEmployee.contract}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <button onClick={() => setSelectedEmployee(null)} type="button" className="tab-btn">
+                <X size={16} />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+              <div className="info-card">
+                <div className="flex items-center gap-2 mb-3">
+                  <Fingerprint size={14} className="text-emerald-400" />
+                  <h4 className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Identification</h4>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-[10px] text-zinc-500">ID Personnel</span>
+                    <span className="text-[11px] font-semibold text-white">{selectedEmployee.id}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-[10px] text-zinc-500">Date d'entrée</span>
+                    <span className="text-[11px] font-semibold text-white">{selectedEmployee.joinDate || "—"}</span>
+                  </div>
+                  {selectedEmployee.age && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-[10px] text-zinc-500">Âge</span>
+                      <span className="text-[11px] font-semibold text-white">{selectedEmployee.age} ans</span>
+                    </div>
+                  )}
+                  {selectedEmployee.genre && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-[10px] text-zinc-500">Genre</span>
+                      <span className="text-[11px] font-semibold text-white">{selectedEmployee.genre}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="info-card">
+                <div className="flex items-center gap-2 mb-3">
+                  <Mail size={14} className="text-emerald-400" />
+                  <h4 className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Contact</h4>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex justify-between items-start">
+                    <span className="text-[10px] text-zinc-500">Email</span>
+                    <span className="text-[11px] font-semibold text-white text-right break-all">{selectedEmployee.email || "—"}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-[10px] text-zinc-500">Nationalité</span>
+                    <span className="text-[11px] font-semibold text-white">{selectedEmployee.nation}</span>
+                  </div>
+                  {selectedEmployee.pco && (
+                    <div className="flex justify-between items-start">
+                      <span className="text-[10px] text-zinc-500">Personne à contacter</span>
+                      <span className="text-[11px] font-semibold text-white text-right">{selectedEmployee.pco}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="info-card">
+                <div className="flex items-center gap-2 mb-3">
+                  <Wallet size={14} className="text-emerald-400" />
+                  <h4 className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Rémunération</h4>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-[10px] text-zinc-500">Salaire mensuel</span>
+                    <span className="text-[13px] font-bold text-white tabular-nums">{selectedEmployee.salary.toLocaleString()} <span className="text-[9px] text-emerald-400">FCFA</span></span>
+                  </div>
+                  {selectedEmployee.prime > 0 && (
+                    <>
+                      <div className="flex justify-between items-center">
+                        <span className="text-[10px] text-zinc-500">Prime</span>
+                        <span className="text-[12px] font-bold tabular-nums" style={{ color: "#d4af37" }}>{selectedEmployee.prime.toLocaleString()} <span className="text-[9px]">FCFA</span></span>
+                      </div>
+                      {selectedEmployee.primeLabel && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-[10px] text-zinc-500">Type de prime</span>
+                          <span className="text-[11px] font-semibold text-zinc-400">{selectedEmployee.primeLabel}</span>
+                        </div>
+                      )}
+                    </>
+                  )}
+                  <div className="pt-2 border-t border-white/[0.06]">
+                    <div className="flex justify-between items-center">
+                      <span className="text-[10px] font-semibold text-zinc-400">Total</span>
+                      <span className="text-[14px] font-bold text-emerald-400 tabular-nums">{(selectedEmployee.salary + selectedEmployee.prime).toLocaleString()} <span className="text-[9px]">FCFA</span></span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="info-card">
+                <div className="flex items-center gap-2 mb-3">
+                  <Award size={14} className="text-emerald-400" />
+                  <h4 className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Performance</h4>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-[10px] text-zinc-500">Département</span>
+                    <span className="text-[11px] font-semibold text-white">{selectedEmployee.dept}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-[10px] text-zinc-500">Fonction</span>
+                    <span className="text-[11px] font-semibold text-white">{selectedEmployee.post}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-[10px] text-zinc-500">Type de contrat</span>
+                    <span className="text-[11px] font-semibold text-white">{selectedEmployee.contract}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-2">
+              <button onClick={() => setSelectedEmployee(null)} type="button" className="flex-1 px-4 py-2.5 rounded-xl text-[11px] font-semibold tab-btn-alt">
+                Fermer
+              </button>
+              <button onClick={() => togglePayment(selectedEmployee.id, selectedEmployee.name, selectedEmployee.paymentStatus)} type="button" className={"flex-1 px-4 py-2.5 rounded-xl text-[11px] font-semibold flex items-center justify-center gap-2 transition-all " + (selectedEmployee.paymentStatus === "Payé" ? "bg-amber-500 text-black hover:bg-amber-400" : "bg-emerald-500 text-black hover:bg-emerald-400")}>
+                {selectedEmployee.paymentStatus === "Payé" ? <Clock size={14} /> : <CheckCircle2 size={14} />}
+                <span>{selectedEmployee.paymentStatus === "Payé" ? "Marquer en attente" : "Confirmer paiement"}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ═══ STYLES GLOBAUX ═══ */}
+      <style jsx>{`
+        .tablet-frame {
+          background: rgba(2, 10, 4, 0.85);
+          border: 1px solid rgba(16, 185, 129, 0.15);
+          box-shadow: 
+            0 0 0 1px rgba(16, 185, 129, 0.08),
+            0 20px 60px rgba(0, 0, 0, 0.5),
+            inset 0 1px 0 rgba(255, 255, 255, 0.03);
+          backdrop-filter: blur(20px);
+        }
+
+        .custom-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scroll::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.02); border-radius: 10px; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: rgba(16, 185, 129, 0.25); border-radius: 10px; }
+        .custom-scroll::-webkit-scrollbar-thumb:hover { background: rgba(16, 185, 129, 0.4); }
+
+        .tab-btn {
+          padding: 0.5rem;
+          background: rgba(255, 255, 255, 0.04);
+          border: 1px solid rgba(255, 255, 255, 0.06);
+          border-radius: 0.75rem;
+          color: rgba(255, 255, 255, 0.6);
+          transition: all 0.2s;
+        }
+        .tab-btn:hover { background: rgba(255, 255, 255, 0.08); color: rgba(16, 185, 129, 1); border-color: rgba(16, 185, 129, 0.3); }
+
+        .tab-btn-alt {
+          padding: 0.5rem 1rem;
+          background: rgba(255, 255, 255, 0.04);
+          border: 1px solid rgba(255, 255, 255, 0.06);
+          border-radius: 0.75rem;
+          color: rgba(255, 255, 255, 0.7);
+          font-size: 0.6875rem;
+          font-weight: 600;
+          transition: all 0.2s;
+        }
+        .tab-btn-alt:hover { background: rgba(16, 185, 129, 0.15); color: rgb(16, 185, 129); border-color: rgba(16, 185, 129, 0.3); }
+
+        .gold-btn {
+          background: linear-gradient(135deg, rgba(212, 175, 55, 0.9), rgba(212, 175, 55, 0.7));
+          color: #000;
+          box-shadow: 0 4px 12px rgba(212, 175, 55, 0.25);
+        }
+        .gold-btn:hover { background: linear-gradient(135deg, rgba(212, 175, 55, 1), rgba(212, 175, 55, 0.85)); box-shadow: 0 6px 20px rgba(212, 175, 55, 0.4); }
+
+        .tab-input {
+          padding: 0.625rem 0.75rem;
+          background: rgba(0, 0, 0, 0.3);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          border-radius: 0.75rem;
+          color: #fff;
+          font-size: 0.6875rem;
+          transition: all 0.2s;
+        }
+        .tab-input:focus { outline: none; border-color: rgba(16, 185, 129, 0.5); background: rgba(0, 0, 0, 0.4); box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1); }
+        .tab-input::placeholder { color: rgba(255, 255, 255, 0.3); }
+
+        .kpi-card {
+          background: rgba(0, 0, 0, 0.25);
+          border: 1px solid rgba(255, 255, 255, 0.06);
+          border-radius: 1rem;
+          padding: 0.875rem;
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+        }
+        .kpi-icon {
+          width: 2rem;
+          height: 2rem;
+          border-radius: 0.625rem;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+        }
+        .kpi-label { font-size: 0.625rem; color: rgba(255, 255, 255, 0.5); margin-bottom: 0.125rem; }
+        .kpi-value { font-size: 1.125rem; font-weight: 700; color: #fff; }
+
+        .payroll-section {
+          background: rgba(0, 0, 0, 0.2);
+          border: 1px solid rgba(16, 185, 129, 0.1);
+          border-radius: 1.25rem;
+          padding: 1.25rem;
+        }
+
+        .sum-chip {
+          padding: 0.5rem 0.875rem;
+          background: rgba(0, 0, 0, 0.3);
+          border: 1px solid rgba(255, 255, 255, 0.06);
+          border-radius: 0.625rem;
+        }
+        .sum-label { font-size: 0.5625rem; color: rgba(255, 255, 255, 0.5); margin-bottom: 0.125rem; text-transform: uppercase; font-weight: 600; }
+        .sum-val { font-size: 0.75rem; font-weight: 700; }
+
+        .dept-card {
+          background: rgba(0, 0, 0, 0.3);
+          border: 1px solid rgba(255, 255, 255, 0.06);
+          border-radius: 0.875rem;
+          padding: 0.75rem;
+          transition: all 0.2s;
+        }
+        .dept-card:hover { background: rgba(0, 0, 0, 0.4); border-color: rgba(16, 185, 129, 0.2); }
+
+        .data-table-wrap {
+          background: rgba(0, 0, 0, 0.2);
+          border: 1px solid rgba(255, 255, 255, 0.06);
+          border-radius: 1rem;
+          overflow: hidden;
+        }
+
+        .pay-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.25rem;
+          padding: 0.375rem 0.625rem;
+          border-radius: 0.5rem;
+          font-size: 0.625rem;
+          font-weight: 600;
+          border: 1px solid;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+        .pay-done { background: rgba(16, 185, 129, 0.15); color: rgb(16, 185, 129); border-color: rgba(16, 185, 129, 0.3); }
+        .pay-done:hover { background: rgba(16, 185, 129, 0.25); }
+        .pay-wait { background: rgba(245, 158, 11, 0.15); color: rgb(245, 158, 11); border-color: rgba(245, 158, 11, 0.3); }
+        .pay-wait:hover { background: rgba(245, 158, 11, 0.25); }
+
+        .dropdown-glass {
+          background: rgba(10, 20, 15, 0.95);
+          border: 1px solid rgba(16, 185, 129, 0.2);
+          backdrop-filter: blur(12px);
+        }
+        .dd-item {
+          width: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 0.5rem 0.75rem;
+          border-radius: 0.5rem;
+          font-size: 0.6875rem;
+          font-weight: 600;
+          transition: all 0.15s;
+        }
+
+        .pg-btn {
+          padding: 0.375rem 0.5rem;
+          background: rgba(255, 255, 255, 0.04);
+          border: 1px solid rgba(255, 255, 255, 0.06);
+          border-radius: 0.5rem;
+          color: rgba(255, 255, 255, 0.6);
+          transition: all 0.2s;
+        }
+        .pg-btn:hover:not(:disabled) { background: rgba(16, 185, 129, 0.15); color: rgb(16, 185, 129); border-color: rgba(16, 185, 129, 0.3); }
+        .pg-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+        .pg-num {
+          min-width: 1.75rem;
+          height: 1.75rem;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 0.5rem;
+          font-size: 0.6875rem;
+          font-weight: 600;
+          color: rgba(255, 255, 255, 0.6);
+          background: rgba(255, 255, 255, 0.04);
+          border: 1px solid rgba(255, 255, 255, 0.06);
+          transition: all 0.2s;
+        }
+        .pg-num:hover { background: rgba(16, 185, 129, 0.15); color: rgb(16, 185, 129); border-color: rgba(16, 185, 129, 0.3); }
+        .pg-active { background: rgb(16, 185, 129) !important; color: #000 !important; border-color: rgb(16, 185, 129) !important; }
+
+        .modal-glass {
+          background: rgba(10, 20, 15, 0.95);
+          border: 1px solid rgba(16, 185, 129, 0.2);
+          backdrop-filter: blur(20px);
+          box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+        }
+
+        .info-card {
+          background: rgba(0, 0, 0, 0.3);
+          border: 1px solid rgba(255, 255, 255, 0.06);
+          border-radius: 0.875rem;
+          padding: 1rem;
+        }
+
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes scaleIn {
+          from { opacity: 0; transform: scale(0.95); }
+          to { opacity: 1; transform: scale(1); }
+        }
+        .animate-fadeIn { animation: fadeIn 0.2s ease-out; }
+        .animate-scaleIn { animation: scaleIn 0.2s ease-out; }
+      `}</style>
+    </div>
+  );
+}
