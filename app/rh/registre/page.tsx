@@ -413,7 +413,7 @@ export default function RegistrePersonnel() {
         <div 
           className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-30"
           style={{ 
-            backgroundImage: "url('/images/tech-bg.webp')",
+            backgroundImage: "url('/images/tech-bg.jpg')",
             filter: "blur(8px) brightness(0.4)"
           }}
         />
