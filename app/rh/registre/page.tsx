@@ -381,7 +381,7 @@ export default function RegistrePersonnel() {
       {/* ═══ INTERFACE PRINCIPALE ═══ */}
       <div className="relative z-10 min-h-screen flex items-center justify-center p-4 md:p-6">
         <div className="holo-container w-full max-w-[1700px]">
-          <div className="h-full overflow-y-auto custom-scroll">
+  <div className="max-h-[calc(100vh-3rem)] overflow-y-auto custom-scroll">
             <div className="p-5 md:p-7 space-y-6">
               
               {/* ── HEADER FUTURISTE ── */}
@@ -716,7 +716,18 @@ export default function RegistrePersonnel() {
               {/* ── TABLEAU HOLOGRAPHIQUE ── */}
               <section className="table-holo">
                 <div className="overflow-x-auto custom-scroll">
-                  <table className="w-full text-left">
+                  <table className="w-full text-left table-fixed">
+                    <colgroup>
+                      <col style={{ width: '20%' }} />
+                      <col style={{ width: '12%' }} />
+                      <col style={{ width: '13%' }} />
+                      <col style={{ width: '8%' }} />
+                      <col style={{ width: '11%' }} />
+                      <col style={{ width: '10%' }} />
+                      <col style={{ width: '9%' }} />
+                      <col style={{ width: '9%' }} />
+                      <col style={{ width: '8%' }} />
+                    </colgroup>
                     <thead>
                       <tr className="border-b border-cyan-500/20">
                         <th className="table-header-holo">👤 Collaborateur</th>
@@ -734,71 +745,73 @@ export default function RegistrePersonnel() {
                       {paginatedData.map((emp: Employee) => (
                         <tr key={emp.id} className="table-row-holo group">
                           <td className="table-cell-holo">
-                            <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-3 min-w-0">
                               <div
                                 onClick={() => setSelectedEmployee(emp)}
-                                className="cursor-pointer hover:scale-105 hover:shadow-lg hover:shadow-cyan-500/30 transition-all duration-300 rounded-xl"
+                                className="cursor-pointer hover:scale-105 hover:shadow-lg hover:shadow-cyan-500/30 transition-all duration-300 rounded-xl flex-shrink-0"
                                 role="button"
                                 tabIndex={0}
                                 onKeyDown={(e) => { if (e.key === "Enter") setSelectedEmployee(emp); }}
                               >
                                 {renderAvatar(emp, "sm")}
                               </div>
-                              <div className="min-w-0">
+                              <div className="min-w-0 flex-1">
                                 <button
                                   onClick={() => setSelectedEmployee(emp)}
                                   type="button"
-                                  className="employee-name-holo"
+                                  className="employee-name-holo block w-full text-left truncate"
+                                  title={emp.name}
                                 >
                                   {emp.name}
                                 </button>
-                                <p className="employee-id-holo">
-                                  <Fingerprint size={9} />
-                                  {emp.id}
+                                <p className="employee-id-holo truncate" title={emp.id}>
+                                  <Fingerprint size={9} className="flex-shrink-0" />
+                                  <span className="truncate">{emp.id}</span>
                                 </p>
                               </div>
                             </div>
                           </td>
                           <td className="table-cell-holo">
-                            <p className="text-[11px] text-cyan-300/80">{emp.dept}</p>
+                            <p className="text-[11px] text-cyan-300/80 truncate" title={emp.dept}>{emp.dept}</p>
                           </td>
                           <td className="table-cell-holo">
-                            <p className="text-[11px] text-slate-400">{emp.post}</p>
+                            <p className="text-[11px] text-slate-400 truncate" title={emp.post}>{emp.post}</p>
                           </td>
                           <td className="table-cell-holo">
-                            <span className="contract-badge-holo">{emp.contract}</span>
+                            <span className="contract-badge-holo truncate block" title={emp.contract}>{emp.contract}</span>
                           </td>
                           <td className="table-cell-holo">
-                            <p className="salary-holo">
+                            <p className="salary-holo truncate" title={emp.salary.toLocaleString() + " FCFA"}>
                               {emp.salary.toLocaleString()} <span className="text-[9px] text-cyan-400">F</span>
                             </p>
                           </td>
                           <td className="table-cell-holo">
                             {emp.prime > 0 ? (
-                              <div>
-                                <p className="prime-holo">
+                              <div className="min-w-0">
+                                <p className="prime-holo truncate" title={emp.prime.toLocaleString() + " FCFA"}>
                                   {emp.prime.toLocaleString()} <span className="text-[9px]">F</span>
                                 </p>
-                                {emp.primeLabel && <p className="prime-label-holo">{emp.primeLabel}</p>}
+                                {emp.primeLabel && <p className="prime-label-holo truncate" title={emp.primeLabel}>{emp.primeLabel}</p>}
                               </div>
                             ) : (
                               <span className="text-[11px] text-slate-700">—</span>
                             )}
                           </td>
                           <td className="table-cell-holo">
-                            <span className={`status-badge-holo ${getStatusColor(emp.status)}`}>
-                              <span className="status-dot-holo" />
-                              {emp.status}
+                            <span className={`status-badge-holo ${getStatusColor(emp.status)} inline-flex whitespace-nowrap`}>
+                              <span className="status-dot-holo flex-shrink-0" />
+                              <span className="truncate">{emp.status}</span>
                             </span>
                           </td>
                           <td className="table-cell-holo">
                             <button
                               type="button"
                               onClick={() => togglePayment(emp.id, emp.name, emp.paymentStatus)}
-                              className={emp.paymentStatus === "Payé" ? "payment-badge-paid-holo" : "payment-badge-pending-holo"}
+                              className={emp.paymentStatus === "Payé" ? "payment-badge-paid-holo inline-flex whitespace-nowrap w-full justify-center" : "payment-badge-pending-holo inline-flex whitespace-nowrap w-full justify-center"}
+                              title={emp.paymentStatus}
                             >
-                              {emp.paymentStatus === "Payé" ? <CheckCircle2 size={11} /> : <Clock size={11} />}
-                              {emp.paymentStatus}
+                              {emp.paymentStatus === "Payé" ? <CheckCircle2 size={11} className="flex-shrink-0" /> : <Clock size={11} className="flex-shrink-0" />}
+                              <span className="truncate">{emp.paymentStatus}</span>
                             </button>
                           </td>
                           <td className="table-cell-holo">
@@ -806,7 +819,7 @@ export default function RegistrePersonnel() {
                               <button
                                 onClick={() => setSelectedEmployee(emp)}
                                 type="button"
-                                className="action-btn-holo"
+                                className="action-btn-holo flex-shrink-0"
                                 title="Voir la fiche"
                               >
                                 <Eye size={15} />
@@ -814,7 +827,7 @@ export default function RegistrePersonnel() {
                               <button
                                 onClick={() => setActiveMenu(activeMenu === emp.id ? null : emp.id)}
                                 type="button"
-                                className={activeMenu === emp.id ? "action-btn-holo-active" : "action-btn-holo"}
+                                className={activeMenu === emp.id ? "action-btn-holo-active flex-shrink-0" : "action-btn-holo flex-shrink-0"}
                               >
                                 <MoreVertical size={15} />
                               </button>
@@ -825,7 +838,7 @@ export default function RegistrePersonnel() {
                                     type="button"
                                     className="dropdown-item-holo text-emerald-400"
                                   >
-                                    <CheckCircle2 size={13} />
+                                    <CheckCircle2 size={13} className="flex-shrink-0" />
                                     <span>Marquer Actif</span>
                                   </button>
                                   <button 
@@ -833,7 +846,7 @@ export default function RegistrePersonnel() {
                                     type="button"
                                     className="dropdown-item-holo text-amber-400"
                                   >
-                                    <Calendar size={13} />
+                                    <Calendar size={13} className="flex-shrink-0" />
                                     <span>En Congé</span>
                                   </button>
                                   <button 
@@ -841,7 +854,7 @@ export default function RegistrePersonnel() {
                                     type="button" 
                                     className="dropdown-item-holo text-slate-400"
                                   >
-                                    <Clock size={13} />
+                                    <Clock size={13} className="flex-shrink-0" />
                                     <span>En Pause</span>
                                   </button>
                                   <div className="h-px bg-gradient-to-r from-transparent via-cyan-500/30 to-transparent my-1" />
@@ -850,7 +863,7 @@ export default function RegistrePersonnel() {
                                     type="button"
                                     className="dropdown-item-holo text-rose-400"
                                   >
-                                    <AlertCircle size={13} />
+                                    <AlertCircle size={13} className="flex-shrink-0" />
                                     <span>Fin de Contrat</span>
                                   </button>
                                 </div>
