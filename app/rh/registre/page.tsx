@@ -318,11 +318,11 @@ export default function RegistrePersonnel() {
           </div>
         </div>
       </div>
-    );
-  }
-  return (
-    <div className="min-h-screen relative overflow-hidden bg-slate-950">
+      );
+    }
 
+    return (
+      <div className="min-h-screen relative overflow-hidden bg-slate-950">
       {/* ═══ FOND HOLOGRAPHIQUE ULTRA FUTURISTE ═══ */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-cyan-900/20 via-slate-950 to-slate-950" />
