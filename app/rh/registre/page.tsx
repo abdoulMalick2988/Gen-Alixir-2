@@ -695,37 +695,6 @@ export default function RegistrePersonnel() {
     </button>
   ))}
 </div>
-                          <p className="text-[10px] font-bold text-cyan-400/80 uppercase tracking-wider mb-1">{dept.name}</p>
-                          <p className="text-base font-black text-white mb-0.5">
-                            {dept.total.toLocaleString()} <span className="text-[10px] text-cyan-400 font-semibold">F</span>
-                          </p>
-                          {dept.totalPrimes > 0 && (
-                            <p className="text-[11px] font-bold text-emerald-400">
-                              + {dept.totalPrimes.toLocaleString()} F
-                            </p>
-                          )}
-                          <div className="mt-3 h-1.5 bg-white/5 rounded-full overflow-hidden border border-white/10">
-                            <div
-                              className="h-full bg-gradient-to-r from-cyan-500 to-emerald-500 rounded-full transition-all duration-1000"
-                              style={{ width: dept.count > 0 ? `${(dept.paid / dept.count) * 100}%` : "0%" }}
-                            />
-                          </div>
-                          <div className="mt-2 flex justify-between items-center text-[9px] font-semibold">
-                            <span className="text-emerald-400 flex items-center gap-1">
-                              <CheckCircle2 size={9} />
-                              {dept.paid} payé{dept.paid > 1 ? "s" : ""}
-                            </span>
-                            {dept.pending > 0 && (
-                              <span className="text-amber-400 flex items-center gap-1">
-                                <Clock size={9} />
-                                {dept.pending}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
                 </section>
               )}
 
