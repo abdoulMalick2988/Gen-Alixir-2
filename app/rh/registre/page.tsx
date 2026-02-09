@@ -398,21 +398,27 @@ export default function RegistrePersonnel() {
   return (
     <div className="min-h-screen relative bg-slate-950 flex justify-center items-start py-8 px-4 overflow-y-auto custom-scroll">
       
-      {/* Fond avec dégradé émeraude */}
-      <div className="fixed inset-0 pointer-events-none">
+      {/* ═══ FOND HOLOGRAPHIQUE (FIXE) ═══ */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-emerald-900/20 via-slate-950 to-slate-950" />
+        <div className="absolute inset-0 opacity-[0.03]" style={{ 
+          backgroundImage: "linear-gradient(rgba(16, 185, 129, 0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(16, 185, 129, 0.5) 1px, transparent 1px)",
+          backgroundSize: "50px 50px",
+          maskImage: "radial-gradient(ellipse at center, black 40%, transparent 70%)"
+        }} />
       </div>
 
-      {/* TABLETTE EN VERRE VERT POLI */}
-      <div className="relative z-10 w-full max-w-[1700px] bg-emerald-950/10 backdrop-blur-2xl border border-emerald-500/30 rounded-[3rem] shadow-2xl shadow-emerald-500/10 mb-10">
+      {/* ═══ TABLETTE EN VERRE VERT POLI (Cadre Principal) ═══ */}
+      <div className="relative z-10 w-full max-w-[1700px] bg-emerald-950/10 backdrop-blur-2xl border border-emerald-500/30 rounded-[3rem] shadow-2xl shadow-emerald-500/10 mb-10 overflow-hidden">
         
-        {/* Liseré de lumière sur le bord supérieur poli */}
+        {/* Reflet de lumière sur le bord supérieur poli */}
         <div className="absolute inset-x-20 top-0 h-[1px] bg-gradient-to-r from-transparent via-emerald-400/40 to-transparent" />
         
-        <div className="p-6 md:p-10 space-y-6">
+        {/* CONTENU INTERNE DE LA TABLETTE */}
+        <div className="p-4 md:p-8 lg:p-10 space-y-6">
 
-              {/* ── HEADER FUTURISTE ── */}
-              <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          {/* ── HEADER FUTURISTE ── */}
+          <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
                   <button onClick={() => router.push("/rh")} type="button" className="cyber-btn">
                     <ArrowLeft size={16} />
