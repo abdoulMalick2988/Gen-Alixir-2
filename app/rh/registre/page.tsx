@@ -1021,3 +1021,1227 @@ export default function RegistrePersonnel() {
           </div>
         </div>
       </div>
+/* ═══════════════════════════════════════════════════════════════
+   PARTIE 3 FINALE - MODALS + STYLES HOLOGRAPHIQUES COMPLETS
+   ═══════════════════════════════════════════════════════════════ */
+
+      {/* ═══ MODAL CONFIRMATION PAIEMENT ═══ */}
+      {payConfirm && (
+        <div className="modal-overlay-holo animate-fadeIn" onClick={() => setPayConfirm(null)}>
+          <div className="modal-container-holo animate-scaleIn" onClick={(e) => e.stopPropagation()}>
+            <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-emerald-500/5 rounded-2xl blur-xl" />
+            <div className="relative">
+              <div className="flex items-start gap-4 mb-6">
+                <div className={payConfirm.current === "Payé" ? "modal-icon-holo-amber" : "modal-icon-holo-green"}>
+                  {payConfirm.current === "Payé" ? (
+                    <Clock size={22} className="text-amber-400" />
+                  ) : (
+                    <CheckCircle2 size={22} className="text-emerald-400" />
+                  )}
+                  <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-white/10 to-transparent opacity-50" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="modal-title-holo mb-2">Confirmation requise</h3>
+                  <p className="modal-description-holo">
+                    {payConfirm.current === "Payé"
+                      ? `Retirer le statut "Payé" pour ${payConfirm.name} ?`
+                      : `Confirmer le paiement du salaire de ${payConfirm.name} ?`}
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <button onClick={() => setPayConfirm(null)} type="button" className="modal-btn-secondary-holo">
+                  <X size={15} />
+                  <span>Annuler</span>
+                </button>
+                <button
+                  onClick={confirmPayment}
+                  type="button"
+                  className={payConfirm.current === "Payé" ? "modal-btn-amber-holo" : "modal-btn-green-holo"}
+                >
+                  {payConfirm.current === "Payé" ? <Clock size={15} /> : <CheckCircle2 size={15} />}
+                  <span>Confirmer</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ═══ MODAL FICHE EMPLOYÉ HOLOGRAPHIQUE ═══ */}
+      {selectedEmployee && (
+        <div className="modal-overlay-holo animate-fadeIn" onClick={() => setSelectedEmployee(null)}>
+          <div className="modal-container-xl-holo animate-scaleIn" onClick={(e) => e.stopPropagation()}>
+            <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/10 via-emerald-500/5 to-violet-500/10 rounded-3xl blur-2xl" />
+            
+            <div className="relative max-h-[85vh] overflow-y-auto custom-scroll">
+              {/* Header */}
+              <div className="flex items-start justify-between mb-6 pb-6 border-b border-cyan-500/20">
+                <div className="flex items-start gap-5">
+                  <div className="relative group">
+                    {renderAvatar(selectedEmployee, "lg")}
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        if (e.target.files?.[0]) handlePhotoUpload(selectedEmployee.id, e.target.files[0]);
+                      }}
+                      className="hidden"
+                    />
+                    <button
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={uploadingPhoto}
+                      type="button"
+                      className="photo-btn-holo"
+                      title="Changer la photo"
+                    >
+                      {uploadingPhoto ? (
+                        <div className="w-4 h-4 border-2 border-slate-900 border-t-transparent animate-spin rounded-full" />
+                      ) : (
+                        <Camera size={14} />
+                      )}
+                    </button>
+                  </div>
+                  <div>
+                    <h3 className="employee-profile-name-holo mb-2">{selectedEmployee.name}</h3>
+                    <p className="employee-profile-role-holo mb-3">
+                      {selectedEmployee.post} • {selectedEmployee.dept}
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      <span className={`status-badge-holo ${getStatusColor(selectedEmployee.status)}`}>
+                        <span className="status-dot-holo" />
+                        {selectedEmployee.status}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => togglePayment(selectedEmployee.id, selectedEmployee.name, selectedEmployee.paymentStatus)}
+                        className={selectedEmployee.paymentStatus === "Payé" ? "payment-badge-paid-holo-clickable" : "payment-badge-pending-holo-clickable"}
+                      >
+                        {selectedEmployee.paymentStatus === "Payé" ? (
+                          <CheckCircle2 size={11} />
+                        ) : (
+                          <Clock size={11} />
+                        )}
+                        {selectedEmployee.paymentStatus}
+                      </button>
+                      <span className="contract-badge-holo">
+                        <Briefcase size={10} />
+                        {selectedEmployee.contract}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <button onClick={() => setSelectedEmployee(null)} type="button" className="cyber-btn">
+                  <X size={16} />
+                </button>
+              </div>
+
+              {/* Info Cards Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                {/* Identification */}
+                <div className="info-card-holo">
+                  <div className="info-header-holo mb-4">
+                    <div className="info-icon-holo">
+                      <Fingerprint size={16} className="text-cyan-400" />
+                    </div>
+                    <h4 className="info-title-holo">Identification</h4>
+                  </div>
+                  <div className="space-y-3">
+                    <div className="info-row-holo">
+                      <span className="info-label-holo">ID Personnel</span>
+                      <span className="info-value-holo">{selectedEmployee.id}</span>
+                    </div>
+                    <div className="info-row-holo">
+                      <span className="info-label-holo">Date d'entrée</span>
+                      <span className="info-value-holo">{selectedEmployee.joinDate || "—"}</span>
+                    </div>
+                    {selectedEmployee.age && (
+                      <div className="info-row-holo">
+                        <span className="info-label-holo">Âge</span>
+                        <span className="info-value-holo">{selectedEmployee.age} ans</span>
+                      </div>
+                    )}
+                    {selectedEmployee.genre && (
+                      <div className="info-row-holo">
+                        <span className="info-label-holo">Genre</span>
+                        <span className="info-value-holo">{selectedEmployee.genre}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Contact */}
+                <div className="info-card-holo">
+                  <div className="info-header-holo mb-4">
+                    <div className="info-icon-holo">
+                      <Mail size={16} className="text-emerald-400" />
+                    </div>
+                    <h4 className="info-title-holo">Contact</h4>
+                  </div>
+                  <div className="space-y-3">
+                    <div className="info-row-holo">
+                      <span className="info-label-holo">Email</span>
+                      <span className="info-value-holo text-right break-all">{selectedEmployee.email || "—"}</span>
+                    </div>
+                    <div className="info-row-holo">
+                      <span className="info-label-holo">Nationalité</span>
+                      <span className="info-value-holo">{selectedEmployee.nation}</span>
+                    </div>
+                    {selectedEmployee.pco && (
+                      <div className="info-row-holo">
+                        <span className="info-label-holo">Contact d'urgence</span>
+                        <span className="info-value-holo text-right">{selectedEmployee.pco}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Rémunération */}
+                <div className="info-card-holo-premium">
+                  <div className="info-header-holo mb-4">
+                    <div className="info-icon-holo-premium">
+                      <Wallet size={16} className="text-emerald-400" />
+                    </div>
+                    <h4 className="info-title-holo">Rémunération</h4>
+                  </div>
+                  <div className="space-y-3">
+                    <div className="info-row-holo">
+                      <span className="info-label-holo">Salaire mensuel</span>
+                      <span className="salary-holo">
+                        {selectedEmployee.salary.toLocaleString()} <span className="text-[10px] text-cyan-400">FCFA</span>
+                      </span>
+                    </div>
+                    {selectedEmployee.prime > 0 && (
+                      <>
+                        <div className="info-row-holo">
+                          <span className="info-label-holo">Prime</span>
+                          <span className="prime-holo">
+                            {selectedEmployee.prime.toLocaleString()} <span className="text-[10px]">FCFA</span>
+                          </span>
+                        </div>
+                        {selectedEmployee.primeLabel && (
+                          <div className="info-row-holo">
+                            <span className="info-label-holo">Type de prime</span>
+                            <span className="info-value-holo text-emerald-400">{selectedEmployee.primeLabel}</span>
+                          </div>
+                        )}
+                      </>
+                    )}
+                    <div className="pt-3 border-t border-cyan-500/20">
+                      <div className="info-row-holo">
+                        <span className="info-label-holo font-bold text-cyan-300">Total mensuel</span>
+                        <span className="text-lg font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-emerald-400 tabular-nums">
+                          {(selectedEmployee.salary + selectedEmployee.prime).toLocaleString()}{" "}
+                          <span className="text-[11px]">FCFA</span>
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Performance */}
+                <div className="info-card-holo">
+                  <div className="info-header-holo mb-4">
+                    <div className="info-icon-holo">
+                      <Award size={16} className="text-violet-400" />
+                    </div>
+                    <h4 className="info-title-holo">Poste & Performance</h4>
+                  </div>
+                  <div className="space-y-3">
+                    <div className="info-row-holo">
+                      <span className="info-label-holo">Département</span>
+                      <span className="info-value-holo">{selectedEmployee.dept}</span>
+                    </div>
+                    <div className="info-row-holo">
+                      <span className="info-label-holo">Fonction</span>
+                      <span className="info-value-holo">{selectedEmployee.post}</span>
+                    </div>
+                    <div className="info-row-holo">
+                      <span className="info-label-holo">Type de contrat</span>
+                      <span className="info-value-holo">{selectedEmployee.contract}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer Actions */}
+              <div className="flex gap-3 pt-4 border-t border-cyan-500/20">
+                <button onClick={() => setSelectedEmployee(null)} type="button" className="modal-btn-secondary-holo flex-1">
+                  <ArrowLeft size={15} />
+                  <span>Retour</span>
+                </button>
+                <button
+                  onClick={() => togglePayment(selectedEmployee.id, selectedEmployee.name, selectedEmployee.paymentStatus)}
+                  type="button"
+                  className={selectedEmployee.paymentStatus === "Payé" ? "modal-btn-amber-holo flex-1" : "modal-btn-green-holo flex-1"}
+                >
+                  {selectedEmployee.paymentStatus === "Payé" ? <Clock size={15} /> : <CheckCircle2 size={15} />}
+                  <span>
+                    {selectedEmployee.paymentStatus === "Payé" ? "Marquer en attente" : "Confirmer paiement"}
+                  </span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ═══════════════════════════════════════════════════════════════
+          STYLES HOLOGRAPHIQUES ULTRA FUTURISTES - COMPLETS
+          ═══════════════════════════════════════════════════════════════ */}
+      <style jsx>{`
+        /* ════════════════════════════════════════════════════
+           ANIMATIONS CUSTOM
+        ════════════════════════════════════════════════════ */
+        @keyframes float {
+          0%, 100% { transform: translateY(0px) translateX(0px); }
+          50% { transform: translateY(-20px) translateX(10px); }
+        }
+        @keyframes float-delayed {
+          0%, 100% { transform: translateY(0px) translateX(0px); }
+          50% { transform: translateY(20px) translateX(-10px); }
+        }
+        @keyframes pulse-slow {
+          0%, 100% { opacity: 0.3; }
+          50% { opacity: 0.6; }
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes scaleIn {
+          from { opacity: 0; transform: scale(0.95); }
+          to { opacity: 1; transform: scale(1); }
+        }
+        @keyframes slideDown {
+          from { opacity: 0; transform: translateY(-20px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes shine {
+          0% { background-position: -250% 0; }
+          100% { background-position: 250% 0; }
+        }
+
+        .animate-float { animation: float 6s ease-in-out infinite; }
+        .animate-float-delayed { animation: float-delayed 8s ease-in-out infinite; }
+        .animate-pulse-slow { animation: pulse-slow 4s ease-in-out infinite; }
+        .animate-fadeIn { animation: fadeIn 0.3s ease-out; }
+        .animate-scaleIn { animation: scaleIn 0.3s ease-out; }
+        .animate-slideDown { animation: slideDown 0.4s ease-out; }
+        .animate-shine { animation: shine 3s linear infinite; }
+
+        /* ════════════════════════════════════════════════════
+           SCROLLBAR HOLOGRAPHIQUE
+        ════════════════════════════════════════════════════ */
+        .custom-scroll::-webkit-scrollbar { width: 10px; height: 10px; }
+        .custom-scroll::-webkit-scrollbar-track {
+          background: rgba(0, 0, 0, 0.3);
+          border-radius: 10px;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb {
+          background: linear-gradient(180deg, rgba(16, 185, 129, 0.6), rgba(6, 182, 212, 0.5));
+          border-radius: 10px;
+          border: 2px solid rgba(0, 0, 0, 0.3);
+        }
+        .custom-scroll::-webkit-scrollbar-thumb:hover {
+          background: linear-gradient(180deg, rgba(16, 185, 129, 0.9), rgba(6, 182, 212, 0.8));
+        }
+
+        /* ════════════════════════════════════════════════════
+           BOUTONS CYBER
+        ════════════════════════════════════════════════════ */
+        .cyber-btn {
+          padding: 0.625rem;
+          background: rgba(16, 185, 129, 0.1);
+          border: 1px solid rgba(16, 185, 129, 0.3);
+          border-radius: 0.75rem;
+          color: rgba(16, 185, 129, 0.9);
+          transition: all 0.3s ease;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          position: relative;
+          overflow: hidden;
+        }
+        .cyber-btn:hover {
+          background: rgba(16, 185, 129, 0.2);
+          border-color: rgba(16, 185, 129, 0.6);
+          box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
+          transform: translateY(-2px);
+        }
+
+        .cyber-btn-alt {
+          padding: 0.625rem 1.125rem;
+          background: rgba(6, 182, 212, 0.08);
+          border: 1px solid rgba(6, 182, 212, 0.25);
+          border-radius: 0.75rem;
+          color: rgba(6, 182, 212, 0.95);
+          font-size: 0.75rem;
+          font-weight: 600;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          transition: all 0.3s ease;
+        }
+        .cyber-btn-alt:hover {
+          background: rgba(6, 182, 212, 0.15);
+          border-color: rgba(6, 182, 212, 0.5);
+          box-shadow: 0 0 20px rgba(6, 182, 212, 0.25);
+          transform: translateY(-2px);
+        }
+        .cyber-btn-alt:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+          transform: none;
+        }
+
+        /* ════════════════════════════════════════════════════
+           INPUTS CYBER
+        ════════════════════════════════════════════════════ */
+        .cyber-input {
+          width: 100%;
+          padding: 0.875rem 1rem;
+          background: rgba(0, 0, 0, 0.4);
+          border: 1px solid rgba(6, 182, 212, 0.3);
+          border-radius: 0.75rem;
+          color: rgba(6, 182, 212, 0.95);
+          font-size: 0.75rem;
+          transition: all 0.3s ease;
+        }
+        .cyber-input:focus {
+          outline: none;
+          background: rgba(0, 0, 0, 0.5);
+          border-color: rgba(6, 182, 212, 0.6);
+          box-shadow: 
+            0 0 0 3px rgba(6, 182, 212, 0.15),
+            0 0 20px rgba(6, 182, 212, 0.2),
+            inset 0 0 20px rgba(6, 182, 212, 0.05);
+        }
+        .cyber-input::placeholder {
+          color: rgba(6, 182, 212, 0.4);
+        }
+
+        /* Dropdown personnalisé holographique */
+        .custom-select-holo {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          padding: 0.875rem 1rem;
+          background: linear-gradient(135deg, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.4));
+          border: 1px solid rgba(6, 182, 212, 0.3);
+          border-radius: 0.75rem;
+          color: rgba(6, 182, 212, 0.95);
+          font-size: 0.75rem;
+          font-weight: 600;
+          transition: all 0.3s ease;
+          cursor: pointer;
+        }
+        .custom-select-holo:hover {
+          border-color: rgba(6, 182, 212, 0.5);
+          background: rgba(0, 0, 0, 0.6);
+          box-shadow: 0 0 20px rgba(6, 182, 212, 0.2);
+        }
+
+        .custom-dropdown-holo {
+          position: absolute;
+          top: calc(100% + 0.5rem);
+          left: 0;
+          right: 0;
+          max-height: 300px;
+          overflow-y: auto;
+          background: linear-gradient(135deg, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.95));
+          border: 1px solid rgba(6, 182, 212, 0.4);
+          border-radius: 1rem;
+          padding: 0.5rem;
+          box-shadow: 
+            0 0 40px rgba(6, 182, 212, 0.3),
+            0 20px 60px rgba(0, 0, 0, 0.7);
+          backdrop-filter: blur(20px);
+          z-index: 50;
+          animation: scaleIn 0.2s ease-out;
+        }
+
+        .dropdown-option-holo {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          width: 100%;
+          padding: 0.75rem 1rem;
+          border-radius: 0.625rem;
+          font-size: 0.75rem;
+          font-weight: 600;
+          color: rgba(6, 182, 212, 0.9);
+          transition: all 0.2s ease;
+          text-align: left;
+        }
+        .dropdown-option-holo:hover {
+          background: rgba(6, 182, 212, 0.1);
+          color: rgb(6, 182, 212);
+        }
+
+        .dropdown-option-holo-active {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          width: 100%;
+          padding: 0.75rem 1rem;
+          border-radius: 0.625rem;
+          font-size: 0.75rem;
+          font-weight: 700;
+          color: rgb(6, 182, 212);
+          background: rgba(6, 182, 212, 0.15);
+          border: 1px solid rgba(6, 182, 212, 0.3);
+          text-align: left;
+        }
+
+        /* ════════════════════════════════════════════════════
+           FILTRES
+        ════════════════════════════════════════════════════ */
+        .filter-btn {
+          padding: 0.5rem 1rem;
+          background: rgba(6, 182, 212, 0.08);
+          border: 1px solid rgba(6, 182, 212, 0.2);
+          border-radius: 0.625rem;
+          color: rgba(6, 182, 212, 0.8);
+          font-size: 0.6875rem;
+          font-weight: 600;
+          transition: all 0.2s ease;
+          cursor: pointer;
+        }
+        .filter-btn:hover {
+          background: rgba(6, 182, 212, 0.15);
+          border-color: rgba(6, 182, 212, 0.4);
+          color: rgba(6, 182, 212, 1);
+        }
+
+        .filter-btn-active {
+          padding: 0.5rem 1rem;
+          background: linear-gradient(135deg, rgba(6, 182, 212, 0.25), rgba(16, 185, 129, 0.2));
+          border: 1px solid rgba(6, 182, 212, 0.5);
+          border-radius: 0.625rem;
+          color: rgb(6, 182, 212);
+          font-size: 0.6875rem;
+          font-weight: 700;
+          box-shadow: 0 0 15px rgba(6, 182, 212, 0.25);
+        }
+
+        /* ════════════════════════════════════════════════════
+           KPI CARDS
+        ════════════════════════════════════════════════════ */
+        .holo-card {
+          background: linear-gradient(135deg, rgba(15, 23, 42, 0.8), rgba(15, 23, 42, 0.6));
+          border: 1px solid rgba(6, 182, 212, 0.2);
+          border-radius: 1.25rem;
+          padding: 1.25rem;
+          transition: all 0.4s ease;
+          position: relative;
+          overflow: hidden;
+        }
+        .holo-card:hover {
+          border-color: rgba(6, 182, 212, 0.4);
+          box-shadow: 
+            0 0 30px rgba(6, 182, 212, 0.2),
+            inset 0 0 30px rgba(6, 182, 212, 0.05);
+          transform: translateY(-4px);
+        }
+
+        .holo-card-premium {
+          background: linear-gradient(135deg, rgba(6, 182, 212, 0.15), rgba(16, 185, 129, 0.1));
+          border: 1px solid rgba(6, 182, 212, 0.4);
+          border-radius: 1.25rem;
+          padding: 1.25rem;
+          transition: all 0.4s ease;
+          position: relative;
+          overflow: hidden;
+          box-shadow: 0 0 30px rgba(6, 182, 212, 0.15);
+        }
+        .holo-card-premium:hover {
+          border-color: rgba(6, 182, 212, 0.6);
+          box-shadow: 
+            0 0 40px rgba(6, 182, 212, 0.3),
+            inset 0 0 30px rgba(6, 182, 212, 0.1);
+          transform: translateY(-4px);
+        }
+
+        .holo-icon {
+          width: 2.75rem;
+          height: 2.75rem;
+          border-radius: 0.875rem;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+          border: 1px solid;
+          position: relative;
+          overflow: hidden;
+        }
+
+        .holo-icon-premium {
+          width: 2.75rem;
+          height: 2.75rem;
+          background: linear-gradient(135deg, rgba(6, 182, 212, 0.3), rgba(16, 185, 129, 0.25));
+          border: 1px solid rgba(6, 182, 212, 0.5);
+          border-radius: 0.875rem;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+          box-shadow: 0 0 20px rgba(6, 182, 212, 0.3);
+        }
+
+        .holo-label {
+          font-size: 0.625rem;
+          color: rgba(6, 182, 212, 0.7);
+          text-transform: uppercase;
+          letter-spacing: 0.08em;
+          font-weight: 700;
+        }
+
+        .holo-value {
+          font-size: 1.375rem;
+          font-weight: 900;
+          color: #fff;
+          text-shadow: 0 0 20px rgba(6, 182, 212, 0.5);
+        }
+
+        .holo-value-premium {
+          font-size: 1.5rem;
+          font-weight: 900;
+          background: linear-gradient(135deg, rgb(6, 182, 212), rgb(16, 185, 129));
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+          filter: drop-shadow(0 0 20px rgba(6, 182, 212, 0.5));
+        }
+
+        /* ════════════════════════════════════════════════════
+           PAYROLL
+        ════════════════════════════════════════════════════ */
+        .payroll-holo {
+          background: linear-gradient(135deg, rgba(15, 23, 42, 0.7), rgba(15, 23, 42, 0.5));
+          border: 1px solid rgba(6, 182, 212, 0.25);
+          border-radius: 1.5rem;
+          padding: 1.75rem;
+          position: relative;
+          overflow: hidden;
+        }
+
+        .stat-chip {
+          padding: 0.75rem 1.125rem;
+          background: rgba(0, 0, 0, 0.5);
+          border: 1px solid rgba(6, 182, 212, 0.25);
+          border-radius: 0.75rem;
+        }
+        .stat-chip-premium {
+          padding: 0.75rem 1.125rem;
+          background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(6, 182, 212, 0.1));
+          border: 1px solid rgba(16, 185, 129, 0.4);
+          border-radius: 0.75rem;
+          box-shadow: 0 0 20px rgba(16, 185, 129, 0.2);
+        }
+
+        .stat-label {
+          font-size: 0.625rem;
+          text-transform: uppercase;
+          font-weight: 700;
+          color: rgba(6, 182, 212, 0.7);
+          margin-bottom: 0.25rem;
+          letter-spacing: 0.05em;
+        }
+        .stat-value {
+          font-size: 0.875rem;
+          font-weight: 800;
+          color: #fff;
+        }
+
+        .dept-holo {
+          background: linear-gradient(135deg, rgba(15, 23, 42, 0.8), rgba(15, 23, 42, 0.6));
+          border: 1px solid rgba(6, 182, 212, 0.2);
+          border-radius: 1rem;
+          padding: 1.125rem;
+          transition: all 0.3s ease;
+          position: relative;
+          overflow: hidden;
+        }
+        .dept-holo:hover {
+          border-color: rgba(6, 182, 212, 0.4);
+          box-shadow: 0 0 25px rgba(6, 182, 212, 0.2);
+        }
+
+        /* ════════════════════════════════════════════════════
+           CARTES EMPLOYÉS
+        ════════════════════════════════════════════════════ */
+        .employee-card-holo {
+          background: linear-gradient(135deg, rgba(15, 23, 42, 0.8), rgba(15, 23, 42, 0.6));
+          border: 1px solid rgba(6, 182, 212, 0.2);
+          border-radius: 1.25rem;
+          transition: all 0.3s ease;
+          position: relative;
+          overflow: hidden;
+        }
+        .employee-card-holo:hover {
+          border-color: rgba(6, 182, 212, 0.4);
+          box-shadow: 
+            0 0 30px rgba(6, 182, 212, 0.2),
+            inset 0 0 30px rgba(6, 182, 212, 0.05);
+          transform: translateY(-4px);
+        }
+
+        .contract-badge-holo {
+          background: rgba(6, 182, 212, 0.1);
+          border: 1px solid rgba(6, 182, 212, 0.25);
+          border-radius: 0.5rem;
+          color: rgba(6, 182, 212, 0.9);
+          display: inline-flex;
+          align-items: center;
+          gap: 0.375rem;
+          font-weight: 700;
+        }
+
+        .salary-holo {
+          font-weight: 800;
+          color: #fff;
+          font-family: 'Courier New', monospace;
+        }
+
+        .prime-holo {
+          font-weight: 800;
+          color: rgb(16, 185, 129);
+          font-family: 'Courier New', monospace;
+        }
+
+        /* ════════════════════════════════════════════════════
+           BADGES STATUT & PAIEMENT
+        ════════════════════════════════════════════════════ */
+        .status-badge-holo {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.5rem;
+          padding: 0.4375rem 0.875rem;
+          border-radius: 0.625rem;
+          border: 1px solid;
+          font-size: 0.625rem;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+        }
+        .status-dot-holo {
+          width: 0.5rem;
+          height: 0.5rem;
+          border-radius: 50%;
+          background: currentColor;
+        }
+        .status-active {
+          background: rgba(16, 185, 129, 0.15);
+          color: rgb(16, 185, 129);
+          border-color: rgba(16, 185, 129, 0.4);
+          box-shadow: 0 0 15px rgba(16, 185, 129, 0.2);
+        }
+        .status-active .status-dot-holo {
+          animation: pulse 2s ease-in-out infinite;
+        }
+        .status-conge {
+          background: rgba(245, 158, 11, 0.15);
+          color: rgb(245, 158, 11);
+          border-color: rgba(245, 158, 11, 0.4);
+        }
+        .status-pause {
+          background: rgba(148, 163, 184, 0.15);
+          color: rgb(148, 163, 184);
+          border-color: rgba(148, 163, 184, 0.4);
+        }
+        .status-sortie {
+          background: rgba(239, 68, 68, 0.15);
+          color: rgb(239, 68, 68);
+          border-color: rgba(239, 68, 68, 0.4);
+        }
+
+        .payment-badge-paid-holo {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.375rem;
+          padding: 0.5rem 0.875rem;
+          background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(139, 92, 246, 0.15));
+          border: 1px solid rgba(139, 92, 246, 0.4);
+          border-radius: 0.625rem;
+          color: rgb(139, 92, 246);
+          font-weight: 700;
+          cursor: pointer;
+          transition: all 0.3s ease;
+        }
+        .payment-badge-paid-holo:hover {
+          background: linear-gradient(135deg, rgba(139, 92, 246, 0.3), rgba(139, 92, 246, 0.25));
+          box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
+          transform: scale(1.05);
+        }
+
+        .payment-badge-pending-holo {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.375rem;
+          padding: 0.5rem 0.875rem;
+          background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(245, 158, 11, 0.15));
+          border: 1px solid rgba(245, 158, 11, 0.4);
+          border-radius: 0.625rem;
+          color: rgb(245, 158, 11);
+          font-weight: 700;
+          cursor: pointer;
+          transition: all 0.3s ease;
+        }
+        .payment-badge-pending-holo:hover {
+          background: linear-gradient(135deg, rgba(245, 158, 11, 0.3), rgba(245, 158, 11, 0.25));
+          box-shadow: 0 0 20px rgba(245, 158, 11, 0.3);
+          transform: scale(1.05);
+        }
+
+        .payment-badge-paid-holo-clickable {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.375rem;
+          padding: 0.5rem 0.875rem;
+          background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(139, 92, 246, 0.15));
+          border: 1px solid rgba(139, 92, 246, 0.4);
+          border-radius: 0.625rem;
+          color: rgb(139, 92, 246);
+          font-size: 0.625rem;
+          font-weight: 700;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          text-transform: uppercase;
+        }
+        .payment-badge-paid-holo-clickable:hover {
+          background: linear-gradient(135deg, rgba(139, 92, 246, 0.35), rgba(139, 92, 246, 0.3));
+          box-shadow: 0 0 25px rgba(139, 92, 246, 0.4);
+          transform: scale(1.05);
+        }
+
+        .payment-badge-pending-holo-clickable {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.375rem;
+          padding: 0.5rem 0.875rem;
+          background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(245, 158, 11, 0.15));
+          border: 1px solid rgba(245, 158, 11, 0.4);
+          border-radius: 0.625rem;
+          color: rgb(245, 158, 11);
+          font-size: 0.625rem;
+          font-weight: 700;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          text-transform: uppercase;
+        }
+        .payment-badge-pending-holo-clickable:hover {
+          background: linear-gradient(135deg, rgba(245, 158, 11, 0.35), rgba(245, 158, 11, 0.3));
+          box-shadow: 0 0 25px rgba(245, 158, 11, 0.4);
+          transform: scale(1.05);
+        }
+
+        .action-btn-holo {
+          padding: 0.5rem;
+          background: rgba(6, 182, 212, 0.1);
+          border: 1px solid rgba(6, 182, 212, 0.25);
+          border-radius: 0.625rem;
+          color: rgba(6, 182, 212, 0.9);
+          transition: all 0.2s ease;
+        }
+        .action-btn-holo:hover {
+          background: rgba(6, 182, 212, 0.2);
+          border-color: rgba(6, 182, 212, 0.5);
+          box-shadow: 0 0 15px rgba(6, 182, 212, 0.3);
+        }
+
+        .action-btn-holo-active {
+          padding: 0.5rem;
+          background: rgba(6, 182, 212, 0.25);
+          border: 1px solid rgba(6, 182, 212, 0.5);
+          border-radius: 0.625rem;
+          color: rgb(6, 182, 212);
+          box-shadow: 0 0 20px rgba(6, 182, 212, 0.3);
+        }
+
+        .dropdown-holo {
+          position: absolute;
+          right: 0;
+          top: 100%;
+          margin-top: 0.5rem;
+          width: 12rem;
+          background: linear-gradient(135deg, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.95));
+          border: 1px solid rgba(6, 182, 212, 0.4);
+          border-radius: 1rem;
+          padding: 0.5rem;
+          box-shadow: 
+            0 0 40px rgba(6, 182, 212, 0.3),
+            0 20px 60px rgba(0, 0, 0, 0.7);
+          backdrop-filter: blur(20px);
+          z-index: 50;
+        }
+
+        .dropdown-item-holo {
+          width: 100%;
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          padding: 0.75rem 1rem;
+          border-radius: 0.625rem;
+          font-size: 0.6875rem;
+          font-weight: 700;
+          transition: all 0.2s ease;
+          text-transform: uppercase;
+          letter-spacing: 0.03em;
+        }
+        .dropdown-item-holo:hover {
+          background: rgba(6, 182, 212, 0.1);
+        }
+
+        /* ════════════════════════════════════════════════════
+           PAGINATION
+        ════════════════════════════════════════════════════ */
+        .pagination-holo {
+          padding: 1.25rem 1.5rem;
+          background: linear-gradient(135deg, rgba(6, 182, 212, 0.05), rgba(16, 185, 129, 0.03));
+          border-top: 1px solid rgba(6, 182, 212, 0.2);
+          display: flex;
+          flex-direction: column;
+          gap: 1rem;
+        }
+        @media (min-width: 640px) {
+          .pagination-holo {
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: center;
+          }
+        }
+
+        .pagination-info-holo {
+          font-size: 0.6875rem;
+          color: rgba(6, 182, 212, 0.8);
+          font-weight: 600;
+        }
+
+        .pagination-btn-holo {
+          padding: 0.625rem;
+          background: rgba(6, 182, 212, 0.1);
+          border: 1px solid rgba(6, 182, 212, 0.25);
+          border-radius: 0.625rem;
+          color: rgba(6, 182, 212, 0.9);
+          transition: all 0.2s ease;
+        }
+        .pagination-btn-holo:hover:not(:disabled) {
+          background: rgba(6, 182, 212, 0.2);
+          border-color: rgba(6, 182, 212, 0.5);
+          box-shadow: 0 0 15px rgba(6, 182, 212, 0.3);
+        }
+        .pagination-btn-holo:disabled {
+          opacity: 0.3;
+          cursor: not-allowed;
+        }
+
+        .pagination-number-holo {
+          min-width: 2.25rem;
+          height: 2.25rem;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: rgba(6, 182, 212, 0.08);
+          border: 1px solid rgba(6, 182, 212, 0.2);
+          border-radius: 0.625rem;
+          color: rgba(6, 182, 212, 0.9);
+          font-size: 0.6875rem;
+          font-weight: 700;
+          transition: all 0.2s ease;
+        }
+        .pagination-number-holo:hover {
+          background: rgba(6, 182, 212, 0.15);
+          border-color: rgba(6, 182, 212, 0.4);
+          box-shadow: 0 0 15px rgba(6, 182, 212, 0.2);
+        }
+
+        .pagination-number-holo-active {
+          min-width: 2.25rem;
+          height: 2.25rem;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: linear-gradient(135deg, rgba(6, 182, 212, 0.3), rgba(16, 185, 129, 0.25));
+          border: 1px solid rgba(6, 182, 212, 0.6);
+          border-radius: 0.625rem;
+          color: rgb(6, 182, 212);
+          font-size: 0.6875rem;
+          font-weight: 900;
+          box-shadow: 0 0 25px rgba(6, 182, 212, 0.4);
+        }
+
+        /* ════════════════════════════════════════════════════
+           MODALS
+        ════════════════════════════════════════════════════ */
+        .modal-overlay-holo {
+          position: fixed;
+          inset: 0;
+          z-index: 100;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 1.5rem;
+          background: rgba(0, 0, 0, 0.85);
+          backdrop-filter: blur(12px);
+        }
+
+        .modal-container-holo {
+          width: 100%;
+          max-width: 32rem;
+          background: linear-gradient(135deg, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.95));
+          border: 1px solid rgba(6, 182, 212, 0.4);
+          border-radius: 1.5rem;
+          padding: 2rem;
+          box-shadow: 
+            0 0 60px rgba(6, 182, 212, 0.3),
+            0 30px 80px rgba(0, 0, 0, 0.8);
+          position: relative;
+        }
+
+        .modal-container-xl-holo {
+          width: 100%;
+          max-width: 70rem;
+          background: linear-gradient(135deg, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.95));
+          border: 1px solid rgba(6, 182, 212, 0.4);
+          border-radius: 1.5rem;
+          padding: 2rem;
+          box-shadow: 
+            0 0 60px rgba(6, 182, 212, 0.3),
+            0 30px 80px rgba(0, 0, 0, 0.8);
+          position: relative;
+        }
+
+        .modal-icon-holo-green {
+          width: 3rem;
+          height: 3rem;
+          background: linear-gradient(135deg, rgba(16, 185, 129, 0.25), rgba(16, 185, 129, 0.15));
+          border: 1px solid rgba(16, 185, 129, 0.5);
+          border-radius: 1rem;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+          box-shadow: 0 0 30px rgba(16, 185, 129, 0.3);
+          position: relative;
+        }
+
+        .modal-icon-holo-amber {
+          width: 3rem;
+          height: 3rem;
+          background: linear-gradient(135deg, rgba(245, 158, 11, 0.25), rgba(245, 158, 11, 0.15));
+          border: 1px solid rgba(245, 158, 11, 0.5);
+          border-radius: 1rem;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+          box-shadow: 0 0 30px rgba(245, 158, 11, 0.3);
+          position: relative;
+        }
+
+        .modal-title-holo {
+          font-size: 1.125rem;
+          font-weight: 800;
+          color: #fff;
+          text-shadow: 0 0 20px rgba(6, 182, 212, 0.3);
+        }
+
+        .modal-description-holo {
+          font-size: 0.8125rem;
+          color: rgba(6, 182, 212, 0.8);
+          line-height: 1.6;
+        }
+
+        .modal-btn-secondary-holo {
+          flex: 1;
+          padding: 0.875rem 1.25rem;
+          background: rgba(6, 182, 212, 0.08);
+          border: 1px solid rgba(6, 182, 212, 0.25);
+          border-radius: 0.875rem;
+          color: rgba(6, 182, 212, 0.95);
+          font-size: 0.75rem;
+          font-weight: 700;
+          transition: all 0.2s ease;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.5rem;
+          text-transform: uppercase;
+        }
+        .modal-btn-secondary-holo:hover {
+          background: rgba(6, 182, 212, 0.15);
+          border-color: rgba(6, 182, 212, 0.4);
+        }
+
+        .modal-btn-green-holo {
+          flex: 1;
+          padding: 0.875rem 1.25rem;
+          background: linear-gradient(135deg, rgba(16, 185, 129, 0.9), rgba(16, 185, 129, 0.8));
+          border: 1px solid rgba(16, 185, 129, 1);
+          border-radius: 0.875rem;
+          color: rgb(15, 23, 42);
+          font-size: 0.75rem;
+          font-weight: 900;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.5rem;
+          transition: all 0.2s ease;
+          box-shadow: 0 0 30px rgba(16, 185, 129, 0.5);
+          text-transform: uppercase;
+        }
+        .modal-btn-green-holo:hover {
+          background: linear-gradient(135deg, rgba(16, 185, 129, 1), rgba(16, 185, 129, 0.95));
+          box-shadow: 0 0 40px rgba(16, 185, 129, 0.7);
+          transform: translateY(-2px);
+        }
+
+        .modal-btn-amber-holo {
+          flex: 1;
+          padding: 0.875rem 1.25rem;
+          background: linear-gradient(135deg, rgba(245, 158, 11, 0.9), rgba(245, 158, 11, 0.8));
+          border: 1px solid rgba(245, 158, 11, 1);
+          border-radius: 0.875rem;
+          color: rgb(15, 23, 42);
+          font-size: 0.75rem;
+          font-weight: 900;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.5rem;
+          transition: all 0.2s ease;
+          box-shadow: 0 0 30px rgba(245, 158, 11, 0.5);
+          text-transform: uppercase;
+        }
+        .modal-btn-amber-holo:hover {
+          background: linear-gradient(135deg, rgba(245, 158, 11, 1), rgba(245, 158, 11, 0.95));
+          box-shadow: 0 0 40px rgba(245, 158, 11, 0.7);
+          transform: translateY(-2px);
+        }
+
+        .employee-profile-name-holo {
+          font-size: 1.5rem;
+          font-weight: 900;
+          color: #fff;
+          text-shadow: 0 0 30px rgba(6, 182, 212, 0.4);
+        }
+
+        .employee-profile-role-holo {
+          font-size: 0.8125rem;
+          color: rgba(6, 182, 212, 0.7);
+          font-weight: 600;
+        }
+
+        .photo-btn-holo {
+          position: absolute;
+          bottom: -0.375rem;
+          right: -0.375rem;
+          width: 2.125rem;
+          height: 2.125rem;
+          background: linear-gradient(135deg, rgba(6, 182, 212, 0.95), rgba(16, 185, 129, 0.9));
+          border: 2px solid rgba(15, 23, 42, 0.8);
+          border-radius: 0.75rem;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: rgb(15, 23, 42);
+          transition: all 0.3s ease;
+          box-shadow: 0 0 20px rgba(6, 182, 212, 0.5);
+          cursor: pointer;
+        }
+        .photo-btn-holo:hover:not(:disabled) {
+          background: linear-gradient(135deg, rgba(6, 182, 212, 1), rgba(16, 185, 129, 1));
+          box-shadow: 0 0 30px rgba(6, 182, 212, 0.7);
+          transform: scale(1.1);
+        }
+        .photo-btn-holo:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+
+        .info-card-holo {
+          background: linear-gradient(135deg, rgba(15, 23, 42, 0.6), rgba(15, 23, 42, 0.4));
+          border: 1px solid rgba(6, 182, 212, 0.2);
+          border-radius: 1.125rem;
+          padding: 1.375rem;
+          transition: all 0.3s ease;
+        }
+        .info-card-holo:hover {
+          border-color: rgba(6, 182, 212, 0.4);
+          box-shadow: 0 0 25px rgba(6, 182, 212, 0.15);
+        }
+
+        .info-card-holo-premium {
+          background: linear-gradient(135deg, rgba(6, 182, 212, 0.12), rgba(16, 185, 129, 0.08));
+          border: 1px solid rgba(6, 182, 212, 0.35);
+          border-radius: 1.125rem;
+          padding: 1.375rem;
+          box-shadow: 0 0 25px rgba(6, 182, 212, 0.2);
+          transition: all 0.3s ease;
+        }
+        .info-card-holo-premium:hover {
+          border-color: rgba(6, 182, 212, 0.5);
+          box-shadow: 0 0 35px rgba(6, 182, 212, 0.3);
+        }
+
+        .info-header-holo {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+        }
+
+        .info-icon-holo {
+          width: 2.25rem;
+          height: 2.25rem;
+          background: rgba(6, 182, 212, 0.15);
+          border: 1px solid rgba(6, 182, 212, 0.3);
+          border-radius: 0.75rem;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .info-icon-holo-premium {
+          width: 2.25rem;
+          height: 2.25rem;
+          background: linear-gradient(135deg, rgba(16, 185, 129, 0.25), rgba(6, 182, 212, 0.2));
+          border: 1px solid rgba(16, 185, 129, 0.4);
+          border-radius: 0.75rem;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 0 15px rgba(16, 185, 129, 0.2);
+        }
+
+        .info-title-holo {
+          font-size: 0.75rem;
+          font-weight: 800;
+          text-transform: uppercase;
+          letter-spacing: 0.08em;
+          color: rgba(6, 182, 212, 0.9);
+        }
+
+        .info-row-holo {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 1rem;
+        }
+
+        .info-label-holo {
+          font-size: 0.6875rem;
+          color: rgba(6, 182, 212, 0.6);
+          font-weight: 600;
+        }
+
+        .info-value-holo {
+          font-size: 0.8125rem;
+          font-weight: 700;
+          color: #fff;
+        }
+      `}</style>
+    </div>
+  );
+}
