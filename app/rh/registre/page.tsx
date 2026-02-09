@@ -1017,12 +1017,8 @@ return (
                   </div>
                 )}
               </section>
-
             </div>
           </div>
-        </div>
-      </div>
-
 {/* ═══ MODAL CONFIRMATION PAIEMENT HOLOGRAPHIQUE ═══ */}
       {payConfirm && (
         <div className="modal-overlay-holo animate-fadeIn" onClick={() => setPayConfirm(null)}>
@@ -1281,6 +1277,8 @@ return (
                 </button>
               </div>
             </div>
+            </div>
+          </div>
           </div>
         </div>
       )}
