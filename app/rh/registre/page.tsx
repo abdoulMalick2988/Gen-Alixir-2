@@ -396,41 +396,20 @@ export default function RegistrePersonnel() {
   /* ═══ PARTIE 2 — Coller après Partie 1 ═══ */
 
   return (
-    <div className="min-h-screen relative overflow-hidden bg-slate-950">
-
-      {/* ═══ FOND HOLOGRAPHIQUE ULTRA FUTURISTE ═══ */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-cyan-900/20 via-slate-950 to-slate-950" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-emerald-900/15 via-transparent to-transparent" />
-        
-        <div className="absolute top-1/4 -left-20 w-[500px] h-[500px] bg-gradient-to-r from-cyan-500/20 to-blue-500/20 rounded-full blur-3xl animate-float" />
-        <div className="absolute bottom-1/3 -right-20 w-[600px] h-[600px] bg-gradient-to-l from-emerald-500/15 to-teal-500/15 rounded-full blur-3xl animate-float-delayed" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-gradient-to-br from-violet-500/10 to-purple-500/10 rounded-full blur-3xl animate-pulse-slow" />
-        
-        <div className="absolute inset-0 opacity-[0.03]" style={{ 
-          backgroundImage: "linear-gradient(rgba(6, 182, 212, 0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(6, 182, 212, 0.5) 1px, transparent 1px)",
-          backgroundSize: "50px 50px",
-          maskImage: "radial-gradient(ellipse at center, black 40%, transparent 70%)"
-        }} />
-        
-        <div className="absolute inset-0 opacity-[0.02]" style={{
-          backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(6, 182, 212, 0.3) 2px, rgba(6, 182, 212, 0.3) 4px)"
-        }} />
-        
-        <div className="absolute top-1/4 left-1/4 w-1 h-1 bg-cyan-400 rounded-full animate-ping opacity-75" />
-        <div className="absolute top-2/3 right-1/3 w-1 h-1 bg-emerald-400 rounded-full animate-ping opacity-75" style={{ animationDelay: "1s" }} />
-        <div className="absolute bottom-1/4 left-2/3 w-1 h-1 bg-violet-400 rounded-full animate-ping opacity-75" style={{ animationDelay: "2s" }} />
-        
-        <div className="absolute top-0 left-1/4 w-px h-full bg-gradient-to-b from-transparent via-cyan-500/20 to-transparent" />
-        <div className="absolute top-0 right-1/3 w-px h-full bg-gradient-to-b from-transparent via-emerald-500/15 to-transparent" />
+    <div className="min-h-screen relative bg-slate-950 flex justify-center items-start py-8 px-4 overflow-y-auto custom-scroll">
+      
+      {/* Fond avec dégradé émeraude */}
+      <div className="fixed inset-0 pointer-events-none">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-emerald-900/20 via-slate-950 to-slate-950" />
       </div>
 
-      {/* ═══ INTERFACE PRINCIPALE SCROLLABLE ═══ */}
-      <div className="relative z-10 min-h-screen py-4 md:py-6 px-3 md:px-6">
-        <div className="holo-container w-full max-w-[1700px] mx-auto">
-          
-          <div className="max-h-[calc(100vh-3rem)] overflow-y-auto custom-scroll">
-            <div className="p-4 md:p-7 space-y-6 pb-20">
+      {/* TABLETTE EN VERRE VERT POLI */}
+      <div className="relative z-10 w-full max-w-[1700px] bg-emerald-950/10 backdrop-blur-2xl border border-emerald-500/30 rounded-[3rem] shadow-2xl shadow-emerald-500/10 mb-10">
+        
+        {/* Liseré de lumière sur le bord supérieur poli */}
+        <div className="absolute inset-x-20 top-0 h-[1px] bg-gradient-to-r from-transparent via-emerald-400/40 to-transparent" />
+        
+        <div className="p-6 md:p-10 space-y-6">
 
               {/* ── HEADER FUTURISTE ── */}
               <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
