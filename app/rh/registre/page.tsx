@@ -470,14 +470,9 @@ export default function RegistrePersonnel() {
                     <Banknote size={15} />
                     <span>Livre de Paie</span>
                   </button>
-                  <button 
-                    onClick={() => router.push("/rh/registre/contrat")} 
-                    type="button" 
-                    className="neon-btn"
-                  >
-                    <UserPlus size={15} />
-                    <span>Nouveau Contrat</span>
-                  </button>
+                  <button onClick={() => router.push("/rh/registre/contrat")} className="neon-btn">
+  <UserPlus size={15} /> <span>Nouveau Collaborateur</span>
+</button>
                 </div>
               </header>
 
