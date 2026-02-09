@@ -1748,6 +1748,26 @@ export default function RegistrePersonnel() {
           font-family: 'Courier New', monospace;
         }
 
+        /* Responsive - texte tronqué sur mobile */
+        @media (max-width: 768px) {
+          .table-holo {
+            min-width: 100%;
+          }
+          
+          .table-cell-holo {
+            padding: 0.875rem 0.75rem;
+            max-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          }
+          
+          .employee-name-holo,
+          .employee-id-holo {
+            max-width: 100%;
+          }
+        }
+
         .contract-badge-holo {
           padding: 0.4375rem 0.75rem;
           background: rgba(6, 182, 212, 0.1);
