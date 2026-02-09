@@ -320,8 +320,6 @@ export default function RegistrePersonnel() {
       </div>
     );
   }
-  /* ═══ PARTIE 2 — Interface principale avec tableau aligné ═══ */
-
   return (
     <div className="min-h-screen relative overflow-hidden bg-slate-950">
 
