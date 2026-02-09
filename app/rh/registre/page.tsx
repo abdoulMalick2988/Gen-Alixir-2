@@ -319,7 +319,6 @@ export default function RegistrePersonnel() {
         </div>
       </div>
     );
-  }
 
   /* ═══ PARTIE 2 — Interface principale avec tableau aligné ═══ */
 
