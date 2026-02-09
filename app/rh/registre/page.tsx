@@ -638,16 +638,63 @@ export default function RegistrePersonnel() {
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3">
-                    {filteredPayroll.map((dept: DeptPayroll, i: number) => (
-                      <div key={dept.name + "-" + String(i)} className="dept-holo group">
-                        <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-transparent rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                        <div className="relative">
-                          <div className="flex items-center justify-between mb-2.5">
-                            <Building2 size={13} className="text-cyan-500/60" />
-                            <span className="px-2 py-0.5 bg-cyan-500/10 border border-cyan-500/20 rounded-md text-[9px] font-bold text-cyan-400">
-                              {dept.count}
-                            </span>
-                          </div>
+  {filteredPayroll.map((dept: DeptPayroll, i: number) => (
+    <button
+      key={dept.name + "-" + String(i)}
+      onClick={() => {
+        setActiveDept(dept.name);
+        setShowPayroll(false);
+      }}
+      type="button"
+      className="dept-holo group cursor-pointer hover:scale-105 transition-transform duration-300"
+    >
+      <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-transparent rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+      <div className="relative">
+        <div className="flex items-center justify-between mb-2.5">
+          <Building2 size={13} className="text-cyan-500/60" />
+          <span className="px-2 py-0.5 bg-cyan-500/10 border border-cyan-500/20 rounded-md text-[9px] font-bold text-cyan-400">
+            {dept.count}
+          </span>
+        </div>
+        <p className="text-[10px] font-bold text-cyan-400/80 uppercase tracking-wider mb-1">{dept.name}</p>
+        <p className="text-base font-black text-white mb-0.5">
+          {dept.total.toLocaleString()} <span className="text-[10px] text-cyan-400 font-semibold">F</span>
+        </p>
+        {dept.totalPrimes > 0 && (
+          <p className="text-[11px] font-bold text-emerald-400">
+            + {dept.totalPrimes.toLocaleString()} F
+          </p>
+        )}
+        <div className="mt-3 h-1.5 bg-white/5 rounded-full overflow-hidden border border-white/10">
+          <div
+            className="h-full bg-gradient-to-r from-cyan-500 to-emerald-500 rounded-full transition-all duration-1000"
+            style={{ width: dept.count > 0 ? `${(dept.paid / dept.count) * 100}%` : "0%" }}
+          />
+        </div>
+        <div className="mt-2 flex justify-between items-center text-[9px] font-semibold">
+          <span className="text-emerald-400 flex items-center gap-1">
+            <CheckCircle2 size={9} />
+            {dept.paid} payé{dept.paid > 1 ? "s" : ""}
+          </span>
+          {dept.pending > 0 && (
+            <span className="text-amber-400 flex items-center gap-1">
+              <Clock size={9} />
+              {dept.pending}
+            </span>
+          )}
+        </div>
+        
+        {/* Indicateur de clic */}
+        <div className="mt-2 pt-2 border-t border-cyan-500/20 opacity-0 group-hover:opacity-100 transition-opacity">
+          <p className="text-[9px] text-cyan-400 text-center flex items-center justify-center gap-1">
+            <Eye size={9} />
+            Cliquer pour filtrer
+          </p>
+        </div>
+      </div>
+    </button>
+  ))}
+</div>
                           <p className="text-[10px] font-bold text-cyan-400/80 uppercase tracking-wider mb-1">{dept.name}</p>
                           <p className="text-base font-black text-white mb-0.5">
                             {dept.total.toLocaleString()} <span className="text-[10px] text-cyan-400 font-semibold">F</span>
@@ -687,11 +734,11 @@ export default function RegistrePersonnel() {
                 <div className="relative flex-1">
                   <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 to-emerald-500/10 rounded-xl blur-sm" />
                   <div className="relative flex items-center">
-                    <Search className="absolute left-3.5 text-cyan-500/60 pointer-events-none" size={16} />
+                    <Search className="absolute left-4 text-cyan-500/60 pointer-events-none" size={16} />
                     <input
                       type="text"
                       placeholder="Chercher un collaborateur..."
-                      className="cyber-input pl-11 pr-11"
+                      className="cyber-input pl-12 pr-11"
                       value={search}
                       onChange={(e) => setSearch(e.target.value)}
                     />
