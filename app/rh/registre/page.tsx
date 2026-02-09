@@ -395,71 +395,90 @@ export default function RegistrePersonnel() {
 
   /* ═══ PARTIE 2 — Coller après Partie 1 ═══ */
 
-  return (
-    <div className="min-h-screen relative bg-slate-950 flex justify-center items-start py-8 px-4 overflow-y-auto custom-scroll">
+return (
+    <div className="min-h-screen relative bg-slate-950 flex justify-center items-center py-6 px-4 overflow-hidden">
       
-      {/* ═══ FOND HOLOGRAPHIQUE (FIXE) ═══ */}
+      {/* ═══ FOND HOLOGRAPHIQUE DEEP-SPACE (FIXE) ═══ */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-emerald-900/20 via-slate-950 to-slate-950" />
-        <div className="absolute inset-0 opacity-[0.03]" style={{ 
+        {/* Gradients de profondeur */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-cyan-900/20 via-slate-950 to-slate-950" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-emerald-900/15 via-transparent to-transparent" />
+        
+        {/* Particules flottantes et nébuleuses */}
+        <div className="absolute top-1/4 -left-20 w-[600px] h-[600px] bg-cyan-500/10 rounded-full blur-[120px] animate-float" />
+        <div className="absolute bottom-1/3 -right-20 w-[700px] h-[700px] bg-emerald-500/10 rounded-full blur-[130px] animate-float-delayed" />
+        
+        {/* Grille Laser avec Masque de Proximité */}
+        <div className="absolute inset-0 opacity-[0.05]" style={{ 
           backgroundImage: "linear-gradient(rgba(16, 185, 129, 0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(16, 185, 129, 0.5) 1px, transparent 1px)",
-          backgroundSize: "50px 50px",
-          maskImage: "radial-gradient(ellipse at center, black 40%, transparent 70%)"
+          backgroundSize: "60px 60px",
+          maskImage: "radial-gradient(circle at center, black 30%, transparent 80%)"
+        }} />
+
+        {/* Scanlines (Lignes de balayage cathodique ultra-fines) */}
+        <div className="absolute inset-0 opacity-[0.02] pointer-events-none" style={{
+          backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 1px, #fff 1px, #fff 2px)",
+          backgroundSize: "100% 4px"
         }} />
       </div>
 
-      {/* ═══ TABLETTE EN VERRE VERT POLI (Cadre Principal) ═══ */}
-      <div className="relative z-10 w-full max-w-[1700px] bg-emerald-950/10 backdrop-blur-2xl border border-emerald-500/30 rounded-[3rem] shadow-2xl shadow-emerald-500/10 mb-10 overflow-hidden">
+      {/* ═══ LA TABLETTE "EMERALD GLASS" (Bords Polis) ═══ */}
+      <div className="relative z-10 w-full max-w-[1750px] h-[92vh] flex flex-col bg-emerald-950/10 backdrop-blur-3xl border border-emerald-500/30 rounded-[3.5rem] shadow-[0_0_50px_-12px_rgba(16,185,129,0.2)] overflow-hidden">
         
-        {/* Reflet de lumière sur le bord supérieur poli */}
-        <div className="absolute inset-x-20 top-0 h-[1px] bg-gradient-to-r from-transparent via-emerald-400/40 to-transparent" />
+        {/* 💡 EFFET POLI : Reflet de lumière sur le biseau supérieur */}
+        <div className="absolute inset-x-24 top-0 h-[2px] bg-gradient-to-r from-transparent via-emerald-300/50 to-transparent blur-[1px]" />
         
-        {/* CONTENU INTERNE DE LA TABLETTE */}
-        <div className="p-4 md:p-8 lg:p-10 space-y-6">
+        {/* 💡 EFFET POLI : Reflet latéral vertical (gauche) */}
+        <div className="absolute left-0 top-24 bottom-24 w-[1px] bg-gradient-to-b from-transparent via-emerald-400/20 to-transparent" />
 
-          {/* ── HEADER FUTURISTE ── */}
-          <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
-                  <button onClick={() => router.push("/rh")} type="button" className="cyber-btn">
-                    <ArrowLeft size={16} />
-                  </button>
-                  <button onClick={() => router.push("/")} type="button" className="cyber-btn">
-                    <Home size={16} />
-                  </button>
-                  <div className="ml-2">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Shield size={18} className="text-cyan-400" />
-                      <h1 className="text-lg md:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-emerald-400 to-cyan-400 tracking-tight">
-                        REGISTRE DU PERSONNEL
-                      </h1>
+        {/* CONTENEUR DE DÉFILEMENT INTERNE (SCROLL) */}
+        <div className="flex-1 overflow-y-auto custom-scroll p-6 md:p-10">
+          <div className="max-w-[1600px] mx-auto space-y-8 pb-12">
+
+            {/* ── HEADER FUTURISTE ── */}
+            <header className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+              <div className="flex items-center gap-5">
+                <button onClick={() => router.back()} className="group relative p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl hover:bg-emerald-500/20 transition-all">
+                  <ArrowLeft size={20} className="text-emerald-400 group-hover:-translate-x-1 transition-transform" />
+                </button>
+                
+                <div className="relative">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-emerald-500/20 rounded-lg animate-pulse">
+                      <Shield size={24} className="text-emerald-400" />
                     </div>
-                    <div className="flex items-center gap-3 text-[11px] text-cyan-500/60">
-                      <span className="flex items-center gap-1.5">
-                        <Activity size={12} className="animate-pulse" />
-                        {stats.total} collaborateurs
-                      </span>
-                      <span className="w-1 h-1 rounded-full bg-cyan-500/40" />
-                      <span className="flex items-center gap-1.5">
-                        <Zap size={12} />
-                        Système en ligne
-                      </span>
-                    </div>
+                    <h1 className="text-2xl md:text-3xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-white via-emerald-400 to-emerald-200">
+                      CORE_DATA // PERSONNEL
+                    </h1>
+                  </div>
+                  <div className="flex items-center gap-3 mt-1 px-1">
+                    <span className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-500/70 uppercase tracking-[0.2em]">
+                      <Activity size={12} /> Live_Sync: Active
+                    </span>
+                    <span className="w-1 h-1 rounded-full bg-emerald-500/30" />
+                    <span className="text-[10px] font-bold text-emerald-500/50 uppercase tracking-[0.2em]">
+                      Security_Level: A-1
+                    </span>
                   </div>
                 </div>
-                <div className="flex items-center gap-3 flex-wrap">
-                  <button
-                    onClick={() => setShowPayroll(!showPayroll)}
-                    type="button"
-                    className={showPayroll ? "cyber-btn-active" : "cyber-btn-alt"}
-                  >
-                    <Banknote size={15} />
-                    <span>Livre de Paie</span>
-                  </button>
-                  <button onClick={() => router.push("/rh/registre/contrat")} className="neon-btn">
-  <UserPlus size={15} /> <span>Nouveau Collaborateur</span>
-</button>
-                </div>
-              </header>
+              </div>
+
+              <div className="flex items-center gap-4">
+                <button onClick={() => setShowPayroll(!showPayroll)} className="group relative px-6 py-3 bg-slate-900/50 border border-emerald-500/30 rounded-2xl overflow-hidden transition-all hover:border-emerald-400">
+                  <div className="absolute inset-0 bg-emerald-500/5 group-hover:bg-emerald-500/10 transition-colors" />
+                  <div className="relative flex items-center gap-2 text-emerald-400 font-bold text-sm">
+                    <Banknote size={18} /> <span>LIVRE DE PAIE</span>
+                  </div>
+                </button>
+
+                <button onClick={() => router.push("/rh/registre/contrat")} className="group relative px-8 py-3 bg-emerald-500 rounded-2xl overflow-hidden transition-all hover:scale-105 active:scale-95 shadow-[0_0_20px_rgba(16,185,129,0.4)]">
+                  <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(255,255,255,0.3)_50%,transparent_75%)] bg-[length:250%_250%] animate-shine" />
+                  <div className="relative flex items-center gap-2 text-slate-950 font-black text-sm">
+                    <UserPlus size={18} /> <span>NOUVEAU COLLABORATEUR</span>
+                  </div>
+                </button>
+              </div>
+            </header>
 
               {/* ── KPI HOLOGRAPHIQUES ── */}
               <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
