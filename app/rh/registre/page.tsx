@@ -244,7 +244,7 @@ export default function RegistrePersonnel() {
     
     setEmployees((p) => p.map((e) => (e.id === payConfirm.id ? { ...e, paymentStatus: ns } : e)));
     if (selectedEmployee?.id === payConfirm.id) {
-      setSelectedEmployee((p) => p ? { ...p, paymentStatus: ns } : null);
+      setSelectedEmployee((p) => (p ? { ...p, paymentStatus: ns } : null));
     }
     setPayConfirm(null);
     
