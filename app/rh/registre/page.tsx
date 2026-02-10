@@ -1023,41 +1023,66 @@ export default function RegistrePersonnel() {
         </div>
       </div>
 
-{/* ═══ MODAL CONFIRMATION PAIEMENT HOLOGRAPHIQUE ═══ */}
+{/* ═══ MODAL CONFIRMATION PAIEMENT HOLOGRAPHIQUE (PRIORITÉ MAX) ═══ */}
       {payConfirm && (
-        <div className="modal-overlay-holo animate-fadeIn" onClick={() => setPayConfirm(null)}>
-          <div className="modal-container-holo animate-scaleIn" onClick={(e) => e.stopPropagation()}>
-            <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-emerald-500/5 rounded-2xl blur-xl" />
-            <div className="relative">
-              <div className="flex items-start gap-4 mb-6">
-                <div className={payConfirm.current === "Payé" ? "modal-icon-holo-amber" : "modal-icon-holo-green"}>
+        <div 
+          className="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-fadeIn"
+          onClick={() => setPayConfirm(null)}
+        >
+          {/* Conteneur "Glass" du Modal */}
+          <div 
+            className="relative w-full max-w-md bg-slate-900/90 border border-emerald-500/30 rounded-[2.5rem] p-8 shadow-[0_0_50px_rgba(16,185,129,0.2)] animate-scaleIn overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Effet de brillance en arrière-plan */}
+            <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 to-transparent pointer-events-none" />
+
+            <div className="relative z-10">
+              <div className="flex items-start gap-5 mb-8">
+                {/* Icône dynamique (Orange si Payé -> En attente / Vert si En attente -> Payé) */}
+                <div className={`p-4 rounded-2xl ${payConfirm.current === "Payé" ? "bg-amber-500/20" : "bg-emerald-500/20"}`}>
                   {payConfirm.current === "Payé" ? (
-                    <Clock size={22} className="text-amber-400" />
+                    <Clock size={28} className="text-amber-400" />
                   ) : (
-                    <CheckCircle2 size={22} className="text-emerald-400" />
+                    <CheckCircle2 size={28} className="text-emerald-400" />
                   )}
-                  <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-white/10 to-transparent opacity-50" />
                 </div>
+
                 <div className="flex-1">
-                  <h3 className="modal-title-holo mb-2">Confirmation requise</h3>
-                  <p className="modal-description-holo">
+                  <h3 className="text-xl font-black text-white tracking-tight uppercase mb-2">
+                    Action Requise
+                  </h3>
+                  <p className="text-slate-400 leading-relaxed">
                     {payConfirm.current === "Payé"
-                      ? `Retirer le statut "Payé" pour ${payConfirm.name} ?`
-                      : `Confirmer le paiement du salaire de ${payConfirm.name} ?`}
+                      ? `Voulez-vous marquer le salaire de `
+                      : `Confirmer le paiement définitif pour `}
+                    <span className="text-white font-bold">{payConfirm.name}</span> ?
                   </p>
                 </div>
               </div>
-              <div className="flex gap-3">
-                <button onClick={() => setPayConfirm(null)} type="button" className="modal-btn-secondary-holo">
-                  <X size={15} />
+
+              {/* Boutons d'action */}
+              <div className="flex gap-4">
+                <button 
+                  onClick={() => setPayConfirm(null)} 
+                  className="flex-1 flex items-center justify-center gap-2 py-4 bg-slate-800/50 hover:bg-slate-800 text-slate-300 rounded-2xl border border-white/5 transition-all font-bold"
+                >
+                  <X size={18} />
                   <span>Annuler</span>
                 </button>
+                
                 <button
-                  onClick={confirmPayment}
-                  type="button"
-                  className={payConfirm.current === "Payé" ? "modal-btn-amber-holo" : "modal-btn-green-holo"}
+                  onClick={() => {
+                    confirmPayment(); // Exécute ta fonction essentielle
+                    setPayConfirm(null); // Ferme le modal immédiatement
+                  }}
+                  className={`flex-1 flex items-center justify-center gap-2 py-4 rounded-2xl font-black transition-all shadow-lg ${
+                    payConfirm.current === "Payé" 
+                    ? "bg-amber-500 text-slate-950 hover:bg-amber-400 shadow-amber-500/20" 
+                    : "bg-emerald-500 text-slate-950 hover:bg-emerald-400 shadow-emerald-500/20"
+                  }`}
                 >
-                  {payConfirm.current === "Payé" ? <Clock size={15} /> : <CheckCircle2 size={15} />}
+                  {payConfirm.current === "Payé" ? <Clock size={18} /> : <CheckCircle2 size={18} />}
                   <span>Confirmer</span>
                 </button>
               </div>
