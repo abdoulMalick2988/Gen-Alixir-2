@@ -708,7 +708,7 @@ export default function RegistrePersonnel() {
                     <input
                       type="text"
                       placeholder="Chercher un collaborateur..."
-                      className="cyber-input pl-12 pr-11"
+                      className="cyber-input !pl-14 pr-11"
                       value={search}
                       onChange={(e) => setSearch(e.target.value)}
                     />
