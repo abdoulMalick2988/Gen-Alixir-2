@@ -697,7 +697,7 @@ export default function GenerateurContratFinal() {
     return Math.round((filled / sectionFields.length) * 100);
   };
   return (
-    <div className="min-h-screen relative overflow-x-hidden" style={{
+    <div className="min-h-screen relative overflow-y-auto" style={{
       background: 'linear-gradient(135deg, #0a0e1a 0%, #1a1f35 50%, #0a0e1a 100%)',
     }}>
       {/* Background Hexagons */}
