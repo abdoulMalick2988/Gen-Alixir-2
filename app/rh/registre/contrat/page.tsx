@@ -1626,22 +1626,30 @@ export default function GenerateurContratFinal() {
         )}
 
         {/* PRÉVISUALISATION */}
-        {showPreview && (
-          <div className="fixed inset-0 bg-black/95 backdrop-blur-sm z-[9998] overflow-y-auto">
-            <div className="min-h-screen flex items-center justify-center p-4 md:p-8">
-              <div 
-                ref={contractRef} 
-                data-contract-ref="true"
-                className="bg-white text-black w-[210mm] min-h-[297mm] p-16 shadow-2xl"
-              >
-                <ContractPreview data={data} config={config} signatures={signatures} />
-              </div>
-            </div>
-          </div>
-        )}
+{showPreview && (
+  <div className="fixed inset-0 bg-black/95 backdrop-blur-sm z-[9998] overflow-y-auto">
+    {/* Bouton Retour */}
+    <div className="sticky top-0 z-50 flex justify-center pt-4 pb-2">
+      <button
+        onClick={() => setShowPreview(false)}
+        className="glass-card px-6 py-3 rounded-xl font-bold text-white flex items-center gap-2 hover:bg-white/10 transition-all shadow-xl border border-cyan-400/30"
+      >
+        <ArrowLeft size={20} className="text-cyan-400" />
+        <span className="text-cyan-300">Retour</span>
+      </button>
+    </div>
+    
+    <div className="min-h-screen flex items-center justify-center p-4 md:p-8 pt-0">
+      <div 
+        ref={contractRef} 
+        data-contract-ref="true"
+        className="bg-white text-black w-[210mm] min-h-[297mm] p-16 shadow-2xl"
+      >
+        <ContractPreview data={data} config={config} signatures={signatures} />
       </div>
     </div>
-  );
+  </div>
+)}
 }
 
 // --- COMPOSANTS ---
