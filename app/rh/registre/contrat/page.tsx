@@ -547,72 +547,77 @@ export default function GenerateurContratFinal() {
 
   // VALIDATION DES SECTIONS
   const isSectionComplete = (section: 'company' | 'employee' | 'contract'): boolean => {
-    if (section === 'company') {
+  if (section === 'company') {
+    return !!(
+      data.compName.trim() &&
+      data.compType.trim() &&
+      data.compAddr.trim() &&
+      data.compRCCM.trim() &&
+      data.compID.trim() &&
+      data.bossName.trim() &&
+      data.bossTitle.trim() &&
+      (!data.showCapital || data.compCapital.trim())
+    );
+  }
+  
+  if (section === 'employee') {
+    return !!(
+      data.empName.trim() &&
+      data.empBirth.trim() &&
+      data.empBirthPlace.trim() &&
+      data.empNation.trim() &&
+      data.empAddr.trim() &&
+      data.empID.trim() &&
+      data.empPhone.trim() &&
+      (!data.isForeigner || data.empWorkPermit.trim())
+    );
+  }
+  
+  if (section === 'contract') {
+    const baseValid = !!(
+      data.jobTitle.trim() &&
+      data.jobDept.trim() &&
+      data.jobLocation.trim() &&
+      data.startDate &&
+      data.trial.trim() &&
+      data.hours.trim()
+    );
+
+    if (data.jobType === 'CDI') {
       return !!(
-        data.compName.trim() &&
-        data.compType.trim() &&
-        data.compAddr.trim() &&
-        data.compRCCM.trim() &&
-        data.compID.trim() &&
-        data.bossName.trim() &&
-        data.bossTitle.trim() &&
-        (!data.showCapital || data.compCapital.trim())
+        baseValid && 
+        data.salary.trim() && 
+        parseFloat(data.salary) > 0 &&
+        data.jobDescription.trim() &&
+        (!data.hasNonCompete || data.nonCompeteDuration.trim())
       );
     }
-    
-    if (section === 'employee') {
+
+    if (data.jobType === 'CDD') {
       return !!(
-        data.empName.trim() &&
-        data.empBirth.trim() &&
-        data.empBirthPlace.trim() &&
-        data.empNation.trim() &&
-        data.empAddr.trim() &&
-        data.empID.trim() &&
-        data.empPhone.trim() &&
-        (!data.isForeigner || data.empWorkPermit.trim())
+        baseValid && 
+        data.salary.trim() && 
+        parseFloat(data.salary) > 0 &&
+        data.endDate && 
+        data.cddReason.trim() &&
+        (!data.hasNonCompete || data.nonCompeteDuration.trim())
       );
     }
-    
-    if (section === 'contract') {
-      const baseValid = !!(
-        data.jobTitle.trim() &&
-        data.jobDept.trim() &&
-        data.jobLocation.trim() &&
-        data.startDate &&
-        data.trial.trim() &&
-        data.hours.trim()
+
+    if (data.jobType === 'STAGE') {
+      return !!(
+        baseValid && 
+        data.endDate && 
+        data.stageTasks.trim() &&
+        data.stageAllowance.trim()
       );
-
-      if (data.jobType === 'CDI') {
-        return baseValid && 
-          data.salary.trim() && 
-          parseFloat(data.salary) > 0 &&
-          data.jobDescription.trim() &&
-          (!data.hasNonCompete || data.nonCompeteDuration.trim());
-      }
-
-      if (data.jobType === 'CDD') {
-        return baseValid && 
-          data.salary.trim() && 
-          parseFloat(data.salary) > 0 &&
-          data.endDate && 
-          data.cddReason.trim() &&
-          (!data.hasNonCompete || data.nonCompeteDuration.trim());
-      }
-
-      if (data.jobType === 'STAGE') {
-        return baseValid && 
-          data.endDate && 
-          data.stageTasks.trim() &&
-          data.stageAllowance.trim();
-      }
-
-      return baseValid;
     }
-    
-    return false;
-  };
 
+    return baseValid;
+  }
+  
+  return false;
+};
   const canAccessSection = (section: 'company' | 'employee' | 'contract'): boolean => {
     if (section === 'company') return true;
     if (section === 'employee') return isSectionComplete('company');
