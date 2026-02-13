@@ -422,20 +422,9 @@ function buildPDF(data: FormData, config: CountryConfig, signatures: { employer:
 
   addArticle('ARTICLE 1 : OBJET ET CADRE LÉGAL', `Le présent contrat est conclu sous le régime du ${config.code}.\n${config.articles.intro}\n${config.articles.engagement}\nLe présent contrat définit les conditions d'engagement et d'emploi du ${data.jobType === 'STAGE' ? 'Stagiaire' : 'Salarié'} au sein de la société ${data.compName}.`);
 
-  let contractTypeText = data.jobType === 'CDI' ? 'indéterminée (CDI)' : data.jobType === 'CDD' ? 'déterminée (CDD)' : 'CONVENTION DE STAGE';
-  let specificPart = '';
-  if (data.jobType === 'CDI' && data.jobDescription) specificPart = `\nTâches confiées : ${data.jobDescription}.`;
-  if (data.jobType === 'CDD' && data.cddReason) specificPart = `\nMotif du CDD : ${data.cddReason}.`;
-  if (data.jobType === 'STAGE' && data.stageTasks) specificPart = `\nMissions du stage : ${data.stageTasks}.`;
-  addArticle('ARTICLE 2 : NATURE ET FONCTIONS', `Le ${data.jobType === 'STAGE' ? 'Stagiaire' : 'Salarié'} est recruté en qualité de ${data.jobTitle} au sein du département ${data.jobDept}.\nLieu d'exercice : ${data.jobLocation}.\nType de contrat : à durée ${contractTypeText}.${specificPart}\nLe ${data.jobType === 'STAGE' ? 'Stagiaire' : 'Salarié'} s'engage à exercer ses fonctions avec diligence, compétence et loyauté, conformément aux directives de l'Employeur et aux usages de la profession.`);
-
-  const salaryAmount = data.jobType === 'STAGE' ? data.stageAllowance : data.salary;
-  const { formatted: salaryFormatted, words: salaryWords } = formatSalaryDisplay(salaryAmount, config.currency);
-  const bonusText = data.bonus ? `\nAvantages complémentaires : ${data.bonus}.` : '';
-  const salaryInWordsText = salaryWords ? ` (${salaryWords})` : '';
-  const remuBody = data.jobType === 'STAGE'
-    ? `Le Stagiaire percevra une gratification mensuelle de ${salaryFormatted} ${config.currency}${salaryInWordsText}.${bonusText}\n${config.articles.workDuration} la durée hebdomadaire de travail est fixée à ${data.hours} heures.`
-    : `En contrepartie de l'exécution de ses fonctions, le Salarié percevra une rémunération mensuelle brute de ${salaryFormatted} ${config.currency}${salaryInWordsText}.\nCette rémunération est versée mensuellement par virement bancaire, sous réserve des retenues légales applicables.${bonusText}\n${config.articles.workDuration} la durée hebdomadaire de travail est fixée à ${data.hours} heures.`;
+  let contractTypeText = data.jobType === 'CDI' ? 'indéterminée (CDI)' : data.jobType === 'CDD' ? 'déterminée (CDD)' : 'CONVENTION DE STAGE';const remuBody = data.jobType === 'STAGE'
+    ? `Le Stagiaire percevra une gratification mensuelle de ${salaryFormatted} ${config.currency}.\n${salaryWords ? 'Soit : ' + salaryWords + '.' : ''}${bonusText}\n${config.articles.workDuration} la durée hebdomadaire de travail est fixée à ${data.hours} heures.`
+    : `En contrepartie de l'exécution de ses fonctions, le Salarié percevra une rémunération mensuelle brute de ${salaryFormatted} ${config.currency}.\n${salaryWords ? 'Soit : ' + salaryWords + '.' : ''}\nCette rémunération est versée mensuellement par virement bancaire, sous réserve des retenues légales applicables.${bonusText}\n${config.articles.workDuration} la durée hebdomadaire de travail est fixée à ${data.hours} heures.`;
   addArticle('ARTICLE 3 : RÉMUNÉRATION', remuBody);
 
   const endDateText = (data.jobType === 'CDD' || data.jobType === 'STAGE') && data.endDate ? ` et prendra fin le ${new Date(data.endDate).toLocaleDateString('fr-FR')}` : '';
