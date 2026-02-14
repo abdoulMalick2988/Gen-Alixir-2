@@ -1263,16 +1263,11 @@ ${nonCompeteArticle}
 // Fonction pour réinitialiser le formulaire (Nouveau Contrat)
   const handleNewContract = () => {
     if (window.confirm("Créer un nouveau contrat ? Cela effacera toutes les données non enregistrées.")) {
-      setFormData({
-        country: 'SENEGAL',
-        documentMode: 'ELECTRONIC',
-        compName: '', compType: '', compAddr: '', compRCCM: '', compID: '',
-        empName: '', empNationality: '', empID: '', empBirthDate: '', empBirthPlace: '', empAddr: '', empEmail: '', empPhone: '',
-        jobType: 'CDI', jobTitle: '', jobDept: '', jobStartDate: '', jobEndDate: '', jobDuration: '', jobSalary: '', jobPrime: '', jobLocation: '', jobTasks: ''
-      });
-      setSignatures({ employer: null, employee: null });
-      setCurrentStep(1);
+      setData(INITIAL_FORM_DATA); // Utilise setData et les valeurs initiales de ton code [cite: 502, 299]
+      setSignatures({ employer: '', employee: '' }); // Reset des signatures [cite: 506]
+      setCurrentStep('company'); // Retour à la première étape 'Entreprise' [cite: 243, 341]
       setShowPreview(false);
+      setIsSaved(false);
     }
   };
             
