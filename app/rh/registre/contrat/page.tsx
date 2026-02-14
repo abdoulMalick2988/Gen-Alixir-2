@@ -423,6 +423,7 @@ export default function ContractArchitectPage() {
   const [showSignatureModal, setShowSignatureModal] = useState(false);
   const [currentSigner, setCurrentSigner] = useState<'employer' | 'employee' | null>(null);
   const [showPostSaveActions, setShowPostSaveActions] = useState(false);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
 
@@ -1262,13 +1263,18 @@ ${nonCompeteArticle}
   );
 // Fonction pour réinitialiser le formulaire (Nouveau Contrat)
   const handleNewContract = () => {
-    if (window.confirm("Créer un nouveau contrat ? Cela effacera toutes les données non enregistrées.")) {
-      setData(INITIAL_FORM_DATA); // Utilise setData et les valeurs initiales de ton code [cite: 502, 299]
-      setSignatures({ employer: '', employee: '' }); // Reset des signatures [cite: 506]
-      setCurrentStep('company'); // Retour à la première étape 'Entreprise' [cite: 243, 341]
-      setShowPreview(false);
-      setIsSaved(false);
-    }
+    // Au lieu du message moche, on ouvre la modale personnalisée
+    setShowResetConfirm(true);
+  };
+
+  // Cette fonction sera appelée quand on cliquera sur "Confirmer" dans la modale
+  const confirmReset = () => {
+    setData(INITIAL_FORM_DATA);
+    setSignatures({ employer: '', employee: '' });
+    setCurrentStep('company');
+    setShowPreview(false);
+    setIsSaved(false);
+    setShowResetConfirm(false); // On ferme la modale
   };
             
 // ─── FIN PARTIE 2 ───────────────────────────
