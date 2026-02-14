@@ -1260,7 +1260,22 @@ ${nonCompeteArticle}
     },
     [showNotif]
   );
-
+// Fonction pour réinitialiser le formulaire (Nouveau Contrat)
+  const handleNewContract = () => {
+    if (window.confirm("Créer un nouveau contrat ? Cela effacera toutes les données non enregistrées.")) {
+      setFormData({
+        country: 'SENEGAL',
+        documentMode: 'ELECTRONIC',
+        compName: '', compType: '', compAddr: '', compRCCM: '', compID: '',
+        empName: '', empNationality: '', empID: '', empBirthDate: '', empBirthPlace: '', empAddr: '', empEmail: '', empPhone: '',
+        jobType: 'CDI', jobTitle: '', jobDept: '', jobStartDate: '', jobEndDate: '', jobDuration: '', jobSalary: '', jobPrime: '', jobLocation: '', jobTasks: ''
+      });
+      setSignatures({ employer: null, employee: null });
+      setCurrentStep(1);
+      setShowPreview(false);
+    }
+  };
+            
 // ─── FIN PARTIE 2 ───────────────────────────
 // Collez la Partie 3 immédiatement après cette ligne
 // ─────────────────────────────────────────────
@@ -1367,6 +1382,15 @@ ${nonCompeteArticle}
                   </p>
                 </div>
               </div>
+
+              {/* Bouton Nouveau (Haut de page) */}
+<button 
+  onClick={handleNewContract}
+  className="ml-4 flex items-center gap-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 border border-emerald-500/20 px-3 py-1.5 rounded-full transition-all group active:scale-95"
+>
+  <Sparkles size={14} className="group-hover:rotate-12 transition-transform" />
+  <span className="text-[10px] font-black tracking-widest">NOUVEAU</span>
+</button>
 
               <button
                 onClick={() => setShowArchives(true)}
@@ -1936,19 +1960,14 @@ ${nonCompeteArticle}
                       <ChevronLeft size={16} />
                       <span>Collaborateur</span>
                     </button>
-                    {/* Bouton Aperçu inline */}
-                    <button
-                      onClick={() => setShowPreview(true)}
-                      className="flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-xs border transition-all hover:scale-105 active:scale-95"
-                      style={{
-                        borderColor: 'rgba(16,185,129,0.3)',
-                        color: 'var(--emerald-light)',
-                        background: 'rgba(16,185,129,0.06)',
-                      }}
-                    >
-                      <Eye size={16} />
-                      <span>Aperçu</span>
-                    </button>
+                    {/* Bouton Nouveau Contrat (Remplace Aperçu) */}
+    <button
+      onClick={handleNewContract}
+      className="flex items-center gap-2 px-6 py-3 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 rounded-xl transition-all border border-emerald-500/30 group"
+    >
+      <Sparkles size={20} className="group-hover:rotate-12 transition-transform" />
+      <span className="font-bold tracking-wide uppercase">Nouveau</span>
+    </button>
                   </div>
                 </div>
               )}
