@@ -392,8 +392,8 @@ const GLOBAL_STYLES = `
   animation: shimmer 2s linear infinite;
 }
 
-/* Signature canvas area */
-.sig-canvas-wrapper {
+/* Signature canvas area — touch-action UNIQUEMENT sur le canvas */
+.sig-canvas-wrapper canvas {
   touch-action: none;
   -ms-touch-action: none;
   user-select: none;
@@ -1281,10 +1281,12 @@ ${nonCompeteArticle}
         fontFamily: "'Outfit', 'Space Grotesk', sans-serif",
         position: 'relative',
         overflowX: 'hidden',
+        overflowY: 'auto',
+        WebkitOverflowScrolling: 'touch',
       }}
     >
       {/* ── Holographic Grid Background ── */}
-      <div className="fixed inset-0 holo-grid pointer-events-none" style={{ zIndex: 0 }} />
+      <div className="fixed inset-0 holo-grid pointer-events-none" style={{ zIndex: 0, touchAction: 'none' }} />
 
       {/* ── Ambient Floating Particles ── */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden" style={{ zIndex: 1 }}>
