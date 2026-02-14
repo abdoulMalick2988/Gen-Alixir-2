@@ -1272,12 +1272,12 @@ ${nonCompeteArticle}
 // ⚠️ Collez ce code IMMÉDIATEMENT après la fin de la Partie 2
 
   // ═══════════════════════════════════════════
-  // RENDU PRINCIPAL (return)
-  // ═══════════════════════════════════════════
+// RENDU PRINCIPAL (return)
+// ═══════════════════════════════════════════
 
   return (
     <div
-      className="min-h-screen eco-scroll holo-grid"
+      className="h-screen w-full overflow-y-auto overflow-x-hidden eco-scroll holo-grid"
       style={{
         background: 'var(--bg-primary)',
         fontFamily: "'Outfit', 'Space Grotesk', sans-serif",
