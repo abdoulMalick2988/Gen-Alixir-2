@@ -53,6 +53,23 @@ import {
   Hexagon,
 } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
+import {
+  Document,
+  Packer,
+  Paragraph,
+  TextRun,
+  HeadingLevel,
+  AlignmentType,
+  ImageRun,
+  Table,
+  TableRow,
+  TableCell,
+  WidthType,
+  BorderStyle,
+  TableLayoutType,
+  convertMillimetersToTwip,
+} from 'docx';
+import { saveAs } from 'file-saver';
 
 // ─────────────────────────────────────────────
 // Supabase Client
@@ -321,10 +338,23 @@ const GLOBAL_STYLES = `
 
 /* Holographic grid background */
 .holo-grid {
-  background-image: 
+  background-image:
     linear-gradient(rgba(16, 185, 129, 0.03) 1px, transparent 1px),
     linear-gradient(90deg, rgba(16, 185, 129, 0.03) 1px, transparent 1px);
   background-size: 40px 40px;
+}
+
+/* Hexagonal mesh overlay — pure CSS, zero JS cost */
+.hex-mesh { position: relative; }
+.hex-mesh::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='100'%3E%3Cpath d='M28 66L0 50L0 16L28 0L56 16L56 50L28 66L28 100' fill='none' stroke='%2310b981' stroke-width='0.5'/%3E%3Cpath d='M28 0L28 34L0 50L0 84L28 100L56 84L56 50L28 34' fill='none' stroke='%2310b981' stroke-width='0.5'/%3E%3C/svg%3E");
+  background-size: 56px 100px;
 }
 
 /* Pulse glow on emerald elements */
@@ -390,6 +420,47 @@ const GLOBAL_STYLES = `
 }
 .shimmer-btn:hover {
   animation: shimmer 2s linear infinite;
+}
+
+/* High-tech action button — consistent green glow */
+.eco-action-btn {
+  position: relative;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  color: var(--text-primary);
+  border-radius: 12px;
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  overflow: hidden;
+}
+.eco-action-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 12px;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.3), rgba(16, 185, 129, 0.05), rgba(16, 185, 129, 0.3));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+.eco-action-btn:hover {
+  background: rgba(16, 185, 129, 0.08);
+  border-color: rgba(16, 185, 129, 0.4);
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.1), 0 0 40px rgba(16, 185, 129, 0.05);
+}
+.eco-action-btn:hover::before { opacity: 1; }
+.eco-action-btn:active { transform: scale(0.98); }
+.eco-action-btn:disabled { opacity: 0.4; pointer-events: none; }
+.eco-action-btn .eco-action-icon {
+  transition: all 0.3s ease;
+  filter: drop-shadow(0 0 0px transparent);
+}
+.eco-action-btn:hover .eco-action-icon {
+  filter: drop-shadow(0 0 4px rgba(16, 185, 129, 0.5));
 }
 
 /* Signature canvas area */
@@ -1116,71 +1187,382 @@ ${nonCompeteArticle}
   }, [generateContractHTML, data.empName, showNotif]);
 
   // ═══════════════════════════════════════════
-  // GÉNÉRATION WORD (.docx) — via Blob HTML avec en-tête Word
+  // UTILITAIRE : Conversion base64 → Uint8Array
+  // ═══════════════════════════════════════════
+
+  const base64ToUint8Array = useCallback((dataUrl: string): Uint8Array => {
+    const base64 = dataUrl.split(',')[1];
+    const binaryString = atob(base64);
+    const bytes = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+    return bytes;
+  }, []);
+
+  // ═══════════════════════════════════════════
+  // GÉNÉRATION WORD (.docx) — via librairie docx
   // ═══════════════════════════════════════════
 
   const generateWord = useCallback(async () => {
     setIsGenerating(true);
     try {
-      const contractBody = generateContractHTML();
+      // Prepare clauses (same logic as generateContractHTML)
+      const capitalClause =
+        data.showCapital && data.compCapital
+          ? `, au capital social de ${data.compCapital} ${config.currency}`
+          : '';
+      const foreignerClause =
+        data.isForeigner && data.empWorkPermit
+          ? `, titulaire du permis de travail n\u00B0${data.empWorkPermit}`
+          : '';
+      const cddClause =
+        data.jobType === 'CDD' && data.cddReason
+          ? `Le pr\u00E9sent contrat est conclu pour les besoins suivants : ${data.cddReason}.`
+          : '';
+      const bonusClause = data.bonus
+        ? `En sus de cette r\u00E9mun\u00E9ration de base, le Salari\u00E9 pourra percevoir les primes et avantages suivants : ${data.bonus}.`
+        : '';
+      const endDateClause =
+        data.jobType === 'CDD' && data.endDate
+          ? ` et prendra fin le ${new Date(data.endDate).toLocaleDateString('fr-FR')}`
+          : '';
 
-      // Encapsuler dans un format Word-compatible (MHTML)
-      const wordDoc = `
-        <html xmlns:o='urn:schemas-microsoft-com:office:office'
-              xmlns:w='urn:schemas-microsoft-com:office:word'
-              xmlns='http://www.w3.org/TR/REC-html40'>
-        <head>
-          <meta charset="UTF-8">
-          <!--[if gte mso 9]>
-          <xml>
-            <w:WordDocument>
-              <w:View>Print</w:View>
-              <w:Zoom>100</w:Zoom>
-              <w:DoNotOptimizeForBrowser/>
-            </w:WordDocument>
-          </xml>
-          <![endif]-->
-          <style>
-            @page { size: A4; margin: 2cm 1.8cm; }
-            body { font-family: Georgia, 'Times New Roman', serif; font-size: 12pt; line-height: 1.8; color: #000; }
-            strong { font-weight: bold; }
-            h1 { font-size: 18pt; text-align: center; text-transform: uppercase; letter-spacing: 2pt; }
-            h3 { font-size: 11pt; font-weight: bold; text-transform: uppercase; }
-            table { border-collapse: collapse; width: 100%; }
-            td { vertical-align: top; padding: 8px; }
-            img { max-width: 200px; }
-          </style>
-        </head>
-        <body>
-          ${contractBody
-            .replace(/<!DOCTYPE html>/, '')
-            .replace(/<html>/, '')
-            .replace(/<\/html>/, '')
-            .replace(/<head>[\s\S]*?<\/head>/, '')
-            .replace(/<body[^>]*>/, '')
-            .replace(/<\/body>/, '')}
-        </body>
-        </html>
-      `;
-
-      const blob = new Blob(['\ufeff' + wordDoc], {
-        type: 'application/msword',
+      const formatDate = (d: string) => {
+        try { return new Date(d).toLocaleDateString('fr-FR'); } catch { return d; }
+      };
+      const todayFull = new Date().toLocaleDateString('fr-FR', {
+        day: 'numeric', month: 'long', year: 'numeric',
       });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `CONTRAT_${data.empName.replace(/\s+/g, '_')}_${Date.now()}.doc`;
-      link.click();
-      URL.revokeObjectURL(url);
 
-      showNotif('Document Word téléchargé', 'success');
+      const suspArticleNum = data.hasNonCompete ? '7' : '6';
+      const litigeArticleNum = data.hasNonCompete ? '8' : '7';
+
+      // Text run helpers
+      const normalRun = (text: string): TextRun => new TextRun({ text, font: 'Georgia', size: 24 });
+      const boldRun = (text: string): TextRun => new TextRun({ text, font: 'Georgia', size: 24, bold: true });
+      const italicRun = (text: string): TextRun => new TextRun({ text, font: 'Georgia', size: 24, italics: true });
+      const boldItalicRun = (text: string): TextRun => new TextRun({ text, font: 'Georgia', size: 24, bold: true, italics: true });
+
+      // Paragraph helpers
+      const articleHeading = (title: string): Paragraph =>
+        new Paragraph({
+          spacing: { before: 300, after: 120 },
+          children: [new TextRun({ text: title, font: 'Georgia', size: 26, bold: true, allCaps: true })],
+        });
+
+      const articleBody = (runs: TextRun[]): Paragraph =>
+        new Paragraph({ spacing: { after: 120 }, children: runs });
+
+      // Build all paragraphs
+      const children: (Paragraph | Table)[] = [];
+
+      // Logo (if base64 data URL)
+      if (data.compLogo) {
+        try {
+          const logoBytes = base64ToUint8Array(data.compLogo);
+          children.push(
+            new Paragraph({
+              children: [
+                new ImageRun({ data: logoBytes, transformation: { width: 90, height: 90 } }),
+              ],
+            })
+          );
+          children.push(
+            new Paragraph({
+              alignment: AlignmentType.RIGHT,
+              children: [
+                boldRun(data.compName),
+                ...(data.compDescription
+                  ? [new TextRun({ text: `\n${data.compDescription}`, font: 'Georgia', size: 20, color: '666666' })]
+                  : []),
+              ],
+            })
+          );
+        } catch { /* skip logo on error */ }
+      }
+
+      // Title
+      children.push(new Paragraph({ spacing: { before: 400 } }));
+      children.push(
+        new Paragraph({
+          alignment: AlignmentType.CENTER,
+          heading: HeadingLevel.HEADING_1,
+          children: [
+            new TextRun({ text: 'CONTRAT DE TRAVAIL', font: 'Georgia', size: 44, bold: true, allCaps: true, characterSpacing: 60 }),
+          ],
+        })
+      );
+      children.push(
+        new Paragraph({
+          alignment: AlignmentType.CENTER,
+          spacing: { after: 400 },
+          children: [new TextRun({ text: `R\u00C9GIME : ${data.jobType}`, font: 'Georgia', size: 28, bold: true, color: '333333' })],
+        })
+      );
+
+      // ENTRE LES SOUSSIGNÉS
+      children.push(
+        new Paragraph({ spacing: { after: 200 }, children: [new TextRun({ text: 'ENTRE LES SOUSSIGN\u00C9S :', font: 'Georgia', size: 28, bold: true })] })
+      );
+
+      // Company info
+      children.push(
+        new Paragraph({
+          spacing: { after: 120 },
+          children: [
+            normalRun('La soci\u00E9t\u00E9 '), boldRun(data.compName),
+            normalRun(`, ${data.compType}${capitalClause}, dont le si\u00E8ge social est situ\u00E9 \u00E0 `),
+            boldRun(data.compAddr),
+            normalRun(', immatricul\u00E9e au Registre de Commerce et du Cr\u00E9dit Mobilier (RCCM) sous le num\u00E9ro '),
+            boldRun(data.compRCCM),
+            normalRun(` et identifi\u00E9e au ${config.idLabel} sous le num\u00E9ro `),
+            boldRun(data.compID),
+            normalRun(', repr\u00E9sent\u00E9e par M./Mme '),
+            boldRun(data.bossName),
+            normalRun(' en sa qualit\u00E9 de '),
+            boldRun(data.bossTitle),
+            normalRun(', d\u00FBment habilit\u00E9(e) aux fins des pr\u00E9sentes.'),
+          ],
+        })
+      );
+
+      children.push(new Paragraph({
+        alignment: AlignmentType.RIGHT,
+        children: [italicRun('Ci-apr\u00E8s d\u00E9nomm\u00E9e \u00AB '), boldItalicRun("L'EMPLOYEUR"), italicRun(' \u00BB')],
+      }));
+      children.push(new Paragraph({ alignment: AlignmentType.CENTER, children: [boldRun("D'UNE PART,")] }));
+      children.push(new Paragraph({ alignment: AlignmentType.CENTER, children: [boldRun('ET :')] }));
+
+      // Employee info
+      children.push(
+        new Paragraph({
+          spacing: { after: 120 },
+          children: [
+            normalRun('M./Mme '), boldRun(data.empName),
+            normalRun(', n\u00E9(e) le '), boldRun(formatDate(data.empBirth)),
+            normalRun(' \u00E0 '), boldRun(data.empBirthPlace),
+            normalRun(', de nationalit\u00E9 '), boldRun(data.empNation),
+            normalRun(foreignerClause),
+            normalRun(", titulaire de la pi\u00E8ce d'identit\u00E9 n\u00B0"),
+            boldRun(data.empID),
+            normalRun(', demeurant \u00E0 '), boldRun(data.empAddr),
+            normalRun(', joignable au '), boldRun(data.empPhone),
+            normalRun('.'),
+          ],
+        })
+      );
+
+      children.push(new Paragraph({
+        alignment: AlignmentType.RIGHT,
+        children: [italicRun('Ci-apr\u00E8s d\u00E9nomm\u00E9(e) \u00AB '), boldItalicRun('LE SALARI\u00C9'), italicRun(' \u00BB')],
+      }));
+      children.push(new Paragraph({ alignment: AlignmentType.CENTER, children: [boldRun("D'AUTRE PART,")] }));
+      children.push(new Paragraph({ spacing: { before: 300, after: 200 }, children: [new TextRun({ text: 'IL A \u00C9T\u00C9 ARR\u00CAT\u00C9 ET CONVENU CE QUI SUIT :', font: 'Georgia', size: 28, bold: true })] }));
+
+      // Article 1
+      children.push(articleHeading('ARTICLE 1 : OBJET ET CADRE L\u00C9GAL'));
+      children.push(articleBody([normalRun(`Le pr\u00E9sent contrat est conclu sous le r\u00E9gime du ${config.code}.`)]));
+      children.push(articleBody([normalRun(config.articles.intro), normalRun(' '), normalRun(config.articles.engagement)]));
+      children.push(articleBody([normalRun(`Le pr\u00E9sent contrat d\u00E9finit les conditions d'engagement et d'emploi du Salari\u00E9 au sein de la soci\u00E9t\u00E9 ${data.compName}.`)]));
+
+      // Article 2
+      children.push(articleHeading('ARTICLE 2 : NATURE ET FONCTIONS'));
+      children.push(articleBody([
+        normalRun('Le Salari\u00E9 est recrut\u00E9 en qualit\u00E9 de '), boldRun(data.jobTitle),
+        normalRun(' au sein du d\u00E9partement '), boldRun(data.jobDept), normalRun('.'),
+      ]));
+      children.push(articleBody([
+        normalRun("Le Salari\u00E9 exercera ses fonctions au sein de l'\u00E9tablissement situ\u00E9 \u00E0 "),
+        boldRun(data.jobLocation), normalRun('.'),
+      ]));
+      children.push(articleBody([
+        normalRun('Le type de contrat conclu est un contrat \u00E0 dur\u00E9e '),
+        boldRun(data.jobType === 'CDI' ? 'ind\u00E9termin\u00E9e (CDI)' : 'd\u00E9termin\u00E9e (CDD)'),
+        normalRun('.'),
+      ]));
+      if (cddClause) { children.push(articleBody([normalRun(cddClause)])); }
+      children.push(articleBody([
+        boldRun("Le Salari\u00E9 s'engage \u00E0"),
+        normalRun(" exercer ses fonctions avec diligence, comp\u00E9tence et loyaut\u00E9, conform\u00E9ment aux directives de l'Employeur et aux usages de la profession."),
+      ]));
+
+      // Article 3
+      children.push(articleHeading('ARTICLE 3 : R\u00C9MUN\u00C9RATION'));
+      children.push(articleBody([
+        normalRun("En contrepartie de l'ex\u00E9cution de ses fonctions, le Salari\u00E9 percevra une r\u00E9mun\u00E9ration mensuelle brute de "),
+        boldRun(`${data.salary} ${config.currency}`), normalRun('.'),
+      ]));
+      children.push(articleBody([normalRun('Cette r\u00E9mun\u00E9ration est vers\u00E9e mensuellement par virement bancaire, sous r\u00E9serve des retenues l\u00E9gales et conventionnelles applicables.')]));
+      if (bonusClause) { children.push(articleBody([normalRun(bonusClause)])); }
+      children.push(articleBody([
+        normalRun(`${config.articles.workDuration} la dur\u00E9e hebdomadaire de travail est fix\u00E9e \u00E0 `),
+        boldRun(`${data.hours} heures`), normalRun('.'),
+      ]));
+
+      // Article 4
+      children.push(articleHeading("ARTICLE 4 : DUR\u00C9E DU CONTRAT ET P\u00C9RIODE D'ESSAI"));
+      children.push(articleBody([
+        normalRun('Le pr\u00E9sent contrat de travail prend effet \u00E0 compter du '),
+        boldRun(formatDate(data.startDate)), normalRun(endDateClause + '.'),
+      ]));
+      children.push(articleBody([
+        normalRun("Une p\u00E9riode d'essai de "), boldRun(`${data.trial} mois`),
+        normalRun(" est pr\u00E9vue. Durant cette p\u00E9riode, chacune des parties peut mettre fin au contrat sans pr\u00E9avis ni indemnit\u00E9, conform\u00E9ment aux dispositions l\u00E9gales en vigueur."),
+      ]));
+      children.push(articleBody([
+        normalRun("\u00C0 l'issue de la p\u00E9riode d'essai, si aucune des parties n'a manifest\u00E9 sa volont\u00E9 de rompre le contrat, celui-ci se poursuivra dans les conditions d\u00E9finies aux pr\u00E9sentes."),
+      ]));
+
+      // Article 5
+      children.push(articleHeading('ARTICLE 5 : OBLIGATIONS DES PARTIES'));
+      children.push(articleBody([boldRun("L'Employeur s'engage \u00E0 :")]));
+      children.push(articleBody([normalRun('\u2014 Fournir au Salari\u00E9 un travail conforme \u00E0 ses qualifications professionnelles')]));
+      children.push(articleBody([normalRun('\u2014 Verser la r\u00E9mun\u00E9ration convenue aux \u00E9ch\u00E9ances pr\u00E9vues')]));
+      children.push(articleBody([normalRun("\u2014 Respecter l'ensemble des dispositions l\u00E9gales et conventionnelles applicables")]));
+      children.push(articleBody([normalRun('\u2014 Assurer la s\u00E9curit\u00E9 et la protection de la sant\u00E9 du Salari\u00E9')]));
+      children.push(new Paragraph({ spacing: { before: 120 } }));
+      children.push(articleBody([boldRun("Le Salari\u00E9 s'engage \u00E0 :")]));
+      children.push(articleBody([normalRun('\u2014 Ex\u00E9cuter personnellement les missions qui lui sont confi\u00E9es')]));
+      children.push(articleBody([normalRun("\u2014 Respecter les directives de l'Employeur et le r\u00E8glement int\u00E9rieur")]));
+      children.push(articleBody([normalRun('\u2014 Observer une obligation de loyaut\u00E9 et de confidentialit\u00E9')]));
+      children.push(articleBody([normalRun("\u2014 Consacrer l'int\u00E9gralit\u00E9 de son activit\u00E9 professionnelle \u00E0 l'Employeur")]));
+
+      // Article 6 (Non-compete, conditional)
+      if (data.hasNonCompete) {
+        children.push(articleHeading('ARTICLE 6 : CLAUSE DE NON-CONCURRENCE'));
+        children.push(articleBody([
+          normalRun("Le Salari\u00E9 s'engage, pendant une dur\u00E9e de "), boldRun(data.nonCompeteDuration),
+          normalRun(" suivant la cessation du pr\u00E9sent contrat, quelle qu'en soit la cause, \u00E0 ne pas exercer, directement ou indirectement, une activit\u00E9 concurrente \u00E0 celle de l'Employeur."),
+        ]));
+        children.push(articleBody([
+          normalRun(`Cette obligation s'applique sur le territoire du ${config.name} et concerne toute activit\u00E9 similaire ou connexe \u00E0 celle exerc\u00E9e au sein de la soci\u00E9t\u00E9 ${data.compName}.`),
+        ]));
+        children.push(articleBody([
+          normalRun("En contrepartie de cette clause, le Salari\u00E9 percevra une indemnit\u00E9 compensatrice dont les modalit\u00E9s seront d\u00E9finies conform\u00E9ment aux dispositions l\u00E9gales applicables."),
+        ]));
+      }
+
+      // Suspension & Rupture
+      children.push(articleHeading(`ARTICLE ${suspArticleNum} : SUSPENSION ET RUPTURE DU CONTRAT`));
+      children.push(articleBody([normalRun(config.articles.termination)]));
+      children.push(articleBody([normalRun('La suspension du contrat de travail pourra intervenir dans les cas pr\u00E9vus par la loi (maladie, maternit\u00E9, accident du travail, etc.).')]));
+      children.push(articleBody([normalRun("La rupture du contrat de travail, quelle qu'en soit la cause, devra respecter les dispositions l\u00E9gales en vigueur relatives au pr\u00E9avis, aux indemnit\u00E9s et aux formalit\u00E9s applicables.")]));
+      children.push(articleBody([normalRun("En cas de rupture du contrat, le Salari\u00E9 restituera imm\u00E9diatement \u00E0 l'Employeur l'ensemble des documents, mat\u00E9riels et \u00E9quipements mis \u00E0 sa disposition.")]));
+
+      // Litiges
+      children.push(articleHeading(`ARTICLE ${litigeArticleNum} : LITIGES`));
+      children.push(articleBody([normalRun("En cas de diff\u00E9rend relatif \u00E0 l'interpr\u00E9tation ou \u00E0 l'ex\u00E9cution du pr\u00E9sent contrat, les parties s'efforceront de trouver une solution amiable.")]));
+      children.push(articleBody([
+        normalRun("\u00C0 d\u00E9faut d'accord amiable, tout litige rel\u00E8vera de la comp\u00E9tence exclusive du "),
+        boldRun(config.court),
+        normalRun(", conform\u00E9ment aux dispositions l\u00E9gales applicables en mati\u00E8re de contentieux du travail."),
+      ]));
+
+      // Fait à...
+      children.push(new Paragraph({ spacing: { before: 400 } }));
+      children.push(articleBody([
+        normalRun('Fait \u00E0 '), boldRun(data.compAddr.split(',')[0].trim()),
+        normalRun(', le '), boldRun(todayFull),
+      ]));
+      children.push(articleBody([normalRun('En deux exemplaires originaux, dont un remis au Salari\u00E9.')]));
+
+      // Signature table (borderless 2-column)
+      const noBorder = { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' };
+      const noBorders = { top: noBorder, bottom: noBorder, left: noBorder, right: noBorder };
+
+      const buildSigCell = (title: string, sigUrl: string, name: string, role: string, placeholder: string): TableCell => {
+        const cellChildren: Paragraph[] = [
+          new Paragraph({ alignment: AlignmentType.CENTER, children: [boldRun(title)] }),
+        ];
+        if (sigUrl) {
+          try {
+            const sigBytes = base64ToUint8Array(sigUrl);
+            cellChildren.push(
+              new Paragraph({
+                alignment: AlignmentType.CENTER,
+                spacing: { before: 100, after: 100 },
+                children: [new ImageRun({ data: sigBytes, transformation: { width: 200, height: 80 } })],
+              })
+            );
+            cellChildren.push(
+              new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: 'Signature \u00E9lectronique', font: 'Georgia', size: 20, color: '666666' })] })
+            );
+          } catch {
+            cellChildren.push(new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 200, after: 200 }, children: [new TextRun({ text: placeholder, font: 'Georgia', size: 20, color: '999999' })] }));
+          }
+        } else {
+          cellChildren.push(new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 200, after: 200 }, children: [new TextRun({ text: placeholder, font: 'Georgia', size: 20, color: '999999' })] }));
+        }
+        cellChildren.push(new Paragraph({ alignment: AlignmentType.CENTER, children: [boldRun(name)] }));
+        cellChildren.push(new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: role, font: 'Georgia', size: 24, color: '666666' })] }));
+        return new TableCell({ borders: noBorders, width: { size: 50, type: WidthType.PERCENTAGE }, children: cellChildren });
+      };
+
+      const sigTable = new Table({
+        width: { size: 100, type: WidthType.PERCENTAGE },
+        layout: TableLayoutType.FIXED,
+        rows: [
+          new TableRow({
+            children: [
+              buildSigCell("L'EMPLOYEUR", signatures.employer, data.bossName, data.bossTitle, '(Signature et cachet)'),
+              buildSigCell('LE SALARI\u00C9', signatures.employee, data.empName, data.jobTitle, '(Lu et approuv\u00E9, signature)'),
+            ],
+          }),
+        ],
+      });
+
+      children.push(new Paragraph({ spacing: { before: 400 } }));
+      children.push(sigTable);
+
+      // Footer
+      const footerParagraphs: Paragraph[] = [];
+      if (data.documentMode === 'ELECTRONIC') {
+        footerParagraphs.push(new Paragraph({
+          alignment: AlignmentType.CENTER, spacing: { before: 400 },
+          border: { top: { style: BorderStyle.SINGLE, size: 2, color: 'CCCCCC', space: 8 } },
+          children: [new TextRun({ text: 'Document g\u00E9n\u00E9r\u00E9 via ECODREUM Intelligence', font: 'Georgia', size: 20, color: '666666', bold: true })],
+        }));
+        footerParagraphs.push(new Paragraph({
+          alignment: AlignmentType.CENTER,
+          children: [new TextRun({ text: 'Ce document ne se substitue pas \u00E0 un conseil juridique personnalis\u00E9', font: 'Georgia', size: 20, color: '666666' })],
+        }));
+      } else {
+        footerParagraphs.push(new Paragraph({
+          alignment: AlignmentType.CENTER, spacing: { before: 400 },
+          border: { top: { style: BorderStyle.SINGLE, size: 2, color: 'CCCCCC', space: 8 } },
+          children: [new TextRun({ text: data.compName, font: 'Georgia', size: 20, bold: true, color: '666666' })],
+        }));
+      }
+      children.push(...footerParagraphs);
+
+      // Create document
+      const doc = new Document({
+        sections: [{
+          properties: {
+            page: {
+              size: { width: convertMillimetersToTwip(210), height: convertMillimetersToTwip(297) },
+              margin: {
+                top: convertMillimetersToTwip(20), bottom: convertMillimetersToTwip(20),
+                left: convertMillimetersToTwip(18), right: convertMillimetersToTwip(18),
+              },
+            },
+          },
+          children,
+        }],
+      });
+
+      // Generate and download
+      const blob = await Packer.toBlob(doc);
+      saveAs(blob, `CONTRAT_${data.empName.replace(/\s+/g, '_')}_${Date.now()}.docx`);
+      showNotif('Document Word (.docx) t\u00E9l\u00E9charg\u00E9', 'success');
     } catch (err) {
       console.error('Erreur Word:', err);
-      showNotif('Erreur génération Word', 'error');
+      showNotif('Erreur g\u00E9n\u00E9ration Word', 'error');
     } finally {
       setIsGenerating(false);
     }
-  }, [generateContractHTML, data.empName, showNotif]);
+  }, [data, config, signatures, base64ToUint8Array, showNotif]);
 
   // ═══════════════════════════════════════════
   // WEB SHARE API — Partage natif du PDF
@@ -1293,7 +1675,7 @@ ${nonCompeteArticle}
 
   return (
     <div
-      className="h-screen w-full overflow-y-auto overflow-x-hidden eco-scroll holo-grid"
+      className="h-screen w-full overflow-y-auto overflow-x-hidden eco-scroll holo-grid hex-mesh"
       style={{
         background: 'var(--bg-primary)',
         fontFamily: "'Outfit', 'Space Grotesk', sans-serif",
@@ -2048,7 +2430,8 @@ ${nonCompeteArticle}
               {/* ── POST-SAVE ACTIONS ── */}
               {showPostSaveActions && (
                 <div className="space-y-2.5 shutter-enter">
-                  <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--emerald-glow)' }}>
+                  <p className="text-[10px] font-bold uppercase tracking-widest flex items-center gap-1.5" style={{ color: 'var(--emerald-glow)' }}>
+                    <Hexagon size={10} />
                     Actions Finales
                   </p>
 
@@ -2056,14 +2439,9 @@ ${nonCompeteArticle}
                   <button
                     onClick={generatePDF}
                     disabled={isGenerating}
-                    className="w-full py-3 px-4 rounded-xl font-bold text-xs flex items-center gap-3 transition-all hover:scale-[1.02] active:scale-[0.98] border"
-                    style={{
-                      background: 'rgba(0,0,0,0.3)',
-                      borderColor: 'var(--border-dim)',
-                      color: 'var(--text-primary)',
-                    }}
+                    className="eco-action-btn w-full py-3 px-4 font-bold text-xs flex items-center gap-3"
                   >
-                    <FileDown size={16} style={{ color: '#f87171' }} />
+                    <FileDown size={16} className="eco-action-icon" style={{ color: '#f87171' }} />
                     <span>Télécharger PDF</span>
                   </button>
 
@@ -2071,28 +2449,19 @@ ${nonCompeteArticle}
                   <button
                     onClick={generateWord}
                     disabled={isGenerating}
-                    className="w-full py-3 px-4 rounded-xl font-bold text-xs flex items-center gap-3 transition-all hover:scale-[1.02] active:scale-[0.98] border"
-                    style={{
-                      background: 'rgba(0,0,0,0.3)',
-                      borderColor: 'var(--border-dim)',
-                      color: 'var(--text-primary)',
-                    }}
+                    className="eco-action-btn w-full py-3 px-4 font-bold text-xs flex items-center gap-3"
                   >
-                    <FileText size={16} style={{ color: '#60a5fa' }} />
-                    <span>Télécharger Word</span>
+                    <FileText size={16} className="eco-action-icon" style={{ color: '#60a5fa' }} />
+                    <span>Télécharger Word (.docx)</span>
                   </button>
 
                   {/* Share */}
                   <button
                     onClick={shareContract}
-                    className="w-full py-3 px-4 rounded-xl font-bold text-xs flex items-center gap-3 transition-all hover:scale-[1.02] active:scale-[0.98] border"
-                    style={{
-                      background: 'rgba(16,185,129,0.06)',
-                      borderColor: 'rgba(16,185,129,0.2)',
-                      color: 'var(--emerald-light)',
-                    }}
+                    className="eco-action-btn w-full py-3 px-4 font-bold text-xs flex items-center gap-3"
+                    style={{ borderColor: 'rgba(16,185,129,0.25)' }}
                   >
-                    <Share2 size={16} />
+                    <Share2 size={16} className="eco-action-icon" style={{ color: 'var(--emerald-light)' }} />
                     <span>Partager</span>
                   </button>
                 </div>
@@ -2101,14 +2470,9 @@ ${nonCompeteArticle}
               {/* Aperçu toggle */}
               <button
                 onClick={() => setShowPreview(!showPreview)}
-                className="w-full py-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 border transition-all hover:scale-[1.02]"
-                style={{
-                  borderColor: 'var(--border-dim)',
-                  color: 'var(--text-secondary)',
-                  background: 'transparent',
-                }}
+                className="eco-action-btn w-full py-3 px-4 font-bold text-xs flex items-center justify-center gap-2"
               >
-                {showPreview ? <EyeOff size={14} /> : <Eye size={14} />}
+                {showPreview ? <EyeOff size={14} className="eco-action-icon" /> : <Eye size={14} className="eco-action-icon" />}
                 <span>{showPreview ? 'Fermer Aperçu' : 'Aperçu du Contrat'}</span>
               </button>
 
