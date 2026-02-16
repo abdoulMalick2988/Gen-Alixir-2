@@ -70,6 +70,8 @@ import {
   convertMillimetersToTwip,
 } from 'docx';
 import { saveAs } from 'file-saver';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 // ─────────────────────────────────────────────
 // Supabase Client (lazy — avoids crash during SSR prerender)
@@ -260,6 +262,63 @@ const STEPS: { id: StepId; label: string; icon: React.ElementType; gradient: str
 ];
 
 // ─────────────────────────────────────────────
+// Utilitaire : Nombre → Lettres françaises
+// ─────────────────────────────────────────────
+
+function numberToFrenchWords(n: number): string {
+  if (n === 0) return 'Zéro';
+  const units = ['', 'Un', 'Deux', 'Trois', 'Quatre', 'Cinq', 'Six', 'Sept', 'Huit', 'Neuf',
+    'Dix', 'Onze', 'Douze', 'Treize', 'Quatorze', 'Quinze', 'Seize', 'Dix-Sept', 'Dix-Huit', 'Dix-Neuf'];
+  const tens = ['', '', 'Vingt', 'Trente', 'Quarante', 'Cinquante', 'Soixante', 'Soixante', 'Quatre-Vingt', 'Quatre-Vingt'];
+
+  function chunk(num: number): string {
+    if (num === 0) return '';
+    if (num < 20) return units[num];
+    if (num < 70) {
+      const t = Math.floor(num / 10);
+      const u = num % 10;
+      if (u === 1 && t !== 8) return `${tens[t]} et Un`;
+      return u === 0 ? tens[t] : `${tens[t]}-${units[u]}`;
+    }
+    if (num < 80) {
+      const u = num - 60;
+      if (u === 1) return 'Soixante et Onze';
+      return `Soixante-${units[u]}`;
+    }
+    if (num < 100) {
+      const u = num - 80;
+      if (u === 0) return 'Quatre-Vingts';
+      return `Quatre-Vingt-${units[u]}`;
+    }
+    if (num < 200) {
+      const rest = num - 100;
+      return rest === 0 ? 'Cent' : `Cent ${chunk(rest)}`;
+    }
+    if (num < 1000) {
+      const h = Math.floor(num / 100);
+      const rest = num % 100;
+      const prefix = `${units[h]} Cent`;
+      return rest === 0 ? `${prefix}s` : `${prefix} ${chunk(rest)}`;
+    }
+    return '';
+  }
+
+  const parts: string[] = [];
+  const billions = Math.floor(n / 1000000000);
+  const millions = Math.floor((n % 1000000000) / 1000000);
+  const thousands = Math.floor((n % 1000000) / 1000);
+  const remainder = n % 1000;
+
+  if (billions > 0) parts.push(`${chunk(billions)} Milliard${billions > 1 ? 's' : ''}`);
+  if (millions > 0) parts.push(`${chunk(millions)} Million${millions > 1 ? 's' : ''}`);
+  if (thousands === 1) parts.push('Mille');
+  else if (thousands > 1) parts.push(`${chunk(thousands)} Mille`);
+  if (remainder > 0) parts.push(chunk(remainder));
+
+  return parts.join(' ').replace(/\s+/g, ' ').trim();
+}
+
+// ─────────────────────────────────────────────
 // Animations CSS (injected inline)
 // ─────────────────────────────────────────────
 
@@ -370,8 +429,17 @@ const GLOBAL_STYLES = `
 }
 .mini-card.ripple-active::after { opacity: 1; }
 .mini-card-selected {
-  border-color: var(--emerald-neon) !important;
-  box-shadow: 0 0 25px rgba(0, 255, 136, 0.2), 0 0 60px rgba(0, 255, 136, 0.06), inset 0 0 30px rgba(0, 255, 136, 0.04);
+  border-color: #c9a84c !important;
+  background: linear-gradient(135deg, rgba(201,168,76,0.18), rgba(180,140,50,0.08)) !important;
+  box-shadow: 0 0 25px rgba(201,168,76,0.3), 0 0 60px rgba(201,168,76,0.08), inset 0 0 30px rgba(201,168,76,0.06);
+}
+.mini-card-selected::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(218,190,100,0.12) 0%, transparent 50%, rgba(201,168,76,0.08) 100%);
+  pointer-events: none;
 }
 
 /* Pulse glow on emerald elements */
@@ -1016,6 +1084,12 @@ export default function ContractArchitectPage() {
         ? ` et prendra fin le ${new Date(data.endDate).toLocaleDateString('fr-FR')}`
         : '';
 
+    const salaryNum = parseInt(data.salary.replace(/\s/g, ''), 10);
+    const salaryWords = !isNaN(salaryNum) ? numberToFrenchWords(salaryNum) : '';
+    const salaryDisplay = salaryWords
+      ? `<strong>${salaryWords} (${data.salary}) ${config.currency}</strong>`
+      : `<strong>${data.salary} ${config.currency}</strong>`;
+
     const formatDate = (d: string) => {
       try {
         return new Date(d).toLocaleDateString('fr-FR');
@@ -1128,7 +1202,7 @@ demeurant à <strong>${data.empAddr}</strong>, joignable au <strong>${data.empPh
 <div class="article">
   <h3>ARTICLE 3 : RÉMUNÉRATION</h3>
   <p>En contrepartie de l'exécution de ses fonctions, le Salarié percevra une rémunération mensuelle brute de
-  <strong>${data.salary} ${config.currency}</strong>.
+  ${salaryDisplay}.
   <br/><br/>Cette rémunération est versée mensuellement par virement bancaire, sous réserve des retenues légales et conventionnelles applicables.${bonusClause}
   <br/><br/>${config.articles.workDuration} la durée hebdomadaire de travail est fixée à <strong>${data.hours} heures</strong>.</p>
 </div>
@@ -1206,41 +1280,60 @@ ${nonCompeteArticle}
 </body></html>`;
   }, [data, config, signatures]);
 
-  // ── Génération PDF via html rendu en iframe + impression ──
+  // ── Génération PDF via jsPDF + html2canvas ──
   const generatePDF = useCallback(async () => {
     setIsGenerating(true);
     try {
-      const html = generateContractHTML();
-      const blob = new Blob([html], { type: 'text/html; charset=utf-8' });
-      const url = URL.createObjectURL(blob);
+      const htmlContent = generateContractHTML();
 
-      // Créer un iframe invisible pour impression
-      const iframe = document.createElement('iframe');
-      iframe.style.position = 'fixed';
-      iframe.style.top = '-10000px';
-      iframe.style.left = '-10000px';
-      iframe.style.width = '210mm';
-      iframe.style.height = '297mm';
-      document.body.appendChild(iframe);
+      // Créer un conteneur hors-écran pour le rendu
+      const container = document.createElement('div');
+      container.style.position = 'fixed';
+      container.style.top = '-10000px';
+      container.style.left = '-10000px';
+      container.style.width = '210mm';
+      container.style.background = '#ffffff';
+      container.innerHTML = htmlContent;
+      document.body.appendChild(container);
 
-      iframe.src = url;
-      await new Promise<void>((resolve) => {
-        iframe.onload = () => resolve();
+      // Attendre le chargement des polices / images
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      const canvas = await html2canvas(container, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff',
+        width: container.scrollWidth,
+        height: container.scrollHeight,
       });
 
-      // Alternative: télécharger directement comme HTML imprimable
-      const downloadLink = document.createElement('a');
-      downloadLink.href = url;
-      downloadLink.download = `CONTRAT_${data.empName.replace(/\s+/g, '_')}_${Date.now()}.html`;
-      downloadLink.click();
+      document.body.removeChild(container);
 
-      // Cleanup
-      setTimeout(() => {
-        document.body.removeChild(iframe);
-        URL.revokeObjectURL(url);
-      }, 2000);
+      const imgData = canvas.toDataURL('image/jpeg', 0.95);
+      const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const imgWidth = pdfWidth;
+      const imgHeight = (canvas.height * pdfWidth) / canvas.width;
 
-      showNotif('Document PDF prêt — ouvrez et imprimez en PDF', 'success');
+      let heightLeft = imgHeight;
+      let position = 0;
+
+      // Première page
+      pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pdfHeight;
+
+      // Pages suivantes si le contenu dépasse une page
+      while (heightLeft > 0) {
+        position -= pdfHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pdfHeight;
+      }
+
+      pdf.save(`CONTRAT_${data.empName.replace(/\s+/g, '_')}_${Date.now()}.pdf`);
+      showNotif('Document PDF téléchargé avec succès', 'success');
     } catch (err) {
       console.error('Erreur PDF:', err);
       showNotif('Erreur génération PDF', 'error');
@@ -1290,6 +1383,9 @@ ${nonCompeteArticle}
         data.jobType === 'CDD' && data.endDate
           ? ` et prendra fin le ${new Date(data.endDate).toLocaleDateString('fr-FR')}`
           : '';
+
+      const wordSalaryNum = parseInt(data.salary.replace(/\s/g, ''), 10);
+      const wordSalaryWords = !isNaN(wordSalaryNum) ? numberToFrenchWords(wordSalaryNum) : '';
 
       const formatDate = (d: string) => {
         try { return new Date(d).toLocaleDateString('fr-FR'); } catch { return d; }
@@ -1452,9 +1548,12 @@ ${nonCompeteArticle}
 
       // Article 3
       children.push(articleHeading('ARTICLE 3 : R\u00C9MUN\u00C9RATION'));
+      const wordSalaryLine = wordSalaryWords
+        ? `${wordSalaryWords} (${data.salary}) ${config.currency}`
+        : `${data.salary} ${config.currency}`;
       children.push(articleBody([
         normalRun("En contrepartie de l'ex\u00E9cution de ses fonctions, le Salari\u00E9 percevra une r\u00E9mun\u00E9ration mensuelle brute de "),
-        boldRun(`${data.salary} ${config.currency}`), normalRun('.'),
+        boldRun(wordSalaryLine), normalRun('.'),
       ]));
       children.push(articleBody([normalRun('Cette r\u00E9mun\u00E9ration est vers\u00E9e mensuellement par virement bancaire, sous r\u00E9serve des retenues l\u00E9gales et conventionnelles applicables.')]));
       if (bonusClause) { children.push(articleBody([normalRun(bonusClause)])); }
@@ -1562,9 +1661,13 @@ ${nonCompeteArticle}
         return new TableCell({ borders: noBorders, width: { size: 50, type: WidthType.PERCENTAGE }, children: cellChildren });
       };
 
+      const pageContentWidthTwip = convertMillimetersToTwip(174);
+      const halfWidthTwip = Math.floor(pageContentWidthTwip / 2);
+
       const sigTable = new Table({
-        width: { size: 100, type: WidthType.PERCENTAGE },
+        width: { size: pageContentWidthTwip, type: WidthType.DXA },
         layout: TableLayoutType.FIXED,
+        columnWidths: [halfWidthTwip, halfWidthTwip],
         rows: [
           new TableRow({
             children: [
