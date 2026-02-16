@@ -330,6 +330,10 @@ const GLOBAL_STYLES = `
   --emerald-deep: #059669;
   --emerald-light: #34d399;
   --emerald-neon: #00ff88;
+  --gold: #c9a84c;
+  --gold-light: #dab86c;
+  --gold-shimmer: #f5e6b8;
+  --gold-deep: #a08030;
   --bg-primary: #030a06;
   --bg-card: rgba(4, 20, 12, 0.85);
   --bg-card-hover: rgba(0, 255, 136, 0.06);
@@ -449,6 +453,56 @@ const GLOBAL_STYLES = `
 }
 .emerald-pulse { animation: emeraldPulse 3s ease-in-out infinite; }
 
+/* Gold shimmer animation */
+@keyframes goldShimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+.gold-shimmer-text {
+  background: linear-gradient(90deg, var(--gold-deep), var(--gold-light), var(--gold-shimmer), var(--gold-light), var(--gold-deep));
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: goldShimmer 4s linear infinite;
+}
+@keyframes goldPulse {
+  0%, 100% { box-shadow: 0 0 8px rgba(201, 168, 76, 0.15); }
+  50% { box-shadow: 0 0 20px rgba(201, 168, 76, 0.35); }
+}
+.gold-pulse { animation: goldPulse 3s ease-in-out infinite; }
+
+/* Gold accent line */
+.gold-line {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  box-shadow: 0 0 6px rgba(201, 168, 76, 0.25);
+}
+
+/* Section card with gold accent top border */
+.eco-section-card {
+  position: relative;
+  overflow: hidden;
+}
+.eco-section-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--gold), var(--emerald-neon), var(--gold), transparent);
+  opacity: 0.6;
+}
+
+/* Reset confirmation modal overlay */
+@keyframes modalFadeIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+.modal-fade-in {
+  animation: modalFadeIn 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
 /* Input focus glow — enhanced */
 .eco-input {
   background: rgba(0, 10, 5, 0.6);
@@ -464,8 +518,8 @@ const GLOBAL_STYLES = `
 }
 .eco-input::placeholder { color: rgba(0, 255, 136, 0.2); }
 .eco-input:focus {
-  border-color: var(--emerald-neon);
-  box-shadow: 0 0 0 3px rgba(0, 255, 136, 0.08), 0 0 25px rgba(0, 255, 136, 0.08);
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(201, 168, 76, 0.1), 0 0 20px rgba(201, 168, 76, 0.08), 0 0 40px rgba(0, 255, 136, 0.04);
   background: rgba(0, 20, 10, 0.8);
 }
 
@@ -479,8 +533,8 @@ const GLOBAL_STYLES = `
 }
 .step-connector-active {
   opacity: 1;
-  background: linear-gradient(90deg, transparent, var(--emerald-neon), transparent);
-  box-shadow: 0 0 8px rgba(0,255,136,0.3);
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  box-shadow: 0 0 8px rgba(201,168,76,0.3);
 }
 
 /* Notification slide */
@@ -496,15 +550,17 @@ const GLOBAL_STYLES = `
   100% { background-position: 200% 0; }
 }
 .shimmer-btn {
-  background: linear-gradient(90deg,
-    rgba(0, 255, 136, 0.7) 0%,
-    rgba(52, 211, 153, 1) 50%,
-    rgba(0, 255, 136, 0.7) 100%);
+  background: linear-gradient(135deg,
+    var(--gold-deep) 0%,
+    var(--gold) 25%,
+    var(--gold-shimmer) 50%,
+    var(--gold) 75%,
+    var(--gold-deep) 100%);
   background-size: 200% auto;
 }
 .shimmer-btn:hover {
   animation: shimmer 2s linear infinite;
-  box-shadow: 0 0 30px rgba(0, 255, 136, 0.3), 0 0 60px rgba(0, 255, 136, 0.1);
+  box-shadow: 0 0 30px rgba(201, 168, 76, 0.4), 0 0 60px rgba(201, 168, 76, 0.15);
 }
 
 /* ═══════════════════════════════════════════ */
@@ -559,23 +615,23 @@ const GLOBAL_STYLES = `
 /* ═══════════════════════════════════════════ */
 .glow-line {
   height: 1px;
-  background: linear-gradient(90deg, transparent, var(--emerald-neon), transparent);
-  box-shadow: 0 0 8px rgba(0,255,136,0.3);
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  box-shadow: 0 0 6px rgba(201,168,76,0.25);
 }
 
 /* ═══════════════════════════════════════════ */
 /* NAV BUTTON STYLES                          */
 /* ═══════════════════════════════════════════ */
 .nav-btn-primary {
-  background: linear-gradient(135deg, var(--emerald-neon), var(--emerald-deep));
-  color: #000;
+  background: linear-gradient(135deg, var(--gold-light), var(--gold), var(--gold-deep));
+  color: #0a0a0a;
   border: none;
   font-weight: 800;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 25px rgba(0, 255, 136, 0.3);
+  box-shadow: 0 4px 25px rgba(201, 168, 76, 0.3);
 }
 .nav-btn-primary:hover {
-  box-shadow: 0 4px 35px rgba(0, 255, 136, 0.5), 0 0 60px rgba(0, 255, 136, 0.15);
+  box-shadow: 0 4px 35px rgba(201, 168, 76, 0.5), 0 0 60px rgba(201, 168, 76, 0.15);
   transform: scale(1.05);
 }
 .nav-btn-primary:active { transform: scale(0.95); }
@@ -1286,14 +1342,20 @@ ${nonCompeteArticle}
     try {
       const htmlContent = generateContractHTML();
 
-      // Créer un conteneur hors-écran pour le rendu
+      // Créer un conteneur hors-écran pour le rendu avec marges professionnelles
       const container = document.createElement('div');
       container.style.position = 'fixed';
       container.style.top = '-10000px';
       container.style.left = '-10000px';
       container.style.width = '210mm';
+      container.style.padding = '20mm 18mm';
+      container.style.boxSizing = 'border-box';
       container.style.background = '#ffffff';
-      container.innerHTML = htmlContent;
+      // Extraire uniquement le contenu du body, pas le HTML/HEAD complet
+      const bodyContent = htmlContent
+        .replace(/<!DOCTYPE html>[\s\S]*?<body[^>]*>/, '')
+        .replace(/<\/body>[\s\S]*<\/html>/, '');
+      container.innerHTML = bodyContent;
       document.body.appendChild(container);
 
       // Attendre le chargement des polices / images
@@ -1822,7 +1884,9 @@ ${nonCompeteArticle}
     setCurrentStep('company');
     setShowPreview(false);
     setIsSaved(false);
-    setShowResetConfirm(false); // On ferme la modale
+    setShowPostSaveActions(false);
+    setValidationErrors([]);
+    setShowResetConfirm(false);
   };
             
 // ─── FIN PARTIE 2 ───────────────────────────
@@ -1891,10 +1955,10 @@ ${nonCompeteArticle}
 
         {/* ── HEADER ── */}
         <header className="mb-8 relative z-10">
-          <div className="eco-glass rounded-2xl p-6 relative overflow-hidden">
-            {/* Decorative hex corner accents */}
+          <div className="eco-glass rounded-2xl p-6 relative overflow-hidden eco-section-card">
+            {/* Decorative corner accents — gold + emerald */}
             <div className="absolute top-0 right-0 w-48 h-48 pointer-events-none" style={{
-              background: 'radial-gradient(circle at top right, rgba(0,255,136,0.08), transparent 60%)',
+              background: 'radial-gradient(circle at top right, rgba(201,168,76,0.1), rgba(0,255,136,0.04) 40%, transparent 60%)',
             }} />
             <div className="absolute bottom-0 left-0 w-32 h-32 pointer-events-none" style={{
               background: 'radial-gradient(circle at bottom left, rgba(0,255,136,0.04), transparent 60%)',
@@ -1906,30 +1970,24 @@ ${nonCompeteArticle}
                   onClick={() => router.back()}
                   className="p-3 rounded-xl border transition-all hover:scale-105 active:scale-95"
                   style={{
-                    background: 'rgba(0, 255, 136, 0.06)',
-                    borderColor: 'rgba(0, 255, 136, 0.2)',
+                    background: 'rgba(201, 168, 76, 0.06)',
+                    borderColor: 'rgba(201, 168, 76, 0.25)',
                   }}
                 >
-                  <ArrowLeft size={18} style={{ color: 'var(--emerald-neon)' }} />
+                  <ArrowLeft size={18} style={{ color: 'var(--gold-light)' }} />
                 </button>
                 <div>
                   <div className="flex items-center gap-2.5 mb-1">
-                    <div className="hex-badge w-8 h-9" style={{ background: 'linear-gradient(135deg, var(--emerald-neon), var(--emerald-deep))' }}>
-                      <Hexagon size={16} style={{ color: '#000' }} />
+                    <div className="hex-badge w-8 h-9" style={{ background: 'linear-gradient(135deg, var(--gold-light), var(--gold-deep))' }}>
+                      <Hexagon size={16} style={{ color: '#0a0a0a' }} />
                     </div>
                     <h1
-                      className="text-xl sm:text-2xl font-black uppercase tracking-tight"
-                      style={{
-                        background: 'linear-gradient(135deg, #fff, var(--emerald-neon))',
-                        WebkitBackgroundClip: 'text',
-                        WebkitTextFillColor: 'transparent',
-                        filter: 'drop-shadow(0 0 12px rgba(0,255,136,0.3))',
-                      }}
+                      className="text-xl sm:text-2xl font-black uppercase tracking-tight gold-shimmer-text"
                     >
                       CONTRACT ARCHITECT
                     </h1>
                   </div>
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.25em]" style={{ color: 'rgba(0,255,136,0.5)' }}>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.25em]" style={{ color: 'rgba(201,168,76,0.6)' }}>
                     ECODREUM Engine L1
                   </p>
                 </div>
@@ -1941,9 +1999,9 @@ ${nonCompeteArticle}
                   onClick={handleNewContract}
                   className="flex items-center gap-2 px-4 py-2.5 rounded-xl border font-bold text-xs uppercase tracking-wider transition-all hover:scale-105 active:scale-95 group"
                   style={{
-                    background: 'rgba(0, 255, 136, 0.06)',
-                    borderColor: 'rgba(0, 255, 136, 0.25)',
-                    color: 'var(--emerald-neon)',
+                    background: 'linear-gradient(135deg, rgba(201,168,76,0.1), rgba(201,168,76,0.03))',
+                    borderColor: 'rgba(201, 168, 76, 0.3)',
+                    color: 'var(--gold-light)',
                   }}
                 >
                   <Sparkles size={14} className="group-hover:rotate-12 transition-transform" />
@@ -1964,7 +2022,7 @@ ${nonCompeteArticle}
                   <span>Archives</span>
                   <span
                     className="px-2 py-0.5 rounded-full text-[10px] font-black"
-                    style={{ background: 'rgba(0, 255, 136, 0.15)', color: 'var(--emerald-neon)' }}
+                    style={{ background: 'rgba(201, 168, 76, 0.15)', color: 'var(--gold-light)' }}
                   >
                     {savedContracts.length}
                   </span>
@@ -2061,7 +2119,7 @@ ${nonCompeteArticle}
 
         {/* ── STEPPER — 3 étapes ── */}
         <div className="mb-8 relative z-10">
-          <div className="eco-glass rounded-2xl p-5">
+          <div className="eco-glass rounded-2xl p-5 eco-section-card">
             {/* Steps Row */}
             <div className="flex items-center justify-between gap-2 mb-4">
               {STEPS.map((step, idx) => {
@@ -2088,12 +2146,14 @@ ${nonCompeteArticle}
                         className={`hex-badge w-10 h-12 flex-shrink-0 transition-all`}
                         style={{
                           background: isComplete
-                            ? 'linear-gradient(135deg, var(--emerald-neon), var(--emerald-deep))'
+                            ? 'linear-gradient(135deg, var(--gold-light), var(--gold), var(--gold-deep))'
                             : isActive
                             ? 'rgba(0, 255, 136, 0.15)'
                             : 'rgba(255,255,255,0.04)',
-                          boxShadow: isActive ? '0 0 20px rgba(0,255,136,0.2)' : 'none',
-                          filter: isComplete ? 'drop-shadow(0 0 6px rgba(0,255,136,0.4))' : 'none',
+                          boxShadow: isComplete
+                            ? '0 0 20px rgba(201,168,76,0.3)'
+                            : isActive ? '0 0 20px rgba(0,255,136,0.2)' : 'none',
+                          filter: isComplete ? 'drop-shadow(0 0 6px rgba(201,168,76,0.4))' : 'none',
                         }}
                       >
                         {isComplete ? (
@@ -2133,12 +2193,12 @@ ${nonCompeteArticle}
                   className="h-full rounded-full transition-all duration-700"
                   style={{
                     width: `${totalProgress}%`,
-                    background: 'linear-gradient(90deg, var(--emerald-deep), var(--emerald-neon), var(--emerald-light))',
-                    boxShadow: '0 0 15px rgba(0,255,136,0.5), 0 0 30px rgba(0,255,136,0.2)',
+                    background: 'linear-gradient(90deg, var(--emerald-deep), var(--emerald-neon), var(--gold), var(--gold-light))',
+                    boxShadow: '0 0 15px rgba(201,168,76,0.4), 0 0 30px rgba(0,255,136,0.2)',
                   }}
                 />
               </div>
-              <span className="text-sm font-black" style={{ color: 'var(--emerald-glow)' }}>
+              <span className="text-sm font-black" style={{ color: 'var(--gold-light)' }}>
                 {totalProgress}%
               </span>
             </div>
@@ -2176,21 +2236,21 @@ ${nonCompeteArticle}
               {/* SECTION ENTREPRISE                 */}
               {/* ═══════════════════════════════════ */}
               {currentStep === 'company' && (
-                <div className="eco-glass rounded-2xl p-6 shutter-enter">
+                <div className="eco-glass rounded-2xl p-6 shutter-enter eco-section-card">
                   {/* Section Header */}
-                  <div className="flex items-center gap-3 pb-5 mb-6" style={{ borderBottom: '1px solid var(--border-dim)' }}>
+                  <div className="flex items-center gap-3 pb-5 mb-6" style={{ borderBottom: '1px solid rgba(201,168,76,0.15)' }}>
                     <div
                       className="hex-badge w-12 h-14 flex-shrink-0"
                       style={{
-                        background: 'linear-gradient(135deg, var(--emerald-neon), var(--emerald-deep))',
-                        boxShadow: '0 4px 20px rgba(0,255,136,0.3)',
-                        filter: 'drop-shadow(0 0 8px rgba(0,255,136,0.3))',
+                        background: 'linear-gradient(135deg, var(--gold-light), var(--gold-deep))',
+                        boxShadow: '0 4px 20px rgba(201,168,76,0.3)',
+                        filter: 'drop-shadow(0 0 8px rgba(201,168,76,0.3))',
                       }}
                     >
-                      <Building size={20} className="text-white" />
+                      <Building size={20} style={{ color: '#0a0a0a' }} />
                     </div>
                     <div>
-                      <h2 className="text-lg font-black uppercase" style={{ color: 'var(--emerald-neon)' }}>
+                      <h2 className="text-lg font-black uppercase" style={{ color: 'var(--gold-light)' }}>
                         Entreprise
                       </h2>
                       <p className="text-[10px] font-semibold" style={{ color: 'var(--text-secondary)' }}>
@@ -2307,20 +2367,20 @@ ${nonCompeteArticle}
               {/* SECTION COLLABORATEUR               */}
               {/* ═══════════════════════════════════ */}
               {currentStep === 'employee' && (
-                <div className="eco-glass rounded-2xl p-6 shutter-enter">
-                  <div className="flex items-center gap-3 pb-5 mb-6" style={{ borderBottom: '1px solid var(--border-dim)' }}>
+                <div className="eco-glass rounded-2xl p-6 shutter-enter eco-section-card">
+                  <div className="flex items-center gap-3 pb-5 mb-6" style={{ borderBottom: '1px solid rgba(201,168,76,0.15)' }}>
                     <div
                       className="hex-badge w-12 h-14 flex-shrink-0"
                       style={{
-                        background: 'linear-gradient(135deg, var(--emerald-neon), var(--emerald-deep))',
-                        boxShadow: '0 4px 20px rgba(0,255,136,0.3)',
-                        filter: 'drop-shadow(0 0 8px rgba(0,255,136,0.3))',
+                        background: 'linear-gradient(135deg, var(--gold-light), var(--gold-deep))',
+                        boxShadow: '0 4px 20px rgba(201,168,76,0.3)',
+                        filter: 'drop-shadow(0 0 8px rgba(201,168,76,0.3))',
                       }}
                     >
-                      <User size={20} className="text-white" />
+                      <User size={20} style={{ color: '#0a0a0a' }} />
                     </div>
                     <div>
-                      <h2 className="text-lg font-black uppercase" style={{ color: 'var(--emerald-neon)' }}>
+                      <h2 className="text-lg font-black uppercase" style={{ color: 'var(--gold-light)' }}>
                         Collaborateur
                       </h2>
                       <p className="text-[10px] font-semibold" style={{ color: 'var(--text-secondary)' }}>
@@ -2385,20 +2445,20 @@ ${nonCompeteArticle}
               {/* SECTION CONTRAT                     */}
               {/* ═══════════════════════════════════ */}
               {currentStep === 'contract' && (
-                <div className="eco-glass rounded-2xl p-6 shutter-enter">
-                  <div className="flex items-center gap-3 pb-5 mb-6" style={{ borderBottom: '1px solid var(--border-dim)' }}>
+                <div className="eco-glass rounded-2xl p-6 shutter-enter eco-section-card">
+                  <div className="flex items-center gap-3 pb-5 mb-6" style={{ borderBottom: '1px solid rgba(201,168,76,0.15)' }}>
                     <div
                       className="hex-badge w-12 h-14 flex-shrink-0"
                       style={{
-                        background: 'linear-gradient(135deg, var(--emerald-neon), var(--emerald-deep))',
-                        boxShadow: '0 4px 20px rgba(0,255,136,0.3)',
-                        filter: 'drop-shadow(0 0 8px rgba(0,255,136,0.3))',
+                        background: 'linear-gradient(135deg, var(--gold-light), var(--gold-deep))',
+                        boxShadow: '0 4px 20px rgba(201,168,76,0.3)',
+                        filter: 'drop-shadow(0 0 8px rgba(201,168,76,0.3))',
                       }}
                     >
-                      <Briefcase size={20} className="text-white" />
+                      <Briefcase size={20} style={{ color: '#0a0a0a' }} />
                     </div>
                     <div>
-                      <h2 className="text-lg font-black uppercase" style={{ color: 'var(--emerald-neon)' }}>
+                      <h2 className="text-lg font-black uppercase" style={{ color: 'var(--gold-light)' }}>
                         Contrat
                       </h2>
                       <p className="text-[10px] font-semibold" style={{ color: 'var(--text-secondary)' }}>
@@ -2502,10 +2562,6 @@ ${nonCompeteArticle}
                       <ChevronLeft size={16} />
                       <span>Collaborateur</span>
                     </button>
-                    <button onClick={handleNewContract} className="nav-btn-primary flex items-center gap-2 px-6 py-3 rounded-xl text-sm ml-3 group">
-                      <Sparkles size={16} className="group-hover:rotate-12 transition-transform" />
-                      <span>Nouveau</span>
-                    </button>
                   </div>
                 </div>
               )}
@@ -2516,11 +2572,11 @@ ${nonCompeteArticle}
           {/* RIGHT: ACTIONS PANEL                    */}
           {/* ═══════════════════════════════════════ */}
           <div className="lg:col-span-4">
-            <div className="eco-glass rounded-2xl p-5 lg:sticky lg:top-6 space-y-5">
+            <div className="eco-glass rounded-2xl p-5 lg:sticky lg:top-6 space-y-5 eco-section-card">
               {/* Signatures */}
               {data.documentMode === 'ELECTRONIC' && (
                 <div>
-                  <p className="text-[10px] font-bold uppercase tracking-widest mb-3 flex items-center gap-2" style={{ color: 'var(--emerald-glow)' }}>
+                  <p className="text-[10px] font-bold uppercase tracking-widest mb-3 flex items-center gap-2" style={{ color: 'var(--gold-light)' }}>
                     <PenTool size={12} />
                     Signatures
                   </p>
@@ -2559,8 +2615,8 @@ ${nonCompeteArticle}
                   disabled={isGenerating}
                   className="shimmer-btn w-full py-4 rounded-xl font-black uppercase text-sm flex items-center justify-center gap-2 transition-all hover:scale-105 active:scale-95 disabled:opacity-40 disabled:hover:scale-100"
                   style={{
-                    color: '#000',
-                    boxShadow: '0 4px 24px rgba(0,255,136,0.35)',
+                    color: '#0a0a0a',
+                    boxShadow: '0 4px 24px rgba(201,168,76,0.35)',
                   }}
                 >
                   {isGenerating ? (
@@ -2585,7 +2641,7 @@ ${nonCompeteArticle}
               {/* ── POST-SAVE ACTIONS ── */}
               {showPostSaveActions && (
                 <div className="space-y-2.5 shutter-enter">
-                  <p className="text-[10px] font-bold uppercase tracking-widest flex items-center gap-1.5" style={{ color: 'var(--emerald-glow)' }}>
+                  <p className="text-[10px] font-bold uppercase tracking-widest flex items-center gap-1.5" style={{ color: 'var(--gold-light)' }}>
                     <Hexagon size={10} />
                     Actions Finales
                   </p>
@@ -2634,9 +2690,9 @@ ${nonCompeteArticle}
               {/* Récapitulatif */}
               <div
                 className="rounded-xl p-4 border"
-                style={{ background: 'rgba(0,255,136,0.03)', borderColor: 'rgba(0,255,136,0.12)' }}
+                style={{ background: 'rgba(201,168,76,0.03)', borderColor: 'rgba(201,168,76,0.15)' }}
               >
-                <div className="flex items-center gap-2 mb-3" style={{ color: 'var(--emerald-glow)' }}>
+                <div className="flex items-center gap-2 mb-3" style={{ color: 'var(--gold-light)' }}>
                   <Scale size={13} />
                   <span className="text-[10px] font-black uppercase">Récapitulatif</span>
                 </div>
@@ -2843,6 +2899,77 @@ ${nonCompeteArticle}
       )}
 
       {/* ═══════════════════════════════════════ */}
+      {/* MODAL RESET CONFIRMATION                */}
+      {/* ═══════════════════════════════════════ */}
+      {showResetConfirm && (
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
+          style={{ background: 'rgba(0,0,0,0.92)', backdropFilter: 'blur(12px)' }}
+        >
+          <div className="eco-glass rounded-2xl p-8 max-w-md w-full modal-fade-in eco-section-card">
+            {/* Gold decorative corner */}
+            <div className="absolute top-0 right-0 w-32 h-32 pointer-events-none" style={{
+              background: 'radial-gradient(circle at top right, rgba(201,168,76,0.12), transparent 60%)',
+            }} />
+
+            <div className="text-center mb-6 relative z-10">
+              <div
+                className="w-16 h-16 rounded-2xl mx-auto mb-4 flex items-center justify-center gold-pulse"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(201,168,76,0.2), rgba(201,168,76,0.05))',
+                  border: '1px solid rgba(201,168,76,0.3)',
+                }}
+              >
+                <AlertTriangle size={28} style={{ color: 'var(--gold-light)' }} />
+              </div>
+              <h3
+                className="text-xl font-black uppercase mb-2"
+                style={{ color: 'var(--gold-light)' }}
+              >
+                Nouveau Contrat
+              </h3>
+              <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+                Toutes les données du formulaire actuel seront effacées.
+                <br />
+                <span className="font-bold" style={{ color: 'var(--gold)' }}>
+                  Cette action est irréversible.
+                </span>
+              </p>
+            </div>
+
+            <div className="gold-line mb-6" />
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowResetConfirm(false)}
+                className="flex-1 py-3.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 border transition-all hover:scale-[1.02] active:scale-[0.98]"
+                style={{
+                  borderColor: 'var(--border-dim)',
+                  color: 'var(--text-secondary)',
+                  background: 'rgba(0,0,0,0.3)',
+                }}
+              >
+                <X size={16} />
+                Annuler
+              </button>
+              <button
+                onClick={confirmReset}
+                className="flex-1 py-3.5 rounded-xl font-black text-sm flex items-center justify-center gap-2 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                style={{
+                  background: 'linear-gradient(135deg, var(--gold-light), var(--gold), var(--gold-deep))',
+                  color: '#0a0a0a',
+                  boxShadow: '0 4px 20px rgba(201,168,76,0.3)',
+                }}
+              >
+                <Sparkles size={16} />
+                Confirmer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ═══════════════════════════════════════ */}
       {/* MODAL PREVIEW                           */}
       {/* ═══════════════════════════════════════ */}
       {showPreview && (
@@ -2932,11 +3059,11 @@ function EcoInput({
         style={{ color: 'var(--text-secondary)' }}
       >
         {icon && (
-          <span style={{ color: 'var(--emerald-glow)' }}>{icon}</span>
+          <span style={{ color: 'var(--gold)' }}>{icon}</span>
         )}
         {label}
         {required && (
-          <span style={{ color: '#f87171' }}>*</span>
+          <span style={{ color: 'var(--gold-light)' }}>*</span>
         )}
       </label>
 
@@ -2984,7 +3111,7 @@ function SummaryRow({ label, value }: SummaryRowProps) {
   return (
     <div
       className="flex justify-between items-center pb-2"
-      style={{ borderBottom: '1px solid rgba(16, 185, 129, 0.08)' }}
+      style={{ borderBottom: '1px solid rgba(201, 168, 76, 0.08)' }}
     >
       <span
         className="text-[10px] font-bold uppercase"
@@ -2994,7 +3121,7 @@ function SummaryRow({ label, value }: SummaryRowProps) {
       </span>
       <span
         className="text-[11px] font-black text-right max-w-[60%] truncate"
-        style={{ color: 'var(--emerald-light)' }}
+        style={{ color: 'var(--gold-light)' }}
       >
         {value}
       </span>
