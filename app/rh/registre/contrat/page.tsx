@@ -127,6 +127,7 @@ interface FormData {
   cddReason: string;
   hasNonCompete: boolean;
   nonCompeteDuration: string;
+  jobTasks: string;
 }
 
 interface SavedContract {
@@ -249,6 +250,7 @@ const INITIAL_FORM_DATA: FormData = {
   cddReason: '',
   hasNonCompete: false,
   nonCompeteDuration: '',
+  jobTasks: '',
 };
 
 // ─────────────────────────────────────────────
@@ -501,6 +503,33 @@ const GLOBAL_STYLES = `
 }
 .modal-fade-in {
   animation: modalFadeIn 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+/* ═══════════════════════════════════════════ */
+/* CONSTELLATION LOADING ANIMATION            */
+/* ═══════════════════════════════════════════ */
+@keyframes constellationFloat {
+  0%, 100% { transform: translate(0, 0); opacity: 0.3; }
+  25% { transform: translate(10px, -15px); opacity: 1; }
+  50% { transform: translate(-5px, -25px); opacity: 0.6; }
+  75% { transform: translate(15px, -10px); opacity: 1; }
+}
+@keyframes constellationPulse {
+  0%, 100% { r: 2; opacity: 0.4; }
+  50% { r: 4; opacity: 1; }
+}
+@keyframes constellationLine {
+  0% { stroke-dashoffset: 100; opacity: 0; }
+  50% { stroke-dashoffset: 0; opacity: 0.6; }
+  100% { stroke-dashoffset: -100; opacity: 0; }
+}
+@keyframes constellationOrbit {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+@keyframes constellationTextPulse {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
 }
 
 /* Input focus glow — enhanced */
@@ -796,7 +825,7 @@ export default function ContractArchitectPage() {
       const fieldMap: Record<StepId, (keyof FormData)[]> = {
         company: ['compName', 'compType', 'compAddr', 'compRCCM', 'compID', 'bossName', 'bossTitle'],
         employee: ['empName', 'empBirth', 'empBirthPlace', 'empNation', 'empAddr', 'empID', 'empPhone'],
-        contract: ['jobTitle', 'jobDept', 'jobLocation', 'salary', 'startDate', 'trial', 'hours'],
+        contract: ['jobTitle', 'jobTasks', 'jobDept', 'jobLocation', 'salary', 'startDate', 'trial', 'hours'],
       };
       const fields = fieldMap[section];
       const filled = fields.filter((f) => {
@@ -1251,6 +1280,7 @@ demeurant à <strong>${data.empAddr}</strong>, joignable au <strong>${data.empPh
   <p>Le Salarié est recruté en qualité de <strong>${data.jobTitle}</strong> au sein du département <strong>${data.jobDept}</strong>.
   <br/><br/>Le Salarié exercera ses fonctions au sein de l'établissement situé à <strong>${data.jobLocation}</strong>.
   <br/><br/>Le type de contrat conclu est un contrat à durée <strong>${data.jobType === 'CDI' ? 'indéterminée (CDI)' : 'déterminée (CDD)'}</strong>.${cddClause}
+  ${data.jobTasks ? `<br/><br/><strong>Tâches confiées :</strong><br/>${data.jobTasks.replace(/\n/g, '<br/>')}` : ''}
   <br/><br/><strong>Le Salarié s'engage à</strong> exercer ses fonctions avec diligence, compétence et loyauté,
   conformément aux directives de l'Employeur et aux usages de la profession.</p>
 </div>
@@ -1336,64 +1366,99 @@ ${nonCompeteArticle}
 </body></html>`;
   }, [data, config, signatures]);
 
-  // ── Génération PDF via jsPDF + html2canvas ──
+  // ── Utilitaire interne : rend le HTML et retourne un jsPDF (pas de téléchargement) ──
+  const buildPDFDocument = useCallback(async (): Promise<jsPDF> => {
+    const htmlContent = generateContractHTML();
+
+    // Créer un conteneur hors-écran avec marges professionnelles
+    const container = document.createElement('div');
+    container.style.position = 'fixed';
+    container.style.top = '-10000px';
+    container.style.left = '-10000px';
+    container.style.width = '794px'; // ~210mm à 96dpi
+    container.style.background = '#ffffff';
+    container.style.fontFamily = "Georgia, 'Times New Roman', serif";
+    container.style.lineHeight = '1.8';
+    container.style.fontSize = '12px';
+    container.style.color = '#000';
+
+    // Extraire uniquement le contenu du body
+    const bodyContent = htmlContent
+      .replace(/<!DOCTYPE html>[\s\S]*?<body[^>]*>/, '')
+      .replace(/<\/body>[\s\S]*<\/html>/, '');
+
+    // Injecter les styles inline + le contenu
+    container.innerHTML = `<style>
+      strong { font-weight: 700; }
+      h1 { font-size: 22px; text-align: center; text-transform: uppercase; letter-spacing: 3px; margin-bottom: 6px; }
+      h3 { font-size: 13px; font-weight: bold; text-transform: uppercase; margin-bottom: 10px; }
+      .article { margin-bottom: 20px; }
+      .sig-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 40px; }
+      .sig-box { text-align: center; }
+      .footer { margin-top: 50px; padding-top: 16px; border-top: 2px solid #ccc; text-align: center; font-size: 10px; color: #666; }
+    </style>` + bodyContent;
+    document.body.appendChild(container);
+
+    // Attendre le chargement des polices / images
+    await new Promise((resolve) => setTimeout(resolve, 600));
+
+    const canvas = await html2canvas(container, {
+      scale: 2,
+      useCORS: true,
+      logging: false,
+      backgroundColor: '#ffffff',
+      width: container.scrollWidth,
+      height: container.scrollHeight,
+    });
+
+    document.body.removeChild(container);
+
+    // Dimensions PDF A4 avec marges
+    const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    const pageW = pdf.internal.pageSize.getWidth();  // 210
+    const pageH = pdf.internal.pageSize.getHeight(); // 297
+    const marginX = 18;
+    const marginY = 20;
+    const contentW = pageW - marginX * 2;  // 174mm zone imprimable
+    const contentH = pageH - marginY * 2;  // 257mm zone imprimable
+
+    // Dimensions de l'image en mm pour correspondre à la zone imprimable
+    const imgHeightMM = (canvas.height * contentW) / canvas.width;
+
+    // Découper le canvas page par page pour éviter les espaces blancs
+    const pxPerPage = (contentH / imgHeightMM) * canvas.height;
+    const totalPages = Math.ceil(canvas.height / pxPerPage);
+
+    for (let page = 0; page < totalPages; page++) {
+      if (page > 0) pdf.addPage();
+
+      const srcY = page * pxPerPage;
+      const srcH = Math.min(pxPerPage, canvas.height - srcY);
+      const destH = (srcH / pxPerPage) * contentH;
+
+      // Découper le fragment du canvas pour cette page
+      const pageCanvas = document.createElement('canvas');
+      pageCanvas.width = canvas.width;
+      pageCanvas.height = Math.ceil(srcH);
+      const ctx = pageCanvas.getContext('2d');
+      if (ctx) {
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
+        ctx.drawImage(canvas, 0, srcY, canvas.width, srcH, 0, 0, canvas.width, srcH);
+      }
+
+      const pageImg = pageCanvas.toDataURL('image/jpeg', 0.95);
+      pdf.addImage(pageImg, 'JPEG', marginX, marginY, contentW, destH);
+    }
+
+    return pdf;
+  }, [generateContractHTML]);
+
+  // ── Génération PDF (téléchargement) ──
   const generatePDF = useCallback(async () => {
     setIsGenerating(true);
     try {
-      const htmlContent = generateContractHTML();
-
-      // Créer un conteneur hors-écran pour le rendu avec marges professionnelles
-      const container = document.createElement('div');
-      container.style.position = 'fixed';
-      container.style.top = '-10000px';
-      container.style.left = '-10000px';
-      container.style.width = '210mm';
-      container.style.padding = '20mm 18mm';
-      container.style.boxSizing = 'border-box';
-      container.style.background = '#ffffff';
-      // Extraire uniquement le contenu du body, pas le HTML/HEAD complet
-      const bodyContent = htmlContent
-        .replace(/<!DOCTYPE html>[\s\S]*?<body[^>]*>/, '')
-        .replace(/<\/body>[\s\S]*<\/html>/, '');
-      container.innerHTML = bodyContent;
-      document.body.appendChild(container);
-
-      // Attendre le chargement des polices / images
-      await new Promise((resolve) => setTimeout(resolve, 500));
-
-      const canvas = await html2canvas(container, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        backgroundColor: '#ffffff',
-        width: container.scrollWidth,
-        height: container.scrollHeight,
-      });
-
-      document.body.removeChild(container);
-
-      const imgData = canvas.toDataURL('image/jpeg', 0.95);
-      const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
-      const imgWidth = pdfWidth;
-      const imgHeight = (canvas.height * pdfWidth) / canvas.width;
-
-      let heightLeft = imgHeight;
-      let position = 0;
-
-      // Première page
-      pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
-      heightLeft -= pdfHeight;
-
-      // Pages suivantes si le contenu dépasse une page
-      while (heightLeft > 0) {
-        position -= pdfHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
-        heightLeft -= pdfHeight;
-      }
-
+      const pdf = await buildPDFDocument();
       pdf.save(`CONTRAT_${data.empName.replace(/\s+/g, '_')}_${Date.now()}.pdf`);
       showNotif('Document PDF téléchargé avec succès', 'success');
     } catch (err) {
@@ -1402,7 +1467,7 @@ ${nonCompeteArticle}
     } finally {
       setIsGenerating(false);
     }
-  }, [generateContractHTML, data.empName, showNotif]);
+  }, [buildPDFDocument, data.empName, showNotif]);
 
   // ═══════════════════════════════════════════
   // UTILITAIRE : Conversion base64 → Uint8Array
@@ -1603,6 +1668,12 @@ ${nonCompeteArticle}
         normalRun('.'),
       ]));
       if (cddClause) { children.push(articleBody([normalRun(cddClause)])); }
+      if (data.jobTasks) {
+        children.push(articleBody([boldRun('T\u00E2ches confi\u00E9es :')]));
+        data.jobTasks.split('\n').filter(Boolean).forEach((line) => {
+          children.push(articleBody([normalRun(`\u2014 ${line.trim()}`)]));
+        });
+      }
       children.push(articleBody([
         boldRun("Le Salari\u00E9 s'engage \u00E0"),
         normalRun(" exercer ses fonctions avec diligence, comp\u00E9tence et loyaut\u00E9, conform\u00E9ment aux directives de l'Employeur et aux usages de la profession."),
@@ -1797,43 +1868,49 @@ ${nonCompeteArticle}
   // ═══════════════════════════════════════════
 
   const shareContract = useCallback(async () => {
+    setIsGenerating(true);
     try {
-      const html = generateContractHTML();
-      const blob = new Blob([html], { type: 'text/html; charset=utf-8' });
-      const file = new File(
-        [blob],
-        `CONTRAT_${data.empName.replace(/\s+/g, '_')}.html`,
-        { type: 'text/html' }
+      // Générer le PDF d'abord
+      const pdf = await buildPDFDocument();
+      const pdfBlob = pdf.output('blob');
+      const pdfFile = new File(
+        [pdfBlob],
+        `CONTRAT_${data.empName.replace(/\s+/g, '_')}.pdf`,
+        { type: 'application/pdf' }
       );
 
-      if (navigator.share && navigator.canShare?.({ files: [file] })) {
+      if (navigator.share && navigator.canShare?.({ files: [pdfFile] })) {
         await navigator.share({
           title: `Contrat - ${data.empName}`,
           text: `Contrat de travail (${data.jobType}) - ${data.empName}`,
-          files: [file],
+          files: [pdfFile],
         });
         showNotif('Partage effectué', 'success');
       } else if (navigator.share) {
-        // Partage sans fichier (fallback)
         await navigator.share({
           title: `Contrat - ${data.empName}`,
           text: `Contrat de travail (${data.jobType}) pour ${data.empName} chez ${data.compName}`,
         });
         showNotif('Partage effectué', 'success');
       } else {
-        // Copier dans le presse-papier comme dernier recours
-        await navigator.clipboard.writeText(
-          `Contrat de travail (${data.jobType}) pour ${data.empName} chez ${data.compName}`
-        );
-        showNotif('Lien copié dans le presse-papier', 'success');
+        // Fallback : télécharger le PDF
+        const url = URL.createObjectURL(pdfBlob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `CONTRAT_${data.empName.replace(/\s+/g, '_')}.pdf`;
+        a.click();
+        URL.revokeObjectURL(url);
+        showNotif('PDF téléchargé (partage non disponible)', 'success');
       }
     } catch (err) {
       if ((err as Error).name !== 'AbortError') {
         console.error('Erreur partage:', err);
         showNotif('Erreur de partage', 'error');
       }
+    } finally {
+      setIsGenerating(false);
     }
-  }, [generateContractHTML, data, showNotif]);
+  }, [buildPDFDocument, data, showNotif]);
 
   // ═══════════════════════════════════════════
   // ARCHIVES — Charger / Supprimer
@@ -1910,6 +1987,9 @@ ${nonCompeteArticle}
         fontFamily: "'Outfit', 'Space Grotesk', sans-serif",
       }}
     >
+
+      {/* ── CONSTELLATION LOADING OVERLAY ── */}
+      {isGenerating && <ConstellationLoader />}
 
       {/* ── NOTIFICATIONS ── */}
       {notif && (
@@ -2504,6 +2584,8 @@ ${nonCompeteArticle}
                     </div>
 
                     <EcoInput label="Poste" value={data.jobTitle} onChange={(v) => updateData('jobTitle', v)} icon={<Briefcase size={12} />} required />
+
+                    <EcoInput label="Tâches Confiées" value={data.jobTasks} onChange={(v) => updateData('jobTasks', v)} icon={<FileText size={12} />} required multiline placeholder="Décrivez les principales missions et responsabilités confiées au salarié..." />
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <EcoInput label="Département" value={data.jobDept} onChange={(v) => updateData('jobDept', v)} icon={<Building size={12} />} required />
@@ -3125,6 +3207,117 @@ function SummaryRow({ label, value }: SummaryRowProps) {
       >
         {value}
       </span>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════
+// COMPOSANT : ConstellationLoader — Animation de chargement
+// ═══════════════════════════════════════════════
+
+function ConstellationLoader({ message = 'Génération en cours...' }: { message?: string }) {
+  const points = React.useMemo(() => {
+    const pts: { cx: number; cy: number; delay: number; dur: number }[] = [];
+    for (let i = 0; i < 24; i++) {
+      pts.push({
+        cx: 20 + Math.random() * 260,
+        cy: 20 + Math.random() * 180,
+        delay: Math.random() * 3,
+        dur: 2 + Math.random() * 2,
+      });
+    }
+    return pts;
+  }, []);
+
+  const lines = React.useMemo(() => {
+    const l: { x1: number; y1: number; x2: number; y2: number; delay: number }[] = [];
+    for (let i = 0; i < points.length; i++) {
+      for (let j = i + 1; j < points.length; j++) {
+        const dx = points[i].cx - points[j].cx;
+        const dy = points[i].cy - points[j].cy;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < 90) {
+          l.push({
+            x1: points[i].cx, y1: points[i].cy,
+            x2: points[j].cx, y2: points[j].cy,
+            delay: Math.random() * 4,
+          });
+        }
+      }
+    }
+    return l;
+  }, [points]);
+
+  return (
+    <div
+      className="fixed inset-0 z-[99999] flex flex-col items-center justify-center"
+      style={{
+        background: 'rgba(3, 10, 6, 0.96)',
+        backdropFilter: 'blur(20px)',
+      }}
+    >
+      <div style={{ width: 300, height: 220, position: 'relative' }}>
+        <svg width="300" height="220" viewBox="0 0 300 220">
+          {/* Lines */}
+          {lines.map((l, i) => (
+            <line
+              key={`l-${i}`}
+              x1={l.x1} y1={l.y1} x2={l.x2} y2={l.y2}
+              stroke="url(#goldGrad)"
+              strokeWidth="0.6"
+              strokeDasharray="6 4"
+              style={{
+                animation: `constellationLine ${3 + Math.random() * 2}s ease-in-out ${l.delay}s infinite`,
+              }}
+            />
+          ))}
+          {/* Points */}
+          {points.map((p, i) => (
+            <circle
+              key={`p-${i}`}
+              cx={p.cx} cy={p.cy} r="2.5"
+              fill={i % 3 === 0 ? '#c9a84c' : i % 3 === 1 ? '#00ff88' : '#dab86c'}
+              style={{
+                animation: `constellationPulse ${p.dur}s ease-in-out ${p.delay}s infinite`,
+                filter: `drop-shadow(0 0 ${i % 2 === 0 ? 6 : 4}px ${i % 3 === 0 ? 'rgba(201,168,76,0.8)' : 'rgba(0,255,136,0.6)'})`,
+              }}
+            />
+          ))}
+          {/* Orbiting ring */}
+          <circle
+            cx="150" cy="110" r="70"
+            fill="none" stroke="url(#goldGrad)" strokeWidth="0.5"
+            strokeDasharray="4 8"
+            style={{ animation: 'constellationOrbit 12s linear infinite', transformOrigin: '150px 110px' }}
+          />
+          <circle
+            cx="150" cy="110" r="45"
+            fill="none" stroke="url(#emeraldGrad)" strokeWidth="0.4"
+            strokeDasharray="3 6"
+            style={{ animation: 'constellationOrbit 8s linear reverse infinite', transformOrigin: '150px 110px' }}
+          />
+          <defs>
+            <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#a08030" />
+              <stop offset="50%" stopColor="#dab86c" />
+              <stop offset="100%" stopColor="#c9a84c" />
+            </linearGradient>
+            <linearGradient id="emeraldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#059669" />
+              <stop offset="100%" stopColor="#00ff88" />
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+      <p
+        className="text-sm font-bold uppercase tracking-[0.2em] mt-4"
+        style={{ color: 'var(--gold-light)', animation: 'constellationTextPulse 2s ease-in-out infinite' }}
+      >
+        {message}
+      </p>
+      <p className="text-[10px] mt-2" style={{ color: 'var(--text-secondary)' }}>
+        Formatage professionnel du document...
+      </p>
     </div>
   );
 }
