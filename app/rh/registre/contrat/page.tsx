@@ -52,15 +52,7 @@ import {
   Scale,
   Hexagon,
 } from 'lucide-react';
-import { createClient } from '@supabase/supabase-js';
-
-// ─────────────────────────────────────────────
-// Supabase Client
-// ─────────────────────────────────────────────
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL ?? '',
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? ''
-);
+import { supabase } from '@/lib/supabase';
 
 // ─────────────────────────────────────────────
 // Interfaces TypeScript (strict, no `any`)
