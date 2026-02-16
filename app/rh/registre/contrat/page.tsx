@@ -267,22 +267,24 @@ const GLOBAL_STYLES = `
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Rajdhani:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
 
 :root {
-  --emerald-glow: #10b981;
+  --emerald-glow: #00ff88;
   --emerald-deep: #059669;
   --emerald-light: #34d399;
-  --bg-primary: #020a0f;
-  --bg-card: rgba(6, 30, 25, 0.55);
-  --bg-card-hover: rgba(16, 185, 129, 0.07);
-  --border-dim: rgba(16, 185, 129, 0.12);
-  --border-active: rgba(16, 185, 129, 0.4);
+  --emerald-neon: #00ff88;
+  --bg-primary: #030a06;
+  --bg-card: rgba(4, 20, 12, 0.85);
+  --bg-card-hover: rgba(0, 255, 136, 0.06);
+  --border-dim: rgba(0, 255, 136, 0.12);
+  --border-active: rgba(0, 255, 136, 0.5);
   --text-primary: #e2e8f0;
   --text-secondary: rgba(167, 243, 208, 0.7);
 }
 
 /* Scrollbar custom */
-.eco-scroll::-webkit-scrollbar { width: 4px; }
-.eco-scroll::-webkit-scrollbar-track { background: transparent; }
+.eco-scroll::-webkit-scrollbar { width: 5px; }
+.eco-scroll::-webkit-scrollbar-track { background: rgba(0,0,0,0.3); }
 .eco-scroll::-webkit-scrollbar-thumb { background: var(--emerald-deep); border-radius: 4px; }
+.eco-scroll::-webkit-scrollbar-thumb:hover { background: var(--emerald-neon); }
 
 /* Nanotech Shutter Transition */
 @keyframes shutterClose {
@@ -294,22 +296,54 @@ const GLOBAL_STYLES = `
   0% { clip-path: inset(0 0 0% 0); opacity: 1; }
   100% { clip-path: inset(100% 0 0 0); opacity: 0; }
 }
-
 .shutter-enter {
   animation: shutterClose 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
 }
 
-/* Glass card base */
+/* ═══════════════════════════════════════════ */
+/* HEXAGONAL BACKGROUND — Immersive pattern   */
+/* ═══════════════════════════════════════════ */
+.hex-bg {
+  position: relative;
+  background:
+    radial-gradient(ellipse at 20% 50%, rgba(0, 255, 136, 0.04) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 20%, rgba(0, 255, 136, 0.03) 0%, transparent 40%),
+    radial-gradient(ellipse at 50% 100%, rgba(0, 255, 136, 0.02) 0%, transparent 50%),
+    var(--bg-primary);
+}
+.hex-bg::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.07;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='104'%3E%3Cpath d='M30 0L60 17.3V52L30 69.3L0 52V17.3L30 0z' fill='none' stroke='%2300ff88' stroke-width='0.8'/%3E%3Cpath d='M30 34.6L60 52V86.6L30 104L0 86.6V52L30 34.6z' fill='none' stroke='%2300ff88' stroke-width='0.4'/%3E%3C/svg%3E");
+  background-size: 60px 104px;
+}
+.hex-bg::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    linear-gradient(180deg, rgba(0,0,0,0.3) 0%, transparent 20%, transparent 80%, rgba(0,0,0,0.5) 100%);
+}
+
+/* Glass card — dark with green glow border */
 .eco-glass {
   background: var(--bg-card);
   border: 1px solid var(--border-dim);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
   transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  box-shadow: 0 0 0 0 rgba(0,255,136,0), inset 0 1px 0 rgba(0,255,136,0.05);
 }
 .eco-glass:hover {
   border-color: var(--border-active);
   background: var(--bg-card-hover);
+  box-shadow: 0 0 30px rgba(0, 255, 136, 0.06), inset 0 1px 0 rgba(0,255,136,0.08);
 }
 
 /* Mini-Card Interactive */
@@ -322,57 +356,34 @@ const GLOBAL_STYLES = `
 }
 .mini-card:hover {
   transform: translateY(-3px) scale(1.02);
-  box-shadow: 0 8px 32px rgba(16, 185, 129, 0.15);
+  box-shadow: 0 8px 40px rgba(0, 255, 136, 0.12);
 }
 .mini-card::after {
   content: '';
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at var(--ripple-x, 50%) var(--ripple-y, 50%), 
-    rgba(16, 185, 129, 0.3) 0%, transparent 70%);
+  background: radial-gradient(circle at var(--ripple-x, 50%) var(--ripple-y, 50%),
+    rgba(0, 255, 136, 0.25) 0%, transparent 70%);
   opacity: 0;
   transition: opacity 0.5s;
   pointer-events: none;
 }
-.mini-card.ripple-active::after {
-  opacity: 1;
-}
+.mini-card.ripple-active::after { opacity: 1; }
 .mini-card-selected {
-  border-color: var(--emerald-glow) !important;
-  box-shadow: 0 0 20px rgba(16, 185, 129, 0.2), inset 0 0 20px rgba(16, 185, 129, 0.05);
-}
-
-/* Holographic grid background */
-.holo-grid {
-  background-image:
-    linear-gradient(rgba(16, 185, 129, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(16, 185, 129, 0.03) 1px, transparent 1px);
-  background-size: 40px 40px;
-}
-
-/* Hexagonal mesh overlay — pure CSS, zero JS cost */
-.hex-mesh { position: relative; }
-.hex-mesh::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-  opacity: 0.035;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='100'%3E%3Cpath d='M28 66L0 50L0 16L28 0L56 16L56 50L28 66L28 100' fill='none' stroke='%2310b981' stroke-width='0.5'/%3E%3Cpath d='M28 0L28 34L0 50L0 84L28 100L56 84L56 50L28 34' fill='none' stroke='%2310b981' stroke-width='0.5'/%3E%3C/svg%3E");
-  background-size: 56px 100px;
+  border-color: var(--emerald-neon) !important;
+  box-shadow: 0 0 25px rgba(0, 255, 136, 0.2), 0 0 60px rgba(0, 255, 136, 0.06), inset 0 0 30px rgba(0, 255, 136, 0.04);
 }
 
 /* Pulse glow on emerald elements */
 @keyframes emeraldPulse {
-  0%, 100% { box-shadow: 0 0 5px rgba(16, 185, 129, 0.2); }
-  50% { box-shadow: 0 0 20px rgba(16, 185, 129, 0.4); }
+  0%, 100% { box-shadow: 0 0 8px rgba(0, 255, 136, 0.2); }
+  50% { box-shadow: 0 0 25px rgba(0, 255, 136, 0.45); }
 }
 .emerald-pulse { animation: emeraldPulse 3s ease-in-out infinite; }
 
-/* Input focus glow */
+/* Input focus glow — enhanced */
 .eco-input {
-  background: rgba(0, 0, 0, 0.4);
+  background: rgba(0, 10, 5, 0.6);
   border: 1px solid var(--border-dim);
   border-radius: 12px;
   padding: 12px 14px;
@@ -381,22 +392,28 @@ const GLOBAL_STYLES = `
   outline: none;
   transition: all 0.3s ease;
   font-family: 'Outfit', sans-serif;
+  width: 100%;
 }
-.eco-input::placeholder { color: rgba(167, 243, 208, 0.3); }
+.eco-input::placeholder { color: rgba(0, 255, 136, 0.2); }
 .eco-input:focus {
-  border-color: var(--emerald-glow);
-  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1), 0 0 20px rgba(16, 185, 129, 0.05);
+  border-color: var(--emerald-neon);
+  box-shadow: 0 0 0 3px rgba(0, 255, 136, 0.08), 0 0 25px rgba(0, 255, 136, 0.08);
+  background: rgba(0, 20, 10, 0.8);
 }
 
 /* Step indicator line */
 .step-connector {
   height: 2px;
-  background: linear-gradient(90deg, var(--border-dim), var(--emerald-glow), var(--border-dim));
+  background: linear-gradient(90deg, transparent, rgba(0,255,136,0.15), transparent);
   flex: 1;
-  opacity: 0.3;
+  opacity: 0.4;
   transition: opacity 0.5s;
 }
-.step-connector-active { opacity: 1; }
+.step-connector-active {
+  opacity: 1;
+  background: linear-gradient(90deg, transparent, var(--emerald-neon), transparent);
+  box-shadow: 0 0 8px rgba(0,255,136,0.3);
+}
 
 /* Notification slide */
 @keyframes notifSlide {
@@ -405,34 +422,30 @@ const GLOBAL_STYLES = `
 }
 .notif-enter { animation: notifSlide 0.4s ease forwards; }
 
-/* Floating particles */
-@keyframes floatParticle {
-  0% { transform: translateY(0) rotate(0deg); opacity: 0.6; }
-  50% { opacity: 1; }
-  100% { transform: translateY(-100vh) rotate(360deg); opacity: 0; }
-}
-
 /* Action panel shimmer */
 @keyframes shimmer {
   0% { background-position: -200% 0; }
   100% { background-position: 200% 0; }
 }
 .shimmer-btn {
-  background: linear-gradient(90deg, 
-    rgba(16, 185, 129, 0.8) 0%, 
-    rgba(52, 211, 153, 1) 50%, 
-    rgba(16, 185, 129, 0.8) 100%);
+  background: linear-gradient(90deg,
+    rgba(0, 255, 136, 0.7) 0%,
+    rgba(52, 211, 153, 1) 50%,
+    rgba(0, 255, 136, 0.7) 100%);
   background-size: 200% auto;
 }
 .shimmer-btn:hover {
   animation: shimmer 2s linear infinite;
+  box-shadow: 0 0 30px rgba(0, 255, 136, 0.3), 0 0 60px rgba(0, 255, 136, 0.1);
 }
 
-/* High-tech action button — consistent green glow */
+/* ═══════════════════════════════════════════ */
+/* ACTION BUTTON — Neon glow style            */
+/* ═══════════════════════════════════════════ */
 .eco-action-btn {
   position: relative;
-  background: rgba(0, 0, 0, 0.35);
-  border: 1px solid rgba(16, 185, 129, 0.2);
+  background: rgba(0, 15, 8, 0.7);
+  border: 1px solid rgba(0, 255, 136, 0.15);
   color: var(--text-primary);
   border-radius: 12px;
   transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
@@ -443,30 +456,73 @@ const GLOBAL_STYLES = `
   position: absolute;
   inset: 0;
   border-radius: 12px;
-  padding: 1px;
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.3), rgba(16, 185, 129, 0.05), rgba(16, 185, 129, 0.3));
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  pointer-events: none;
+  background: linear-gradient(135deg, rgba(0, 255, 136, 0.08) 0%, transparent 50%, rgba(0, 255, 136, 0.04) 100%);
   opacity: 0;
   transition: opacity 0.3s ease;
+  pointer-events: none;
 }
 .eco-action-btn:hover {
-  background: rgba(16, 185, 129, 0.08);
-  border-color: rgba(16, 185, 129, 0.4);
-  box-shadow: 0 0 20px rgba(16, 185, 129, 0.1), 0 0 40px rgba(16, 185, 129, 0.05);
+  background: rgba(0, 255, 136, 0.08);
+  border-color: rgba(0, 255, 136, 0.45);
+  box-shadow: 0 0 25px rgba(0, 255, 136, 0.12), 0 0 50px rgba(0, 255, 136, 0.04);
 }
 .eco-action-btn:hover::before { opacity: 1; }
 .eco-action-btn:active { transform: scale(0.98); }
 .eco-action-btn:disabled { opacity: 0.4; pointer-events: none; }
 .eco-action-btn .eco-action-icon {
   transition: all 0.3s ease;
-  filter: drop-shadow(0 0 0px transparent);
 }
 .eco-action-btn:hover .eco-action-icon {
-  filter: drop-shadow(0 0 4px rgba(16, 185, 129, 0.5));
+  filter: drop-shadow(0 0 6px rgba(0, 255, 136, 0.6));
+}
+
+/* ═══════════════════════════════════════════ */
+/* HEXAGONAL ICON BADGE                       */
+/* ═══════════════════════════════════════════ */
+.hex-badge {
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ═══════════════════════════════════════════ */
+/* SECTION HEADER GLOW LINE                   */
+/* ═══════════════════════════════════════════ */
+.glow-line {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--emerald-neon), transparent);
+  box-shadow: 0 0 8px rgba(0,255,136,0.3);
+}
+
+/* ═══════════════════════════════════════════ */
+/* NAV BUTTON STYLES                          */
+/* ═══════════════════════════════════════════ */
+.nav-btn-primary {
+  background: linear-gradient(135deg, var(--emerald-neon), var(--emerald-deep));
+  color: #000;
+  border: none;
+  font-weight: 800;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 25px rgba(0, 255, 136, 0.3);
+}
+.nav-btn-primary:hover {
+  box-shadow: 0 4px 35px rgba(0, 255, 136, 0.5), 0 0 60px rgba(0, 255, 136, 0.15);
+  transform: scale(1.05);
+}
+.nav-btn-primary:active { transform: scale(0.95); }
+
+.nav-btn-ghost {
+  background: transparent;
+  border: 1px solid var(--border-dim);
+  color: var(--text-secondary);
+  font-weight: 700;
+  transition: all 0.3s ease;
+}
+.nav-btn-ghost:hover {
+  border-color: rgba(0, 255, 136, 0.3);
+  background: rgba(0, 255, 136, 0.04);
+  color: var(--emerald-light);
 }
 
 /* Signature canvas area */
@@ -1682,9 +1738,8 @@ ${nonCompeteArticle}
 
   return (
     <div
-      className="h-screen w-full overflow-y-auto overflow-x-hidden eco-scroll holo-grid hex-mesh"
+      className="h-screen w-full overflow-y-auto overflow-x-hidden eco-scroll hex-bg"
       style={{
-        background: 'var(--bg-primary)',
         fontFamily: "'Outfit', 'Space Grotesk', sans-serif",
       }}
     >
@@ -1729,86 +1784,98 @@ ${nonCompeteArticle}
       {/* ═══════════════════════════════════════ */}
       {/* MAIN CONTENT                           */}
       {/* ═══════════════════════════════════════ */}
-      <div className="relative max-w-6xl mx-auto px-4 py-6 md:px-8 md:py-8">
+      <div className="relative z-10 max-w-6xl mx-auto px-4 py-6 md:px-8 md:py-8">
 
         {/* ── HEADER ── */}
-        <header className="mb-8">
-          <div className="eco-glass rounded-2xl p-5 relative overflow-hidden">
-            {/* Decorative corner accent */}
-            <div
-              className="absolute top-0 right-0 w-32 h-32 pointer-events-none"
-              style={{
-                background: 'radial-gradient(circle at top right, rgba(16,185,129,0.08), transparent 70%)',
-              }}
-            />
+        <header className="mb-8 relative z-10">
+          <div className="eco-glass rounded-2xl p-6 relative overflow-hidden">
+            {/* Decorative hex corner accents */}
+            <div className="absolute top-0 right-0 w-48 h-48 pointer-events-none" style={{
+              background: 'radial-gradient(circle at top right, rgba(0,255,136,0.08), transparent 60%)',
+            }} />
+            <div className="absolute bottom-0 left-0 w-32 h-32 pointer-events-none" style={{
+              background: 'radial-gradient(circle at bottom left, rgba(0,255,136,0.04), transparent 60%)',
+            }} />
+
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 relative z-10">
               <div className="flex items-center gap-4">
                 <button
                   onClick={() => router.back()}
                   className="p-3 rounded-xl border transition-all hover:scale-105 active:scale-95"
                   style={{
-                    background: 'rgba(16, 185, 129, 0.08)',
-                    borderColor: 'rgba(16, 185, 129, 0.2)',
+                    background: 'rgba(0, 255, 136, 0.06)',
+                    borderColor: 'rgba(0, 255, 136, 0.2)',
                   }}
                 >
-                  <ArrowLeft size={18} style={{ color: 'var(--emerald-glow)' }} />
+                  <ArrowLeft size={18} style={{ color: 'var(--emerald-neon)' }} />
                 </button>
                 <div>
-                  <div className="flex items-center gap-2 mb-0.5">
-                    <Hexagon size={18} style={{ color: 'var(--emerald-glow)' }} />
+                  <div className="flex items-center gap-2.5 mb-1">
+                    <div className="hex-badge w-8 h-9" style={{ background: 'linear-gradient(135deg, var(--emerald-neon), var(--emerald-deep))' }}>
+                      <Hexagon size={16} style={{ color: '#000' }} />
+                    </div>
                     <h1
                       className="text-xl sm:text-2xl font-black uppercase tracking-tight"
                       style={{
-                        background: 'linear-gradient(135deg, var(--emerald-light), var(--emerald-glow))',
+                        background: 'linear-gradient(135deg, #fff, var(--emerald-neon))',
                         WebkitBackgroundClip: 'text',
                         WebkitTextFillColor: 'transparent',
+                        filter: 'drop-shadow(0 0 12px rgba(0,255,136,0.3))',
                       }}
                     >
                       CONTRACT ARCHITECT
                     </h1>
                   </div>
-                  <p className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'var(--text-secondary)' }}>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.25em]" style={{ color: 'rgba(0,255,136,0.5)' }}>
                     ECODREUM Engine L1
                   </p>
                 </div>
               </div>
 
-              {/* Bouton Nouveau (Haut de page) */}
-<button 
-  onClick={handleNewContract}
-  className="ml-4 flex items-center gap-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 border border-emerald-500/20 px-3 py-1.5 rounded-full transition-all group active:scale-95"
->
-  <Sparkles size={14} className="group-hover:rotate-12 transition-transform" />
-  <span className="text-[10px] font-black tracking-widest">NOUVEAU</span>
-</button>
-
-              <button
-                onClick={() => setShowArchives(true)}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl border font-bold text-xs uppercase tracking-wider transition-all hover:scale-105 active:scale-95"
-                style={{
-                  background: 'rgba(16, 185, 129, 0.06)',
-                  borderColor: 'rgba(16, 185, 129, 0.25)',
-                  color: 'var(--emerald-light)',
-                }}
-              >
-                <Archive size={15} />
-                <span>Archives</span>
-                <span
-                  className="px-2 py-0.5 rounded-full text-[10px] font-black"
-                  style={{ background: 'rgba(16, 185, 129, 0.15)', color: 'var(--emerald-glow)' }}
+              <div className="flex items-center gap-3">
+                {/* Bouton Nouveau */}
+                <button
+                  onClick={handleNewContract}
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl border font-bold text-xs uppercase tracking-wider transition-all hover:scale-105 active:scale-95 group"
+                  style={{
+                    background: 'rgba(0, 255, 136, 0.06)',
+                    borderColor: 'rgba(0, 255, 136, 0.25)',
+                    color: 'var(--emerald-neon)',
+                  }}
                 >
-                  {savedContracts.length}
-                </span>
-              </button>
+                  <Sparkles size={14} className="group-hover:rotate-12 transition-transform" />
+                  <span>Nouveau</span>
+                </button>
+
+                {/* Bouton Archives */}
+                <button
+                  onClick={() => setShowArchives(true)}
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl border font-bold text-xs uppercase tracking-wider transition-all hover:scale-105 active:scale-95"
+                  style={{
+                    background: 'rgba(0, 255, 136, 0.06)',
+                    borderColor: 'rgba(0, 255, 136, 0.25)',
+                    color: 'var(--emerald-light)',
+                  }}
+                >
+                  <Archive size={15} />
+                  <span>Archives</span>
+                  <span
+                    className="px-2 py-0.5 rounded-full text-[10px] font-black"
+                    style={{ background: 'rgba(0, 255, 136, 0.15)', color: 'var(--emerald-neon)' }}
+                  >
+                    {savedContracts.length}
+                  </span>
+                </button>
+              </div>
             </div>
           </div>
         </header>
 
         {/* ── MODE + JURIDICTION (Mini-Cards) ── */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 relative z-10">
           {/* Mode de Document */}
           <div className="eco-glass rounded-2xl p-5">
-            <label className="text-[10px] font-bold uppercase tracking-widest mb-3 block" style={{ color: 'var(--emerald-glow)' }}>
+            <label className="text-[10px] font-bold uppercase tracking-widest mb-3 flex items-center gap-1.5" style={{ color: 'var(--emerald-neon)' }}>
               Mode de Document
             </label>
             <div className="flex gap-3">
@@ -1825,7 +1892,7 @@ ${nonCompeteArticle}
                   style={{
                     background:
                       data.documentMode === mode
-                        ? 'linear-gradient(135deg, rgba(16,185,129,0.15), rgba(16,185,129,0.05))'
+                        ? 'linear-gradient(135deg, rgba(0,255,136,0.15), rgba(0,255,136,0.05))'
                         : 'rgba(0,0,0,0.25)',
                     borderColor:
                       data.documentMode === mode ? 'var(--emerald-glow)' : 'var(--border-dim)',
@@ -1853,8 +1920,8 @@ ${nonCompeteArticle}
 
           {/* Juridiction */}
           <div className="eco-glass rounded-2xl p-5">
-            <label className="text-[10px] font-bold uppercase tracking-widest mb-3 block" style={{ color: 'var(--emerald-glow)' }}>
-              Juridiction
+            <label className="text-[10px] font-bold uppercase tracking-widest mb-3 flex items-center gap-1.5" style={{ color: 'var(--emerald-neon)' }}>
+              <Globe size={10} /> Juridiction
             </label>
             <div className="flex gap-3">
               {(['SENEGAL', 'BURUNDI'] as const).map((country) => (
@@ -1867,7 +1934,7 @@ ${nonCompeteArticle}
                   style={{
                     background:
                       data.country === country
-                        ? 'linear-gradient(135deg, rgba(16,185,129,0.15), rgba(16,185,129,0.05))'
+                        ? 'linear-gradient(135deg, rgba(0,255,136,0.15), rgba(0,255,136,0.05))'
                         : 'rgba(0,0,0,0.25)',
                     borderColor: data.country === country ? 'var(--emerald-glow)' : 'var(--border-dim)',
                   }}
@@ -1890,7 +1957,7 @@ ${nonCompeteArticle}
         </div>
 
         {/* ── STEPPER — 3 étapes ── */}
-        <div className="mb-8">
+        <div className="mb-8 relative z-10">
           <div className="eco-glass rounded-2xl p-5">
             {/* Steps Row */}
             <div className="flex items-center justify-between gap-2 mb-4">
@@ -1907,37 +1974,38 @@ ${nonCompeteArticle}
                       className="flex items-center gap-3 px-3 py-2 rounded-xl transition-all hover:scale-105 active:scale-95"
                       style={{
                         background: isActive
-                          ? 'rgba(16, 185, 129, 0.12)'
+                          ? 'rgba(0, 255, 136, 0.08)'
                           : 'transparent',
                         border: isActive
-                          ? '1px solid rgba(16, 185, 129, 0.3)'
+                          ? '1px solid rgba(0, 255, 136, 0.3)'
                           : '1px solid transparent',
                       }}
                     >
                       <div
-                        className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-all"
+                        className={`hex-badge w-10 h-12 flex-shrink-0 transition-all`}
                         style={{
                           background: isComplete
-                            ? 'linear-gradient(135deg, var(--emerald-glow), var(--emerald-deep))'
+                            ? 'linear-gradient(135deg, var(--emerald-neon), var(--emerald-deep))'
                             : isActive
-                            ? 'rgba(16, 185, 129, 0.2)'
+                            ? 'rgba(0, 255, 136, 0.15)'
                             : 'rgba(255,255,255,0.04)',
-                          boxShadow: isActive ? '0 0 20px rgba(16,185,129,0.15)' : 'none',
+                          boxShadow: isActive ? '0 0 20px rgba(0,255,136,0.2)' : 'none',
+                          filter: isComplete ? 'drop-shadow(0 0 6px rgba(0,255,136,0.4))' : 'none',
                         }}
                       >
                         {isComplete ? (
-                          <CheckCircle size={18} style={{ color: '#fff' }} />
+                          <CheckCircle size={18} style={{ color: '#000' }} />
                         ) : (
                           <StepIcon
                             size={18}
-                            style={{ color: isActive ? 'var(--emerald-glow)' : 'rgba(255,255,255,0.3)' }}
+                            style={{ color: isActive ? 'var(--emerald-neon)' : 'rgba(255,255,255,0.3)' }}
                           />
                         )}
                       </div>
                       <div className="hidden sm:block text-left">
                         <p
                           className="text-xs font-bold uppercase"
-                          style={{ color: isActive ? 'var(--emerald-light)' : 'var(--text-secondary)' }}
+                          style={{ color: isActive ? 'var(--emerald-neon)' : 'var(--text-secondary)' }}
                         >
                           {step.label}
                         </p>
@@ -1962,8 +2030,8 @@ ${nonCompeteArticle}
                   className="h-full rounded-full transition-all duration-700"
                   style={{
                     width: `${totalProgress}%`,
-                    background: 'linear-gradient(90deg, var(--emerald-deep), var(--emerald-glow), var(--emerald-light))',
-                    boxShadow: '0 0 12px rgba(16,185,129,0.4)',
+                    background: 'linear-gradient(90deg, var(--emerald-deep), var(--emerald-neon), var(--emerald-light))',
+                    boxShadow: '0 0 15px rgba(0,255,136,0.5), 0 0 30px rgba(0,255,136,0.2)',
                   }}
                 />
               </div>
@@ -2009,16 +2077,17 @@ ${nonCompeteArticle}
                   {/* Section Header */}
                   <div className="flex items-center gap-3 pb-5 mb-6" style={{ borderBottom: '1px solid var(--border-dim)' }}>
                     <div
-                      className="w-11 h-11 rounded-xl flex items-center justify-center"
+                      className="hex-badge w-12 h-14 flex-shrink-0"
                       style={{
-                        background: 'linear-gradient(135deg, #10b981, #059669)',
-                        boxShadow: '0 4px 20px rgba(16,185,129,0.3)',
+                        background: 'linear-gradient(135deg, var(--emerald-neon), var(--emerald-deep))',
+                        boxShadow: '0 4px 20px rgba(0,255,136,0.3)',
+                        filter: 'drop-shadow(0 0 8px rgba(0,255,136,0.3))',
                       }}
                     >
                       <Building size={20} className="text-white" />
                     </div>
                     <div>
-                      <h2 className="text-lg font-black uppercase" style={{ color: 'var(--emerald-light)' }}>
+                      <h2 className="text-lg font-black uppercase" style={{ color: 'var(--emerald-neon)' }}>
                         Entreprise
                       </h2>
                       <p className="text-[10px] font-semibold" style={{ color: 'var(--text-secondary)' }}>
@@ -2031,7 +2100,7 @@ ${nonCompeteArticle}
                     {/* Logo & Description */}
                     <div
                       className="rounded-xl p-5 border"
-                      style={{ background: 'rgba(16,185,129,0.03)', borderColor: 'rgba(16,185,129,0.12)' }}
+                      style={{ background: 'rgba(0,255,136,0.03)', borderColor: 'rgba(0,255,136,0.12)' }}
                     >
                       <p className="text-[10px] font-bold uppercase tracking-widest mb-4" style={{ color: 'var(--emerald-glow)' }}>
                         Identité Visuelle (Optionnel)
@@ -2056,7 +2125,7 @@ ${nonCompeteArticle}
                           ) : (
                             <label
                               className="flex flex-col items-center justify-center h-28 border-2 border-dashed rounded-xl cursor-pointer transition-all hover:border-opacity-60"
-                              style={{ borderColor: 'rgba(16,185,129,0.2)' }}
+                              style={{ borderColor: 'rgba(0,255,136,0.2)' }}
                             >
                               <Upload size={18} style={{ color: 'var(--emerald-glow)' }} className="mb-2" />
                               <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>
@@ -2122,15 +2191,8 @@ ${nonCompeteArticle}
                   </div>
 
                   {/* Step Nav */}
-                  <div className="flex justify-end mt-6 pt-5" style={{ borderTop: '1px solid var(--border-dim)' }}>
-                    <button
-                      onClick={goNextStep}
-                      className="flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm text-black transition-all hover:scale-105 active:scale-95"
-                      style={{
-                        background: 'linear-gradient(135deg, var(--emerald-glow), var(--emerald-deep))',
-                        boxShadow: '0 4px 20px rgba(16,185,129,0.3)',
-                      }}
-                    >
+                  <div className="flex justify-end mt-6 pt-5"><div className="glow-line flex-1 mr-4 self-center" />
+                    <button onClick={goNextStep} className="nav-btn-primary flex items-center gap-2 px-6 py-3 rounded-xl text-sm">
                       <span>Collaborateur</span>
                       <ChevronRight size={16} />
                     </button>
@@ -2145,16 +2207,17 @@ ${nonCompeteArticle}
                 <div className="eco-glass rounded-2xl p-6 shutter-enter">
                   <div className="flex items-center gap-3 pb-5 mb-6" style={{ borderBottom: '1px solid var(--border-dim)' }}>
                     <div
-                      className="w-11 h-11 rounded-xl flex items-center justify-center"
+                      className="hex-badge w-12 h-14 flex-shrink-0"
                       style={{
-                        background: 'linear-gradient(135deg, #34d399, #06b6d4)',
-                        boxShadow: '0 4px 20px rgba(52,211,153,0.3)',
+                        background: 'linear-gradient(135deg, var(--emerald-neon), var(--emerald-deep))',
+                        boxShadow: '0 4px 20px rgba(0,255,136,0.3)',
+                        filter: 'drop-shadow(0 0 8px rgba(0,255,136,0.3))',
                       }}
                     >
                       <User size={20} className="text-white" />
                     </div>
                     <div>
-                      <h2 className="text-lg font-black uppercase" style={{ color: '#6ee7b7' }}>
+                      <h2 className="text-lg font-black uppercase" style={{ color: 'var(--emerald-neon)' }}>
                         Collaborateur
                       </h2>
                       <p className="text-[10px] font-semibold" style={{ color: 'var(--text-secondary)' }}>
@@ -2202,23 +2265,12 @@ ${nonCompeteArticle}
                     </div>
                   </div>
 
-                  <div className="flex justify-between mt-6 pt-5" style={{ borderTop: '1px solid var(--border-dim)' }}>
-                    <button
-                      onClick={goPrevStep}
-                      className="flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-xs border transition-all hover:scale-105 active:scale-95"
-                      style={{ borderColor: 'var(--border-dim)', color: 'var(--text-secondary)' }}
-                    >
+                  <div className="flex justify-between mt-6 pt-5"><div className="glow-line flex-1 mx-4 self-center" />
+                    <button onClick={goPrevStep} className="nav-btn-ghost flex items-center gap-2 px-5 py-3 rounded-xl text-xs">
                       <ChevronLeft size={16} />
                       <span>Entreprise</span>
                     </button>
-                    <button
-                      onClick={goNextStep}
-                      className="flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm text-black transition-all hover:scale-105 active:scale-95"
-                      style={{
-                        background: 'linear-gradient(135deg, var(--emerald-glow), var(--emerald-deep))',
-                        boxShadow: '0 4px 20px rgba(16,185,129,0.3)',
-                      }}
-                    >
+                    <button onClick={goNextStep} className="nav-btn-primary flex items-center gap-2 px-6 py-3 rounded-xl text-sm ml-3">
                       <span>Contrat</span>
                       <ChevronRight size={16} />
                     </button>
@@ -2233,16 +2285,17 @@ ${nonCompeteArticle}
                 <div className="eco-glass rounded-2xl p-6 shutter-enter">
                   <div className="flex items-center gap-3 pb-5 mb-6" style={{ borderBottom: '1px solid var(--border-dim)' }}>
                     <div
-                      className="w-11 h-11 rounded-xl flex items-center justify-center"
+                      className="hex-badge w-12 h-14 flex-shrink-0"
                       style={{
-                        background: 'linear-gradient(135deg, #f59e0b, #10b981)',
-                        boxShadow: '0 4px 20px rgba(245,158,11,0.2)',
+                        background: 'linear-gradient(135deg, var(--emerald-neon), var(--emerald-deep))',
+                        boxShadow: '0 4px 20px rgba(0,255,136,0.3)',
+                        filter: 'drop-shadow(0 0 8px rgba(0,255,136,0.3))',
                       }}
                     >
                       <Briefcase size={20} className="text-white" />
                     </div>
                     <div>
-                      <h2 className="text-lg font-black uppercase" style={{ color: '#fbbf24' }}>
+                      <h2 className="text-lg font-black uppercase" style={{ color: 'var(--emerald-neon)' }}>
                         Contrat
                       </h2>
                       <p className="text-[10px] font-semibold" style={{ color: 'var(--text-secondary)' }}>
@@ -2268,7 +2321,7 @@ ${nonCompeteArticle}
                             style={{
                               background:
                                 data.jobType === jt
-                                  ? 'linear-gradient(135deg, rgba(16,185,129,0.15), rgba(16,185,129,0.05))'
+                                  ? 'linear-gradient(135deg, rgba(0,255,136,0.15), rgba(0,255,136,0.05))'
                                   : 'rgba(0,0,0,0.25)',
                               borderColor: data.jobType === jt ? 'var(--emerald-glow)' : 'var(--border-dim)',
                             }}
@@ -2320,7 +2373,7 @@ ${nonCompeteArticle}
                     {/* Non-concurrence */}
                     <div
                       className="rounded-xl p-5 border"
-                      style={{ background: 'rgba(16,185,129,0.03)', borderColor: 'rgba(16,185,129,0.12)' }}
+                      style={{ background: 'rgba(0,255,136,0.03)', borderColor: 'rgba(0,255,136,0.12)' }}
                     >
                       <label className="flex items-center gap-3 cursor-pointer">
                         <input
@@ -2341,23 +2394,15 @@ ${nonCompeteArticle}
                     </div>
                   </div>
 
-                  <div className="flex justify-between mt-6 pt-5" style={{ borderTop: '1px solid var(--border-dim)' }}>
-                    <button
-                      onClick={goPrevStep}
-                      className="flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-xs border transition-all hover:scale-105 active:scale-95"
-                      style={{ borderColor: 'var(--border-dim)', color: 'var(--text-secondary)' }}
-                    >
+                  <div className="flex justify-between mt-6 pt-5"><div className="glow-line flex-1 mx-4 self-center" />
+                    <button onClick={goPrevStep} className="nav-btn-ghost flex items-center gap-2 px-5 py-3 rounded-xl text-xs">
                       <ChevronLeft size={16} />
                       <span>Collaborateur</span>
                     </button>
-                    {/* Bouton Nouveau Contrat (Remplace Aperçu) */}
-    <button
-      onClick={handleNewContract}
-      className="flex items-center gap-2 px-6 py-3 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 rounded-xl transition-all border border-emerald-500/30 group"
-    >
-      <Sparkles size={20} className="group-hover:rotate-12 transition-transform" />
-      <span className="font-bold tracking-wide uppercase">Nouveau</span>
-    </button>
+                    <button onClick={handleNewContract} className="nav-btn-primary flex items-center gap-2 px-6 py-3 rounded-xl text-sm ml-3 group">
+                      <Sparkles size={16} className="group-hover:rotate-12 transition-transform" />
+                      <span>Nouveau</span>
+                    </button>
                   </div>
                 </div>
               )}
@@ -2386,7 +2431,7 @@ ${nonCompeteArticle}
                           className="w-full py-3 px-4 rounded-xl font-bold text-xs flex items-center justify-between transition-all hover:scale-[1.02] active:scale-[0.98]"
                           style={{
                             background: hasSig
-                              ? 'linear-gradient(135deg, rgba(16,185,129,0.15), rgba(16,185,129,0.05))'
+                              ? 'linear-gradient(135deg, rgba(0,255,136,0.15), rgba(0,255,136,0.05))'
                               : 'rgba(0,0,0,0.3)',
                             border: `1px solid ${hasSig ? 'var(--emerald-glow)' : 'var(--border-dim)'}`,
                             color: hasSig ? 'var(--emerald-light)' : 'var(--text-secondary)',
@@ -2412,7 +2457,7 @@ ${nonCompeteArticle}
                   className="shimmer-btn w-full py-4 rounded-xl font-black uppercase text-sm flex items-center justify-center gap-2 transition-all hover:scale-105 active:scale-95 disabled:opacity-40 disabled:hover:scale-100"
                   style={{
                     color: '#000',
-                    boxShadow: '0 4px 24px rgba(16,185,129,0.35)',
+                    boxShadow: '0 4px 24px rgba(0,255,136,0.35)',
                   }}
                 >
                   {isGenerating ? (
@@ -2466,7 +2511,7 @@ ${nonCompeteArticle}
                   <button
                     onClick={shareContract}
                     className="eco-action-btn w-full py-3 px-4 font-bold text-xs flex items-center gap-3"
-                    style={{ borderColor: 'rgba(16,185,129,0.25)' }}
+                    style={{ borderColor: 'rgba(0,255,136,0.25)' }}
                   >
                     <Share2 size={16} className="eco-action-icon" style={{ color: 'var(--emerald-light)' }} />
                     <span>Partager</span>
@@ -2486,7 +2531,7 @@ ${nonCompeteArticle}
               {/* Récapitulatif */}
               <div
                 className="rounded-xl p-4 border"
-                style={{ background: 'rgba(16,185,129,0.03)', borderColor: 'rgba(16,185,129,0.12)' }}
+                style={{ background: 'rgba(0,255,136,0.03)', borderColor: 'rgba(0,255,136,0.12)' }}
               >
                 <div className="flex items-center gap-2 mb-3" style={{ color: 'var(--emerald-glow)' }}>
                   <Scale size={13} />
@@ -2537,7 +2582,7 @@ ${nonCompeteArticle}
               </button>
             </div>
 
-            <p className="text-xs mb-4 px-3 py-2 rounded-xl" style={{ color: 'var(--text-secondary)', background: 'rgba(16,185,129,0.05)', border: '1px solid rgba(16,185,129,0.1)' }}>
+            <p className="text-xs mb-4 px-3 py-2 rounded-xl" style={{ color: 'var(--text-secondary)', background: 'rgba(0,255,136,0.05)', border: '1px solid rgba(0,255,136,0.1)' }}>
               Signez dans l'espace ci-dessous. Le canvas est verrouillé contre le défilement.
             </p>
 
@@ -2576,11 +2621,7 @@ ${nonCompeteArticle}
               </button>
               <button
                 onClick={saveSignature}
-                className="flex-1 py-3 rounded-xl font-bold text-xs text-black flex items-center justify-center gap-2 transition-all hover:scale-[1.02]"
-                style={{
-                  background: 'linear-gradient(135deg, var(--emerald-glow), var(--emerald-deep))',
-                  boxShadow: '0 4px 20px rgba(16,185,129,0.3)',
-                }}
+                className="nav-btn-primary flex-1 py-3 rounded-xl text-xs flex items-center justify-center gap-2"
               >
                 <Save size={14} />
                 Enregistrer
@@ -2617,7 +2658,7 @@ ${nonCompeteArticle}
 
               {savedContracts.length === 0 ? (
                 <div className="text-center py-20">
-                  <Archive size={50} className="mx-auto mb-4" style={{ color: 'rgba(16,185,129,0.2)' }} />
+                  <Archive size={50} className="mx-auto mb-4" style={{ color: 'rgba(0,255,136,0.2)' }} />
                   <p className="text-sm font-bold" style={{ color: 'var(--text-secondary)' }}>
                     Aucun contrat enregistré
                   </p>
@@ -2643,7 +2684,7 @@ ${nonCompeteArticle}
                           style={{
                             background:
                               contract.mode === 'ELECTRONIC'
-                                ? 'rgba(16,185,129,0.12)'
+                                ? 'rgba(0,255,136,0.12)'
                                 : 'rgba(245,158,11,0.12)',
                             color:
                               contract.mode === 'ELECTRONIC' ? 'var(--emerald-light)' : '#fbbf24',
@@ -2676,7 +2717,7 @@ ${nonCompeteArticle}
                         <button
                           onClick={() => loadContract(contract)}
                           className="flex-1 py-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 border transition-all hover:scale-[1.02]"
-                          style={{ borderColor: 'rgba(16,185,129,0.2)', color: 'var(--emerald-light)', background: 'rgba(16,185,129,0.06)' }}
+                          style={{ borderColor: 'rgba(0,255,136,0.2)', color: 'var(--emerald-light)', background: 'rgba(0,255,136,0.06)' }}
                         >
                           <Upload size={12} />
                           Charger
