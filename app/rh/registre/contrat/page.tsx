@@ -53,6 +53,25 @@ import {
   Hexagon,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import {
+  Document,
+  Packer,
+  Paragraph,
+  TextRun,
+  HeadingLevel,
+  AlignmentType,
+  ImageRun,
+  Table,
+  TableRow,
+  TableCell,
+  WidthType,
+  BorderStyle,
+  TableLayoutType,
+  convertMillimetersToTwip,
+} from 'docx';
+import { saveAs } from 'file-saver';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 // ─────────────────────────────────────────────
 // Interfaces TypeScript (strict, no `any`)
@@ -94,6 +113,7 @@ interface FormData {
   cddReason: string;
   hasNonCompete: boolean;
   nonCompeteDuration: string;
+  jobTasks: string;
 }
 
 interface SavedContract {
@@ -216,6 +236,7 @@ const INITIAL_FORM_DATA: FormData = {
   cddReason: '',
   hasNonCompete: false,
   nonCompeteDuration: '',
+  jobTasks: '',
 };
 
 // ─────────────────────────────────────────────
@@ -229,6 +250,63 @@ const STEPS: { id: StepId; label: string; icon: React.ElementType; gradient: str
 ];
 
 // ─────────────────────────────────────────────
+// Utilitaire : Nombre → Lettres françaises
+// ─────────────────────────────────────────────
+
+function numberToFrenchWords(n: number): string {
+  if (n === 0) return 'Zéro';
+  const units = ['', 'Un', 'Deux', 'Trois', 'Quatre', 'Cinq', 'Six', 'Sept', 'Huit', 'Neuf',
+    'Dix', 'Onze', 'Douze', 'Treize', 'Quatorze', 'Quinze', 'Seize', 'Dix-Sept', 'Dix-Huit', 'Dix-Neuf'];
+  const tens = ['', '', 'Vingt', 'Trente', 'Quarante', 'Cinquante', 'Soixante', 'Soixante', 'Quatre-Vingt', 'Quatre-Vingt'];
+
+  function chunk(num: number): string {
+    if (num === 0) return '';
+    if (num < 20) return units[num];
+    if (num < 70) {
+      const t = Math.floor(num / 10);
+      const u = num % 10;
+      if (u === 1 && t !== 8) return `${tens[t]} et Un`;
+      return u === 0 ? tens[t] : `${tens[t]}-${units[u]}`;
+    }
+    if (num < 80) {
+      const u = num - 60;
+      if (u === 1) return 'Soixante et Onze';
+      return `Soixante-${units[u]}`;
+    }
+    if (num < 100) {
+      const u = num - 80;
+      if (u === 0) return 'Quatre-Vingts';
+      return `Quatre-Vingt-${units[u]}`;
+    }
+    if (num < 200) {
+      const rest = num - 100;
+      return rest === 0 ? 'Cent' : `Cent ${chunk(rest)}`;
+    }
+    if (num < 1000) {
+      const h = Math.floor(num / 100);
+      const rest = num % 100;
+      const prefix = `${units[h]} Cent`;
+      return rest === 0 ? `${prefix}s` : `${prefix} ${chunk(rest)}`;
+    }
+    return '';
+  }
+
+  const parts: string[] = [];
+  const billions = Math.floor(n / 1000000000);
+  const millions = Math.floor((n % 1000000000) / 1000000);
+  const thousands = Math.floor((n % 1000000) / 1000);
+  const remainder = n % 1000;
+
+  if (billions > 0) parts.push(`${chunk(billions)} Milliard${billions > 1 ? 's' : ''}`);
+  if (millions > 0) parts.push(`${chunk(millions)} Million${millions > 1 ? 's' : ''}`);
+  if (thousands === 1) parts.push('Mille');
+  else if (thousands > 1) parts.push(`${chunk(thousands)} Mille`);
+  if (remainder > 0) parts.push(chunk(remainder));
+
+  return parts.join(' ').replace(/\s+/g, ' ').trim();
+}
+
+// ─────────────────────────────────────────────
 // Animations CSS (injected inline)
 // ─────────────────────────────────────────────
 
@@ -236,22 +314,28 @@ const GLOBAL_STYLES = `
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Rajdhani:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
 
 :root {
-  --emerald-glow: #10b981;
+  --emerald-glow: #00ff88;
   --emerald-deep: #059669;
   --emerald-light: #34d399;
-  --bg-primary: #020a0f;
-  --bg-card: rgba(6, 30, 25, 0.55);
-  --bg-card-hover: rgba(16, 185, 129, 0.07);
-  --border-dim: rgba(16, 185, 129, 0.12);
-  --border-active: rgba(16, 185, 129, 0.4);
+  --emerald-neon: #00ff88;
+  --gold: #c9a84c;
+  --gold-light: #dab86c;
+  --gold-shimmer: #f5e6b8;
+  --gold-deep: #a08030;
+  --bg-primary: #030a06;
+  --bg-card: rgba(4, 20, 12, 0.85);
+  --bg-card-hover: rgba(0, 255, 136, 0.06);
+  --border-dim: rgba(0, 255, 136, 0.12);
+  --border-active: rgba(0, 255, 136, 0.5);
   --text-primary: #e2e8f0;
   --text-secondary: rgba(167, 243, 208, 0.7);
 }
 
 /* Scrollbar custom */
-.eco-scroll::-webkit-scrollbar { width: 4px; }
-.eco-scroll::-webkit-scrollbar-track { background: transparent; }
+.eco-scroll::-webkit-scrollbar { width: 5px; }
+.eco-scroll::-webkit-scrollbar-track { background: rgba(0,0,0,0.3); }
 .eco-scroll::-webkit-scrollbar-thumb { background: var(--emerald-deep); border-radius: 4px; }
+.eco-scroll::-webkit-scrollbar-thumb:hover { background: var(--emerald-neon); }
 
 /* Nanotech Shutter Transition */
 @keyframes shutterClose {
@@ -263,22 +347,54 @@ const GLOBAL_STYLES = `
   0% { clip-path: inset(0 0 0% 0); opacity: 1; }
   100% { clip-path: inset(100% 0 0 0); opacity: 0; }
 }
-
 .shutter-enter {
   animation: shutterClose 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
 }
 
-/* Glass card base */
+/* ═══════════════════════════════════════════ */
+/* HEXAGONAL BACKGROUND — Immersive pattern   */
+/* ═══════════════════════════════════════════ */
+.hex-bg {
+  position: relative;
+  background:
+    radial-gradient(ellipse at 20% 50%, rgba(0, 255, 136, 0.04) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 20%, rgba(0, 255, 136, 0.03) 0%, transparent 40%),
+    radial-gradient(ellipse at 50% 100%, rgba(0, 255, 136, 0.02) 0%, transparent 50%),
+    var(--bg-primary);
+}
+.hex-bg::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.07;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='104'%3E%3Cpath d='M30 0L60 17.3V52L30 69.3L0 52V17.3L30 0z' fill='none' stroke='%2300ff88' stroke-width='0.8'/%3E%3Cpath d='M30 34.6L60 52V86.6L30 104L0 86.6V52L30 34.6z' fill='none' stroke='%2300ff88' stroke-width='0.4'/%3E%3C/svg%3E");
+  background-size: 60px 104px;
+}
+.hex-bg::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    linear-gradient(180deg, rgba(0,0,0,0.3) 0%, transparent 20%, transparent 80%, rgba(0,0,0,0.5) 100%);
+}
+
+/* Glass card — dark with green glow border */
 .eco-glass {
   background: var(--bg-card);
   border: 1px solid var(--border-dim);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
   transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  box-shadow: 0 0 0 0 rgba(0,255,136,0), inset 0 1px 0 rgba(0,255,136,0.05);
 }
 .eco-glass:hover {
   border-color: var(--border-active);
   background: var(--bg-card-hover);
+  box-shadow: 0 0 30px rgba(0, 255, 136, 0.06), inset 0 1px 0 rgba(0,255,136,0.08);
 }
 
 /* Mini-Card Interactive */
@@ -291,44 +407,120 @@ const GLOBAL_STYLES = `
 }
 .mini-card:hover {
   transform: translateY(-3px) scale(1.02);
-  box-shadow: 0 8px 32px rgba(16, 185, 129, 0.15);
+  box-shadow: 0 8px 40px rgba(0, 255, 136, 0.12);
 }
 .mini-card::after {
   content: '';
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at var(--ripple-x, 50%) var(--ripple-y, 50%), 
-    rgba(16, 185, 129, 0.3) 0%, transparent 70%);
+  background: radial-gradient(circle at var(--ripple-x, 50%) var(--ripple-y, 50%),
+    rgba(0, 255, 136, 0.25) 0%, transparent 70%);
   opacity: 0;
   transition: opacity 0.5s;
   pointer-events: none;
 }
-.mini-card.ripple-active::after {
-  opacity: 1;
-}
+.mini-card.ripple-active::after { opacity: 1; }
 .mini-card-selected {
-  border-color: var(--emerald-glow) !important;
-  box-shadow: 0 0 20px rgba(16, 185, 129, 0.2), inset 0 0 20px rgba(16, 185, 129, 0.05);
+  border-color: #c9a84c !important;
+  background: linear-gradient(135deg, rgba(201,168,76,0.18), rgba(180,140,50,0.08)) !important;
+  box-shadow: 0 0 25px rgba(201,168,76,0.3), 0 0 60px rgba(201,168,76,0.08), inset 0 0 30px rgba(201,168,76,0.06);
 }
-
-/* Holographic grid background */
-.holo-grid {
-  background-image: 
-    linear-gradient(rgba(16, 185, 129, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(16, 185, 129, 0.03) 1px, transparent 1px);
-  background-size: 40px 40px;
+.mini-card-selected::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(218,190,100,0.12) 0%, transparent 50%, rgba(201,168,76,0.08) 100%);
+  pointer-events: none;
 }
 
 /* Pulse glow on emerald elements */
 @keyframes emeraldPulse {
-  0%, 100% { box-shadow: 0 0 5px rgba(16, 185, 129, 0.2); }
-  50% { box-shadow: 0 0 20px rgba(16, 185, 129, 0.4); }
+  0%, 100% { box-shadow: 0 0 8px rgba(0, 255, 136, 0.2); }
+  50% { box-shadow: 0 0 25px rgba(0, 255, 136, 0.45); }
 }
 .emerald-pulse { animation: emeraldPulse 3s ease-in-out infinite; }
 
-/* Input focus glow */
+/* Gold shimmer animation */
+@keyframes goldShimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+.gold-shimmer-text {
+  background: linear-gradient(90deg, var(--gold-deep), var(--gold-light), var(--gold-shimmer), var(--gold-light), var(--gold-deep));
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: goldShimmer 4s linear infinite;
+}
+@keyframes goldPulse {
+  0%, 100% { box-shadow: 0 0 8px rgba(201, 168, 76, 0.15); }
+  50% { box-shadow: 0 0 20px rgba(201, 168, 76, 0.35); }
+}
+.gold-pulse { animation: goldPulse 3s ease-in-out infinite; }
+
+/* Gold accent line */
+.gold-line {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  box-shadow: 0 0 6px rgba(201, 168, 76, 0.25);
+}
+
+/* Section card with gold accent top border */
+.eco-section-card {
+  position: relative;
+  overflow: hidden;
+}
+.eco-section-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--gold), var(--emerald-neon), var(--gold), transparent);
+  opacity: 0.6;
+}
+
+/* Reset confirmation modal overlay */
+@keyframes modalFadeIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+.modal-fade-in {
+  animation: modalFadeIn 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+/* ═══════════════════════════════════════════ */
+/* CONSTELLATION LOADING ANIMATION            */
+/* ═══════════════════════════════════════════ */
+@keyframes constellationFloat {
+  0%, 100% { transform: translate(0, 0); opacity: 0.3; }
+  25% { transform: translate(10px, -15px); opacity: 1; }
+  50% { transform: translate(-5px, -25px); opacity: 0.6; }
+  75% { transform: translate(15px, -10px); opacity: 1; }
+}
+@keyframes constellationPulse {
+  0%, 100% { r: 2; opacity: 0.4; }
+  50% { r: 4; opacity: 1; }
+}
+@keyframes constellationLine {
+  0% { stroke-dashoffset: 100; opacity: 0; }
+  50% { stroke-dashoffset: 0; opacity: 0.6; }
+  100% { stroke-dashoffset: -100; opacity: 0; }
+}
+@keyframes constellationOrbit {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+@keyframes constellationTextPulse {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
+}
+
+/* Input focus glow — enhanced */
 .eco-input {
-  background: rgba(0, 0, 0, 0.4);
+  background: rgba(0, 10, 5, 0.6);
   border: 1px solid var(--border-dim);
   border-radius: 12px;
   padding: 12px 14px;
@@ -337,22 +529,28 @@ const GLOBAL_STYLES = `
   outline: none;
   transition: all 0.3s ease;
   font-family: 'Outfit', sans-serif;
+  width: 100%;
 }
-.eco-input::placeholder { color: rgba(167, 243, 208, 0.3); }
+.eco-input::placeholder { color: rgba(0, 255, 136, 0.2); }
 .eco-input:focus {
-  border-color: var(--emerald-glow);
-  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1), 0 0 20px rgba(16, 185, 129, 0.05);
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(201, 168, 76, 0.1), 0 0 20px rgba(201, 168, 76, 0.08), 0 0 40px rgba(0, 255, 136, 0.04);
+  background: rgba(0, 20, 10, 0.8);
 }
 
 /* Step indicator line */
 .step-connector {
   height: 2px;
-  background: linear-gradient(90deg, var(--border-dim), var(--emerald-glow), var(--border-dim));
+  background: linear-gradient(90deg, transparent, rgba(0,255,136,0.15), transparent);
   flex: 1;
-  opacity: 0.3;
+  opacity: 0.4;
   transition: opacity 0.5s;
 }
-.step-connector-active { opacity: 1; }
+.step-connector-active {
+  opacity: 1;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  box-shadow: 0 0 8px rgba(201,168,76,0.3);
+}
 
 /* Notification slide */
 @keyframes notifSlide {
@@ -361,27 +559,109 @@ const GLOBAL_STYLES = `
 }
 .notif-enter { animation: notifSlide 0.4s ease forwards; }
 
-/* Floating particles */
-@keyframes floatParticle {
-  0% { transform: translateY(0) rotate(0deg); opacity: 0.6; }
-  50% { opacity: 1; }
-  100% { transform: translateY(-100vh) rotate(360deg); opacity: 0; }
-}
-
 /* Action panel shimmer */
 @keyframes shimmer {
   0% { background-position: -200% 0; }
   100% { background-position: 200% 0; }
 }
 .shimmer-btn {
-  background: linear-gradient(90deg, 
-    rgba(16, 185, 129, 0.8) 0%, 
-    rgba(52, 211, 153, 1) 50%, 
-    rgba(16, 185, 129, 0.8) 100%);
+  background: linear-gradient(135deg,
+    var(--gold-deep) 0%,
+    var(--gold) 25%,
+    var(--gold-shimmer) 50%,
+    var(--gold) 75%,
+    var(--gold-deep) 100%);
   background-size: 200% auto;
 }
 .shimmer-btn:hover {
   animation: shimmer 2s linear infinite;
+  box-shadow: 0 0 30px rgba(201, 168, 76, 0.4), 0 0 60px rgba(201, 168, 76, 0.15);
+}
+
+/* ═══════════════════════════════════════════ */
+/* ACTION BUTTON — Neon glow style            */
+/* ═══════════════════════════════════════════ */
+.eco-action-btn {
+  position: relative;
+  background: rgba(0, 15, 8, 0.7);
+  border: 1px solid rgba(0, 255, 136, 0.15);
+  color: var(--text-primary);
+  border-radius: 12px;
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  overflow: hidden;
+}
+.eco-action-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(0, 255, 136, 0.08) 0%, transparent 50%, rgba(0, 255, 136, 0.04) 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+.eco-action-btn:hover {
+  background: rgba(0, 255, 136, 0.08);
+  border-color: rgba(0, 255, 136, 0.45);
+  box-shadow: 0 0 25px rgba(0, 255, 136, 0.12), 0 0 50px rgba(0, 255, 136, 0.04);
+}
+.eco-action-btn:hover::before { opacity: 1; }
+.eco-action-btn:active { transform: scale(0.98); }
+.eco-action-btn:disabled { opacity: 0.4; pointer-events: none; }
+.eco-action-btn .eco-action-icon {
+  transition: all 0.3s ease;
+}
+.eco-action-btn:hover .eco-action-icon {
+  filter: drop-shadow(0 0 6px rgba(0, 255, 136, 0.6));
+}
+
+/* ═══════════════════════════════════════════ */
+/* HEXAGONAL ICON BADGE                       */
+/* ═══════════════════════════════════════════ */
+.hex-badge {
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ═══════════════════════════════════════════ */
+/* SECTION HEADER GLOW LINE                   */
+/* ═══════════════════════════════════════════ */
+.glow-line {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  box-shadow: 0 0 6px rgba(201,168,76,0.25);
+}
+
+/* ═══════════════════════════════════════════ */
+/* NAV BUTTON STYLES                          */
+/* ═══════════════════════════════════════════ */
+.nav-btn-primary {
+  background: linear-gradient(135deg, var(--gold-light), var(--gold), var(--gold-deep));
+  color: #0a0a0a;
+  border: none;
+  font-weight: 800;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 25px rgba(201, 168, 76, 0.3);
+}
+.nav-btn-primary:hover {
+  box-shadow: 0 4px 35px rgba(201, 168, 76, 0.5), 0 0 60px rgba(201, 168, 76, 0.15);
+  transform: scale(1.05);
+}
+.nav-btn-primary:active { transform: scale(0.95); }
+
+.nav-btn-ghost {
+  background: transparent;
+  border: 1px solid var(--border-dim);
+  color: var(--text-secondary);
+  font-weight: 700;
+  transition: all 0.3s ease;
+}
+.nav-btn-ghost:hover {
+  border-color: rgba(0, 255, 136, 0.3);
+  background: rgba(0, 255, 136, 0.04);
+  color: var(--emerald-light);
 }
 
 /* Signature canvas area */
@@ -531,7 +811,7 @@ export default function ContractArchitectPage() {
       const fieldMap: Record<StepId, (keyof FormData)[]> = {
         company: ['compName', 'compType', 'compAddr', 'compRCCM', 'compID', 'bossName', 'bossTitle'],
         employee: ['empName', 'empBirth', 'empBirthPlace', 'empNation', 'empAddr', 'empID', 'empPhone'],
-        contract: ['jobTitle', 'jobDept', 'jobLocation', 'salary', 'startDate', 'trial', 'hours'],
+        contract: ['jobTitle', 'jobTasks', 'jobDept', 'jobLocation', 'salary', 'startDate', 'trial', 'hours'],
       };
       const fields = fieldMap[section];
       const filled = fields.filter((f) => {
@@ -814,7 +1094,8 @@ export default function ContractArchitectPage() {
 
       // Tentative Supabase
       try {
-        const { error } = await supabase.from('contracts').insert([
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { error } = await (supabase.from('contracts') as any).insert([
           {
             id: contract.id,
             employee_name: contract.employeeName,
@@ -873,6 +1154,12 @@ export default function ContractArchitectPage() {
       data.jobType === 'CDD' && data.endDate
         ? ` et prendra fin le ${new Date(data.endDate).toLocaleDateString('fr-FR')}`
         : '';
+
+    const salaryNum = parseInt(data.salary.replace(/\s/g, ''), 10);
+    const salaryWords = !isNaN(salaryNum) ? numberToFrenchWords(salaryNum) : '';
+    const salaryDisplay = salaryWords
+      ? `<strong>${salaryWords} (${data.salary}) ${config.currency}</strong>`
+      : `<strong>${data.salary} ${config.currency}</strong>`;
 
     const formatDate = (d: string) => {
       try {
@@ -979,6 +1266,7 @@ demeurant à <strong>${data.empAddr}</strong>, joignable au <strong>${data.empPh
   <p>Le Salarié est recruté en qualité de <strong>${data.jobTitle}</strong> au sein du département <strong>${data.jobDept}</strong>.
   <br/><br/>Le Salarié exercera ses fonctions au sein de l'établissement situé à <strong>${data.jobLocation}</strong>.
   <br/><br/>Le type de contrat conclu est un contrat à durée <strong>${data.jobType === 'CDI' ? 'indéterminée (CDI)' : 'déterminée (CDD)'}</strong>.${cddClause}
+  ${data.jobTasks ? `<br/><br/><strong>Tâches confiées :</strong><br/>${data.jobTasks.replace(/\n/g, '<br/>')}` : ''}
   <br/><br/><strong>Le Salarié s'engage à</strong> exercer ses fonctions avec diligence, compétence et loyauté,
   conformément aux directives de l'Employeur et aux usages de la profession.</p>
 </div>
@@ -986,7 +1274,7 @@ demeurant à <strong>${data.empAddr}</strong>, joignable au <strong>${data.empPh
 <div class="article">
   <h3>ARTICLE 3 : RÉMUNÉRATION</h3>
   <p>En contrepartie de l'exécution de ses fonctions, le Salarié percevra une rémunération mensuelle brute de
-  <strong>${data.salary} ${config.currency}</strong>.
+  ${salaryDisplay}.
   <br/><br/>Cette rémunération est versée mensuellement par virement bancaire, sous réserve des retenues légales et conventionnelles applicables.${bonusClause}
   <br/><br/>${config.articles.workDuration} la durée hebdomadaire de travail est fixée à <strong>${data.hours} heures</strong>.</p>
 </div>
@@ -1064,158 +1352,551 @@ ${nonCompeteArticle}
 </body></html>`;
   }, [data, config, signatures]);
 
-  // ── Génération PDF via html rendu en iframe + impression ──
+  // ── Utilitaire interne : rend le HTML et retourne un jsPDF (pas de téléchargement) ──
+  const buildPDFDocument = useCallback(async (): Promise<jsPDF> => {
+    const htmlContent = generateContractHTML();
+
+    // Créer un conteneur hors-écran avec marges professionnelles
+    const container = document.createElement('div');
+    container.style.position = 'fixed';
+    container.style.top = '-10000px';
+    container.style.left = '-10000px';
+    container.style.width = '794px'; // ~210mm à 96dpi
+    container.style.background = '#ffffff';
+    container.style.fontFamily = "Georgia, 'Times New Roman', serif";
+    container.style.lineHeight = '1.8';
+    container.style.fontSize = '12px';
+    container.style.color = '#000';
+
+    // Extraire uniquement le contenu du body
+    const bodyContent = htmlContent
+      .replace(/<!DOCTYPE html>[\s\S]*?<body[^>]*>/, '')
+      .replace(/<\/body>[\s\S]*<\/html>/, '');
+
+    // Injecter les styles inline + le contenu
+    container.innerHTML = `<style>
+      strong { font-weight: 700; }
+      h1 { font-size: 22px; text-align: center; text-transform: uppercase; letter-spacing: 3px; margin-bottom: 6px; }
+      h3 { font-size: 13px; font-weight: bold; text-transform: uppercase; margin-bottom: 10px; }
+      .article { margin-bottom: 20px; }
+      .sig-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 40px; }
+      .sig-box { text-align: center; }
+      .footer { margin-top: 50px; padding-top: 16px; border-top: 2px solid #ccc; text-align: center; font-size: 10px; color: #666; }
+    </style>` + bodyContent;
+    document.body.appendChild(container);
+
+    // Attendre le chargement des polices / images
+    await new Promise((resolve) => setTimeout(resolve, 600));
+
+    const canvas = await html2canvas(container, {
+      scale: 2,
+      useCORS: true,
+      logging: false,
+      backgroundColor: '#ffffff',
+      width: container.scrollWidth,
+      height: container.scrollHeight,
+    });
+
+    document.body.removeChild(container);
+
+    // Dimensions PDF A4 avec marges
+    const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    const pageW = pdf.internal.pageSize.getWidth();  // 210
+    const pageH = pdf.internal.pageSize.getHeight(); // 297
+    const marginX = 18;
+    const marginY = 20;
+    const contentW = pageW - marginX * 2;  // 174mm zone imprimable
+    const contentH = pageH - marginY * 2;  // 257mm zone imprimable
+
+    // Dimensions de l'image en mm pour correspondre à la zone imprimable
+    const imgHeightMM = (canvas.height * contentW) / canvas.width;
+
+    // Découper le canvas page par page pour éviter les espaces blancs
+    const pxPerPage = (contentH / imgHeightMM) * canvas.height;
+    const totalPages = Math.ceil(canvas.height / pxPerPage);
+
+    for (let page = 0; page < totalPages; page++) {
+      if (page > 0) pdf.addPage();
+
+      const srcY = page * pxPerPage;
+      const srcH = Math.min(pxPerPage, canvas.height - srcY);
+      const destH = (srcH / pxPerPage) * contentH;
+
+      // Découper le fragment du canvas pour cette page
+      const pageCanvas = document.createElement('canvas');
+      pageCanvas.width = canvas.width;
+      pageCanvas.height = Math.ceil(srcH);
+      const ctx = pageCanvas.getContext('2d');
+      if (ctx) {
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
+        ctx.drawImage(canvas, 0, srcY, canvas.width, srcH, 0, 0, canvas.width, srcH);
+      }
+
+      const pageImg = pageCanvas.toDataURL('image/jpeg', 0.95);
+      pdf.addImage(pageImg, 'JPEG', marginX, marginY, contentW, destH);
+    }
+
+    return pdf;
+  }, [generateContractHTML]);
+
+  // ── Génération PDF (téléchargement) ──
   const generatePDF = useCallback(async () => {
     setIsGenerating(true);
     try {
-      const html = generateContractHTML();
-      const blob = new Blob([html], { type: 'text/html; charset=utf-8' });
-      const url = URL.createObjectURL(blob);
-
-      // Créer un iframe invisible pour impression
-      const iframe = document.createElement('iframe');
-      iframe.style.position = 'fixed';
-      iframe.style.top = '-10000px';
-      iframe.style.left = '-10000px';
-      iframe.style.width = '210mm';
-      iframe.style.height = '297mm';
-      document.body.appendChild(iframe);
-
-      iframe.src = url;
-      await new Promise<void>((resolve) => {
-        iframe.onload = () => resolve();
-      });
-
-      // Alternative: télécharger directement comme HTML imprimable
-      const downloadLink = document.createElement('a');
-      downloadLink.href = url;
-      downloadLink.download = `CONTRAT_${data.empName.replace(/\s+/g, '_')}_${Date.now()}.html`;
-      downloadLink.click();
-
-      // Cleanup
-      setTimeout(() => {
-        document.body.removeChild(iframe);
-        URL.revokeObjectURL(url);
-      }, 2000);
-
-      showNotif('Document PDF prêt — ouvrez et imprimez en PDF', 'success');
+      const pdf = await buildPDFDocument();
+      pdf.save(`CONTRAT_${data.empName.replace(/\s+/g, '_')}_${Date.now()}.pdf`);
+      showNotif('Document PDF téléchargé avec succès', 'success');
     } catch (err) {
       console.error('Erreur PDF:', err);
       showNotif('Erreur génération PDF', 'error');
     } finally {
       setIsGenerating(false);
     }
-  }, [generateContractHTML, data.empName, showNotif]);
+  }, [buildPDFDocument, data.empName, showNotif]);
 
   // ═══════════════════════════════════════════
-  // GÉNÉRATION WORD (.docx) — via Blob HTML avec en-tête Word
+  // UTILITAIRE : Conversion base64 → Uint8Array
+  // ═══════════════════════════════════════════
+
+  const base64ToUint8Array = useCallback((dataUrl: string): Uint8Array => {
+    const base64 = dataUrl.split(',')[1];
+    const binaryString = atob(base64);
+    const bytes = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+    return bytes;
+  }, []);
+
+  // ═══════════════════════════════════════════
+  // GÉNÉRATION WORD (.docx) — via librairie docx
   // ═══════════════════════════════════════════
 
   const generateWord = useCallback(async () => {
     setIsGenerating(true);
     try {
-      const contractBody = generateContractHTML();
+      // Prepare clauses (same logic as generateContractHTML)
+      const capitalClause =
+        data.showCapital && data.compCapital
+          ? `, au capital social de ${data.compCapital} ${config.currency}`
+          : '';
+      const foreignerClause =
+        data.isForeigner && data.empWorkPermit
+          ? `, titulaire du permis de travail n\u00B0${data.empWorkPermit}`
+          : '';
+      const cddClause =
+        data.jobType === 'CDD' && data.cddReason
+          ? `Le pr\u00E9sent contrat est conclu pour les besoins suivants : ${data.cddReason}.`
+          : '';
+      const bonusClause = data.bonus
+        ? `En sus de cette r\u00E9mun\u00E9ration de base, le Salari\u00E9 pourra percevoir les primes et avantages suivants : ${data.bonus}.`
+        : '';
+      const endDateClause =
+        data.jobType === 'CDD' && data.endDate
+          ? ` et prendra fin le ${new Date(data.endDate).toLocaleDateString('fr-FR')}`
+          : '';
 
-      // Encapsuler dans un format Word-compatible (MHTML)
-      const wordDoc = `
-        <html xmlns:o='urn:schemas-microsoft-com:office:office'
-              xmlns:w='urn:schemas-microsoft-com:office:word'
-              xmlns='http://www.w3.org/TR/REC-html40'>
-        <head>
-          <meta charset="UTF-8">
-          <!--[if gte mso 9]>
-          <xml>
-            <w:WordDocument>
-              <w:View>Print</w:View>
-              <w:Zoom>100</w:Zoom>
-              <w:DoNotOptimizeForBrowser/>
-            </w:WordDocument>
-          </xml>
-          <![endif]-->
-          <style>
-            @page { size: A4; margin: 2cm 1.8cm; }
-            body { font-family: Georgia, 'Times New Roman', serif; font-size: 12pt; line-height: 1.8; color: #000; }
-            strong { font-weight: bold; }
-            h1 { font-size: 18pt; text-align: center; text-transform: uppercase; letter-spacing: 2pt; }
-            h3 { font-size: 11pt; font-weight: bold; text-transform: uppercase; }
-            table { border-collapse: collapse; width: 100%; }
-            td { vertical-align: top; padding: 8px; }
-            img { max-width: 200px; }
-          </style>
-        </head>
-        <body>
-          ${contractBody
-            .replace(/<!DOCTYPE html>/, '')
-            .replace(/<html>/, '')
-            .replace(/<\/html>/, '')
-            .replace(/<head>[\s\S]*?<\/head>/, '')
-            .replace(/<body[^>]*>/, '')
-            .replace(/<\/body>/, '')}
-        </body>
-        </html>
-      `;
+      const wordSalaryNum = parseInt(data.salary.replace(/\s/g, ''), 10);
+      const wordSalaryWords = !isNaN(wordSalaryNum) ? numberToFrenchWords(wordSalaryNum) : '';
 
-      const blob = new Blob(['\ufeff' + wordDoc], {
-        type: 'application/msword',
+      const formatDate = (d: string) => {
+        try { return new Date(d).toLocaleDateString('fr-FR'); } catch { return d; }
+      };
+      const todayFull = new Date().toLocaleDateString('fr-FR', {
+        day: 'numeric', month: 'long', year: 'numeric',
       });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `CONTRAT_${data.empName.replace(/\s+/g, '_')}_${Date.now()}.doc`;
-      link.click();
-      URL.revokeObjectURL(url);
 
-      showNotif('Document Word téléchargé', 'success');
+      const suspArticleNum = data.hasNonCompete ? '7' : '6';
+      const litigeArticleNum = data.hasNonCompete ? '8' : '7';
+
+      // Text run helpers
+      const normalRun = (text: string): TextRun => new TextRun({ text, font: 'Georgia', size: 24 });
+      const boldRun = (text: string): TextRun => new TextRun({ text, font: 'Georgia', size: 24, bold: true });
+      const italicRun = (text: string): TextRun => new TextRun({ text, font: 'Georgia', size: 24, italics: true });
+      const boldItalicRun = (text: string): TextRun => new TextRun({ text, font: 'Georgia', size: 24, bold: true, italics: true });
+
+      // Paragraph helpers
+      const articleHeading = (title: string): Paragraph =>
+        new Paragraph({
+          spacing: { before: 300, after: 120 },
+          children: [new TextRun({ text: title, font: 'Georgia', size: 26, bold: true, allCaps: true })],
+        });
+
+      const articleBody = (runs: TextRun[]): Paragraph =>
+        new Paragraph({ spacing: { after: 120 }, children: runs });
+
+      // Build all paragraphs
+      const children: (Paragraph | Table)[] = [];
+
+      // Logo (if base64 data URL)
+      if (data.compLogo) {
+        try {
+          const logoBytes = base64ToUint8Array(data.compLogo);
+          children.push(
+            new Paragraph({
+              children: [
+                new ImageRun({ data: logoBytes, transformation: { width: 90, height: 90 } }),
+              ],
+            })
+          );
+          children.push(
+            new Paragraph({
+              alignment: AlignmentType.RIGHT,
+              children: [
+                boldRun(data.compName),
+                ...(data.compDescription
+                  ? [new TextRun({ text: `\n${data.compDescription}`, font: 'Georgia', size: 20, color: '666666' })]
+                  : []),
+              ],
+            })
+          );
+        } catch { /* skip logo on error */ }
+      }
+
+      // Title
+      children.push(new Paragraph({ spacing: { before: 400 } }));
+      children.push(
+        new Paragraph({
+          alignment: AlignmentType.CENTER,
+          heading: HeadingLevel.HEADING_1,
+          children: [
+            new TextRun({ text: 'CONTRAT DE TRAVAIL', font: 'Georgia', size: 44, bold: true, allCaps: true, characterSpacing: 60 }),
+          ],
+        })
+      );
+      children.push(
+        new Paragraph({
+          alignment: AlignmentType.CENTER,
+          spacing: { after: 400 },
+          children: [new TextRun({ text: `R\u00C9GIME : ${data.jobType}`, font: 'Georgia', size: 28, bold: true, color: '333333' })],
+        })
+      );
+
+      // ENTRE LES SOUSSIGNÉS
+      children.push(
+        new Paragraph({ spacing: { after: 200 }, children: [new TextRun({ text: 'ENTRE LES SOUSSIGN\u00C9S :', font: 'Georgia', size: 28, bold: true })] })
+      );
+
+      // Company info
+      children.push(
+        new Paragraph({
+          spacing: { after: 120 },
+          children: [
+            normalRun('La soci\u00E9t\u00E9 '), boldRun(data.compName),
+            normalRun(`, ${data.compType}${capitalClause}, dont le si\u00E8ge social est situ\u00E9 \u00E0 `),
+            boldRun(data.compAddr),
+            normalRun(', immatricul\u00E9e au Registre de Commerce et du Cr\u00E9dit Mobilier (RCCM) sous le num\u00E9ro '),
+            boldRun(data.compRCCM),
+            normalRun(` et identifi\u00E9e au ${config.idLabel} sous le num\u00E9ro `),
+            boldRun(data.compID),
+            normalRun(', repr\u00E9sent\u00E9e par M./Mme '),
+            boldRun(data.bossName),
+            normalRun(' en sa qualit\u00E9 de '),
+            boldRun(data.bossTitle),
+            normalRun(', d\u00FBment habilit\u00E9(e) aux fins des pr\u00E9sentes.'),
+          ],
+        })
+      );
+
+      children.push(new Paragraph({
+        alignment: AlignmentType.RIGHT,
+        children: [italicRun('Ci-apr\u00E8s d\u00E9nomm\u00E9e \u00AB '), boldItalicRun("L'EMPLOYEUR"), italicRun(' \u00BB')],
+      }));
+      children.push(new Paragraph({ alignment: AlignmentType.CENTER, children: [boldRun("D'UNE PART,")] }));
+      children.push(new Paragraph({ alignment: AlignmentType.CENTER, children: [boldRun('ET :')] }));
+
+      // Employee info
+      children.push(
+        new Paragraph({
+          spacing: { after: 120 },
+          children: [
+            normalRun('M./Mme '), boldRun(data.empName),
+            normalRun(', n\u00E9(e) le '), boldRun(formatDate(data.empBirth)),
+            normalRun(' \u00E0 '), boldRun(data.empBirthPlace),
+            normalRun(', de nationalit\u00E9 '), boldRun(data.empNation),
+            normalRun(foreignerClause),
+            normalRun(", titulaire de la pi\u00E8ce d'identit\u00E9 n\u00B0"),
+            boldRun(data.empID),
+            normalRun(', demeurant \u00E0 '), boldRun(data.empAddr),
+            normalRun(', joignable au '), boldRun(data.empPhone),
+            normalRun('.'),
+          ],
+        })
+      );
+
+      children.push(new Paragraph({
+        alignment: AlignmentType.RIGHT,
+        children: [italicRun('Ci-apr\u00E8s d\u00E9nomm\u00E9(e) \u00AB '), boldItalicRun('LE SALARI\u00C9'), italicRun(' \u00BB')],
+      }));
+      children.push(new Paragraph({ alignment: AlignmentType.CENTER, children: [boldRun("D'AUTRE PART,")] }));
+      children.push(new Paragraph({ spacing: { before: 300, after: 200 }, children: [new TextRun({ text: 'IL A \u00C9T\u00C9 ARR\u00CAT\u00C9 ET CONVENU CE QUI SUIT :', font: 'Georgia', size: 28, bold: true })] }));
+
+      // Article 1
+      children.push(articleHeading('ARTICLE 1 : OBJET ET CADRE L\u00C9GAL'));
+      children.push(articleBody([normalRun(`Le pr\u00E9sent contrat est conclu sous le r\u00E9gime du ${config.code}.`)]));
+      children.push(articleBody([normalRun(config.articles.intro), normalRun(' '), normalRun(config.articles.engagement)]));
+      children.push(articleBody([normalRun(`Le pr\u00E9sent contrat d\u00E9finit les conditions d'engagement et d'emploi du Salari\u00E9 au sein de la soci\u00E9t\u00E9 ${data.compName}.`)]));
+
+      // Article 2
+      children.push(articleHeading('ARTICLE 2 : NATURE ET FONCTIONS'));
+      children.push(articleBody([
+        normalRun('Le Salari\u00E9 est recrut\u00E9 en qualit\u00E9 de '), boldRun(data.jobTitle),
+        normalRun(' au sein du d\u00E9partement '), boldRun(data.jobDept), normalRun('.'),
+      ]));
+      children.push(articleBody([
+        normalRun("Le Salari\u00E9 exercera ses fonctions au sein de l'\u00E9tablissement situ\u00E9 \u00E0 "),
+        boldRun(data.jobLocation), normalRun('.'),
+      ]));
+      children.push(articleBody([
+        normalRun('Le type de contrat conclu est un contrat \u00E0 dur\u00E9e '),
+        boldRun(data.jobType === 'CDI' ? 'ind\u00E9termin\u00E9e (CDI)' : 'd\u00E9termin\u00E9e (CDD)'),
+        normalRun('.'),
+      ]));
+      if (cddClause) { children.push(articleBody([normalRun(cddClause)])); }
+      if (data.jobTasks) {
+        children.push(articleBody([boldRun('T\u00E2ches confi\u00E9es :')]));
+        data.jobTasks.split('\n').filter(Boolean).forEach((line) => {
+          children.push(articleBody([normalRun(`\u2014 ${line.trim()}`)]));
+        });
+      }
+      children.push(articleBody([
+        boldRun("Le Salari\u00E9 s'engage \u00E0"),
+        normalRun(" exercer ses fonctions avec diligence, comp\u00E9tence et loyaut\u00E9, conform\u00E9ment aux directives de l'Employeur et aux usages de la profession."),
+      ]));
+
+      // Article 3
+      children.push(articleHeading('ARTICLE 3 : R\u00C9MUN\u00C9RATION'));
+      const wordSalaryLine = wordSalaryWords
+        ? `${wordSalaryWords} (${data.salary}) ${config.currency}`
+        : `${data.salary} ${config.currency}`;
+      children.push(articleBody([
+        normalRun("En contrepartie de l'ex\u00E9cution de ses fonctions, le Salari\u00E9 percevra une r\u00E9mun\u00E9ration mensuelle brute de "),
+        boldRun(wordSalaryLine), normalRun('.'),
+      ]));
+      children.push(articleBody([normalRun('Cette r\u00E9mun\u00E9ration est vers\u00E9e mensuellement par virement bancaire, sous r\u00E9serve des retenues l\u00E9gales et conventionnelles applicables.')]));
+      if (bonusClause) { children.push(articleBody([normalRun(bonusClause)])); }
+      children.push(articleBody([
+        normalRun(`${config.articles.workDuration} la dur\u00E9e hebdomadaire de travail est fix\u00E9e \u00E0 `),
+        boldRun(`${data.hours} heures`), normalRun('.'),
+      ]));
+
+      // Article 4
+      children.push(articleHeading("ARTICLE 4 : DUR\u00C9E DU CONTRAT ET P\u00C9RIODE D'ESSAI"));
+      children.push(articleBody([
+        normalRun('Le pr\u00E9sent contrat de travail prend effet \u00E0 compter du '),
+        boldRun(formatDate(data.startDate)), normalRun(endDateClause + '.'),
+      ]));
+      children.push(articleBody([
+        normalRun("Une p\u00E9riode d'essai de "), boldRun(`${data.trial} mois`),
+        normalRun(" est pr\u00E9vue. Durant cette p\u00E9riode, chacune des parties peut mettre fin au contrat sans pr\u00E9avis ni indemnit\u00E9, conform\u00E9ment aux dispositions l\u00E9gales en vigueur."),
+      ]));
+      children.push(articleBody([
+        normalRun("\u00C0 l'issue de la p\u00E9riode d'essai, si aucune des parties n'a manifest\u00E9 sa volont\u00E9 de rompre le contrat, celui-ci se poursuivra dans les conditions d\u00E9finies aux pr\u00E9sentes."),
+      ]));
+
+      // Article 5
+      children.push(articleHeading('ARTICLE 5 : OBLIGATIONS DES PARTIES'));
+      children.push(articleBody([boldRun("L'Employeur s'engage \u00E0 :")]));
+      children.push(articleBody([normalRun('\u2014 Fournir au Salari\u00E9 un travail conforme \u00E0 ses qualifications professionnelles')]));
+      children.push(articleBody([normalRun('\u2014 Verser la r\u00E9mun\u00E9ration convenue aux \u00E9ch\u00E9ances pr\u00E9vues')]));
+      children.push(articleBody([normalRun("\u2014 Respecter l'ensemble des dispositions l\u00E9gales et conventionnelles applicables")]));
+      children.push(articleBody([normalRun('\u2014 Assurer la s\u00E9curit\u00E9 et la protection de la sant\u00E9 du Salari\u00E9')]));
+      children.push(new Paragraph({ spacing: { before: 120 } }));
+      children.push(articleBody([boldRun("Le Salari\u00E9 s'engage \u00E0 :")]));
+      children.push(articleBody([normalRun('\u2014 Ex\u00E9cuter personnellement les missions qui lui sont confi\u00E9es')]));
+      children.push(articleBody([normalRun("\u2014 Respecter les directives de l'Employeur et le r\u00E8glement int\u00E9rieur")]));
+      children.push(articleBody([normalRun('\u2014 Observer une obligation de loyaut\u00E9 et de confidentialit\u00E9')]));
+      children.push(articleBody([normalRun("\u2014 Consacrer l'int\u00E9gralit\u00E9 de son activit\u00E9 professionnelle \u00E0 l'Employeur")]));
+
+      // Article 6 (Non-compete, conditional)
+      if (data.hasNonCompete) {
+        children.push(articleHeading('ARTICLE 6 : CLAUSE DE NON-CONCURRENCE'));
+        children.push(articleBody([
+          normalRun("Le Salari\u00E9 s'engage, pendant une dur\u00E9e de "), boldRun(data.nonCompeteDuration),
+          normalRun(" suivant la cessation du pr\u00E9sent contrat, quelle qu'en soit la cause, \u00E0 ne pas exercer, directement ou indirectement, une activit\u00E9 concurrente \u00E0 celle de l'Employeur."),
+        ]));
+        children.push(articleBody([
+          normalRun(`Cette obligation s'applique sur le territoire du ${config.name} et concerne toute activit\u00E9 similaire ou connexe \u00E0 celle exerc\u00E9e au sein de la soci\u00E9t\u00E9 ${data.compName}.`),
+        ]));
+        children.push(articleBody([
+          normalRun("En contrepartie de cette clause, le Salari\u00E9 percevra une indemnit\u00E9 compensatrice dont les modalit\u00E9s seront d\u00E9finies conform\u00E9ment aux dispositions l\u00E9gales applicables."),
+        ]));
+      }
+
+      // Suspension & Rupture
+      children.push(articleHeading(`ARTICLE ${suspArticleNum} : SUSPENSION ET RUPTURE DU CONTRAT`));
+      children.push(articleBody([normalRun(config.articles.termination)]));
+      children.push(articleBody([normalRun('La suspension du contrat de travail pourra intervenir dans les cas pr\u00E9vus par la loi (maladie, maternit\u00E9, accident du travail, etc.).')]));
+      children.push(articleBody([normalRun("La rupture du contrat de travail, quelle qu'en soit la cause, devra respecter les dispositions l\u00E9gales en vigueur relatives au pr\u00E9avis, aux indemnit\u00E9s et aux formalit\u00E9s applicables.")]));
+      children.push(articleBody([normalRun("En cas de rupture du contrat, le Salari\u00E9 restituera imm\u00E9diatement \u00E0 l'Employeur l'ensemble des documents, mat\u00E9riels et \u00E9quipements mis \u00E0 sa disposition.")]));
+
+      // Litiges
+      children.push(articleHeading(`ARTICLE ${litigeArticleNum} : LITIGES`));
+      children.push(articleBody([normalRun("En cas de diff\u00E9rend relatif \u00E0 l'interpr\u00E9tation ou \u00E0 l'ex\u00E9cution du pr\u00E9sent contrat, les parties s'efforceront de trouver une solution amiable.")]));
+      children.push(articleBody([
+        normalRun("\u00C0 d\u00E9faut d'accord amiable, tout litige rel\u00E8vera de la comp\u00E9tence exclusive du "),
+        boldRun(config.court),
+        normalRun(", conform\u00E9ment aux dispositions l\u00E9gales applicables en mati\u00E8re de contentieux du travail."),
+      ]));
+
+      // Fait à...
+      children.push(new Paragraph({ spacing: { before: 400 } }));
+      children.push(articleBody([
+        normalRun('Fait \u00E0 '), boldRun(data.compAddr.split(',')[0].trim()),
+        normalRun(', le '), boldRun(todayFull),
+      ]));
+      children.push(articleBody([normalRun('En deux exemplaires originaux, dont un remis au Salari\u00E9.')]));
+
+      // Signature table (borderless 2-column)
+      const noBorder = { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' };
+      const noBorders = { top: noBorder, bottom: noBorder, left: noBorder, right: noBorder };
+
+      const buildSigCell = (title: string, sigUrl: string, name: string, role: string, placeholder: string): TableCell => {
+        const cellChildren: Paragraph[] = [
+          new Paragraph({ alignment: AlignmentType.CENTER, children: [boldRun(title)] }),
+        ];
+        if (sigUrl) {
+          try {
+            const sigBytes = base64ToUint8Array(sigUrl);
+            cellChildren.push(
+              new Paragraph({
+                alignment: AlignmentType.CENTER,
+                spacing: { before: 100, after: 100 },
+                children: [new ImageRun({ data: sigBytes, transformation: { width: 200, height: 80 } })],
+              })
+            );
+            cellChildren.push(
+              new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: 'Signature \u00E9lectronique', font: 'Georgia', size: 20, color: '666666' })] })
+            );
+          } catch {
+            cellChildren.push(new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 200, after: 200 }, children: [new TextRun({ text: placeholder, font: 'Georgia', size: 20, color: '999999' })] }));
+          }
+        } else {
+          cellChildren.push(new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 200, after: 200 }, children: [new TextRun({ text: placeholder, font: 'Georgia', size: 20, color: '999999' })] }));
+        }
+        cellChildren.push(new Paragraph({ alignment: AlignmentType.CENTER, children: [boldRun(name)] }));
+        cellChildren.push(new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: role, font: 'Georgia', size: 24, color: '666666' })] }));
+        return new TableCell({ borders: noBorders, width: { size: 50, type: WidthType.PERCENTAGE }, children: cellChildren });
+      };
+
+      const pageContentWidthTwip = convertMillimetersToTwip(174);
+      const halfWidthTwip = Math.floor(pageContentWidthTwip / 2);
+
+      const sigTable = new Table({
+        width: { size: pageContentWidthTwip, type: WidthType.DXA },
+        layout: TableLayoutType.FIXED,
+        columnWidths: [halfWidthTwip, halfWidthTwip],
+        rows: [
+          new TableRow({
+            children: [
+              buildSigCell("L'EMPLOYEUR", signatures.employer, data.bossName, data.bossTitle, '(Signature et cachet)'),
+              buildSigCell('LE SALARI\u00C9', signatures.employee, data.empName, data.jobTitle, '(Lu et approuv\u00E9, signature)'),
+            ],
+          }),
+        ],
+      });
+
+      children.push(new Paragraph({ spacing: { before: 400 } }));
+      children.push(sigTable);
+
+      // Footer
+      const footerParagraphs: Paragraph[] = [];
+      if (data.documentMode === 'ELECTRONIC') {
+        footerParagraphs.push(new Paragraph({
+          alignment: AlignmentType.CENTER, spacing: { before: 400 },
+          border: { top: { style: BorderStyle.SINGLE, size: 2, color: 'CCCCCC', space: 8 } },
+          children: [new TextRun({ text: 'Document g\u00E9n\u00E9r\u00E9 via ECODREUM Intelligence', font: 'Georgia', size: 20, color: '666666', bold: true })],
+        }));
+        footerParagraphs.push(new Paragraph({
+          alignment: AlignmentType.CENTER,
+          children: [new TextRun({ text: 'Ce document ne se substitue pas \u00E0 un conseil juridique personnalis\u00E9', font: 'Georgia', size: 20, color: '666666' })],
+        }));
+      } else {
+        footerParagraphs.push(new Paragraph({
+          alignment: AlignmentType.CENTER, spacing: { before: 400 },
+          border: { top: { style: BorderStyle.SINGLE, size: 2, color: 'CCCCCC', space: 8 } },
+          children: [new TextRun({ text: data.compName, font: 'Georgia', size: 20, bold: true, color: '666666' })],
+        }));
+      }
+      children.push(...footerParagraphs);
+
+      // Create document
+      const doc = new Document({
+        sections: [{
+          properties: {
+            page: {
+              size: { width: convertMillimetersToTwip(210), height: convertMillimetersToTwip(297) },
+              margin: {
+                top: convertMillimetersToTwip(20), bottom: convertMillimetersToTwip(20),
+                left: convertMillimetersToTwip(18), right: convertMillimetersToTwip(18),
+              },
+            },
+          },
+          children,
+        }],
+      });
+
+      // Generate and download
+      const blob = await Packer.toBlob(doc);
+      saveAs(blob, `CONTRAT_${data.empName.replace(/\s+/g, '_')}_${Date.now()}.docx`);
+      showNotif('Document Word (.docx) t\u00E9l\u00E9charg\u00E9', 'success');
     } catch (err) {
       console.error('Erreur Word:', err);
-      showNotif('Erreur génération Word', 'error');
+      showNotif('Erreur g\u00E9n\u00E9ration Word', 'error');
     } finally {
       setIsGenerating(false);
     }
-  }, [generateContractHTML, data.empName, showNotif]);
+  }, [data, config, signatures, base64ToUint8Array, showNotif]);
 
   // ═══════════════════════════════════════════
   // WEB SHARE API — Partage natif du PDF
   // ═══════════════════════════════════════════
 
   const shareContract = useCallback(async () => {
+    setIsGenerating(true);
     try {
-      const html = generateContractHTML();
-      const blob = new Blob([html], { type: 'text/html; charset=utf-8' });
-      const file = new File(
-        [blob],
-        `CONTRAT_${data.empName.replace(/\s+/g, '_')}.html`,
-        { type: 'text/html' }
+      // Générer le PDF d'abord
+      const pdf = await buildPDFDocument();
+      const pdfBlob = pdf.output('blob');
+      const pdfFile = new File(
+        [pdfBlob],
+        `CONTRAT_${data.empName.replace(/\s+/g, '_')}.pdf`,
+        { type: 'application/pdf' }
       );
 
-      if (navigator.share && navigator.canShare?.({ files: [file] })) {
+      if (navigator.share && navigator.canShare?.({ files: [pdfFile] })) {
         await navigator.share({
           title: `Contrat - ${data.empName}`,
           text: `Contrat de travail (${data.jobType}) - ${data.empName}`,
-          files: [file],
+          files: [pdfFile],
         });
         showNotif('Partage effectué', 'success');
       } else if (navigator.share) {
-        // Partage sans fichier (fallback)
         await navigator.share({
           title: `Contrat - ${data.empName}`,
           text: `Contrat de travail (${data.jobType}) pour ${data.empName} chez ${data.compName}`,
         });
         showNotif('Partage effectué', 'success');
       } else {
-        // Copier dans le presse-papier comme dernier recours
-        await navigator.clipboard.writeText(
-          `Contrat de travail (${data.jobType}) pour ${data.empName} chez ${data.compName}`
-        );
-        showNotif('Lien copié dans le presse-papier', 'success');
+        // Fallback : télécharger le PDF
+        const url = URL.createObjectURL(pdfBlob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `CONTRAT_${data.empName.replace(/\s+/g, '_')}.pdf`;
+        a.click();
+        URL.revokeObjectURL(url);
+        showNotif('PDF téléchargé (partage non disponible)', 'success');
       }
     } catch (err) {
       if ((err as Error).name !== 'AbortError') {
         console.error('Erreur partage:', err);
         showNotif('Erreur de partage', 'error');
       }
+    } finally {
+      setIsGenerating(false);
     }
-  }, [generateContractHTML, data, showNotif]);
+  }, [buildPDFDocument, data, showNotif]);
 
   // ═══════════════════════════════════════════
   // ARCHIVES — Charger / Supprimer
@@ -1266,7 +1947,9 @@ ${nonCompeteArticle}
     setCurrentStep('company');
     setShowPreview(false);
     setIsSaved(false);
-    setShowResetConfirm(false); // On ferme la modale
+    setShowPostSaveActions(false);
+    setValidationErrors([]);
+    setShowResetConfirm(false);
   };
             
 // ─── FIN PARTIE 2 ───────────────────────────
@@ -1285,12 +1968,14 @@ ${nonCompeteArticle}
 
   return (
     <div
-      className="h-screen w-full overflow-y-auto overflow-x-hidden eco-scroll holo-grid"
+      className="h-screen w-full overflow-y-auto overflow-x-hidden eco-scroll hex-bg"
       style={{
-        background: 'var(--bg-primary)',
         fontFamily: "'Outfit', 'Space Grotesk', sans-serif",
       }}
     >
+
+      {/* ── CONSTELLATION LOADING OVERLAY ── */}
+      {isGenerating && <ConstellationLoader />}
 
       {/* ── NOTIFICATIONS ── */}
       {notif && (
@@ -1332,86 +2017,92 @@ ${nonCompeteArticle}
       {/* ═══════════════════════════════════════ */}
       {/* MAIN CONTENT                           */}
       {/* ═══════════════════════════════════════ */}
-      <div className="relative max-w-6xl mx-auto px-4 py-6 md:px-8 md:py-8">
+      <div className="relative z-10 max-w-6xl mx-auto px-4 py-6 md:px-8 md:py-8">
 
         {/* ── HEADER ── */}
-        <header className="mb-8">
-          <div className="eco-glass rounded-2xl p-5 relative overflow-hidden">
-            {/* Decorative corner accent */}
-            <div
-              className="absolute top-0 right-0 w-32 h-32 pointer-events-none"
-              style={{
-                background: 'radial-gradient(circle at top right, rgba(16,185,129,0.08), transparent 70%)',
-              }}
-            />
+        <header className="mb-8 relative z-10">
+          <div className="eco-glass rounded-2xl p-6 relative overflow-hidden eco-section-card">
+            {/* Decorative corner accents — gold + emerald */}
+            <div className="absolute top-0 right-0 w-48 h-48 pointer-events-none" style={{
+              background: 'radial-gradient(circle at top right, rgba(201,168,76,0.1), rgba(0,255,136,0.04) 40%, transparent 60%)',
+            }} />
+            <div className="absolute bottom-0 left-0 w-32 h-32 pointer-events-none" style={{
+              background: 'radial-gradient(circle at bottom left, rgba(0,255,136,0.04), transparent 60%)',
+            }} />
+
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 relative z-10">
               <div className="flex items-center gap-4">
                 <button
                   onClick={() => router.back()}
                   className="p-3 rounded-xl border transition-all hover:scale-105 active:scale-95"
                   style={{
-                    background: 'rgba(16, 185, 129, 0.08)',
-                    borderColor: 'rgba(16, 185, 129, 0.2)',
+                    background: 'rgba(201, 168, 76, 0.06)',
+                    borderColor: 'rgba(201, 168, 76, 0.25)',
                   }}
                 >
-                  <ArrowLeft size={18} style={{ color: 'var(--emerald-glow)' }} />
+                  <ArrowLeft size={18} style={{ color: 'var(--gold-light)' }} />
                 </button>
                 <div>
-                  <div className="flex items-center gap-2 mb-0.5">
-                    <Hexagon size={18} style={{ color: 'var(--emerald-glow)' }} />
+                  <div className="flex items-center gap-2.5 mb-1">
+                    <div className="hex-badge w-8 h-9" style={{ background: 'linear-gradient(135deg, var(--gold-light), var(--gold-deep))' }}>
+                      <Hexagon size={16} style={{ color: '#0a0a0a' }} />
+                    </div>
                     <h1
-                      className="text-xl sm:text-2xl font-black uppercase tracking-tight"
-                      style={{
-                        background: 'linear-gradient(135deg, var(--emerald-light), var(--emerald-glow))',
-                        WebkitBackgroundClip: 'text',
-                        WebkitTextFillColor: 'transparent',
-                      }}
+                      className="text-xl sm:text-2xl font-black uppercase tracking-tight gold-shimmer-text"
                     >
                       CONTRACT ARCHITECT
                     </h1>
                   </div>
-                  <p className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'var(--text-secondary)' }}>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.25em]" style={{ color: 'rgba(201,168,76,0.6)' }}>
                     ECODREUM Engine L1
                   </p>
                 </div>
               </div>
 
-              {/* Bouton Nouveau (Haut de page) */}
-<button 
-  onClick={handleNewContract}
-  className="ml-4 flex items-center gap-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 border border-emerald-500/20 px-3 py-1.5 rounded-full transition-all group active:scale-95"
->
-  <Sparkles size={14} className="group-hover:rotate-12 transition-transform" />
-  <span className="text-[10px] font-black tracking-widest">NOUVEAU</span>
-</button>
-
-              <button
-                onClick={() => setShowArchives(true)}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl border font-bold text-xs uppercase tracking-wider transition-all hover:scale-105 active:scale-95"
-                style={{
-                  background: 'rgba(16, 185, 129, 0.06)',
-                  borderColor: 'rgba(16, 185, 129, 0.25)',
-                  color: 'var(--emerald-light)',
-                }}
-              >
-                <Archive size={15} />
-                <span>Archives</span>
-                <span
-                  className="px-2 py-0.5 rounded-full text-[10px] font-black"
-                  style={{ background: 'rgba(16, 185, 129, 0.15)', color: 'var(--emerald-glow)' }}
+              <div className="flex items-center gap-3">
+                {/* Bouton Nouveau */}
+                <button
+                  onClick={handleNewContract}
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl border font-bold text-xs uppercase tracking-wider transition-all hover:scale-105 active:scale-95 group"
+                  style={{
+                    background: 'linear-gradient(135deg, rgba(201,168,76,0.1), rgba(201,168,76,0.03))',
+                    borderColor: 'rgba(201, 168, 76, 0.3)',
+                    color: 'var(--gold-light)',
+                  }}
                 >
-                  {savedContracts.length}
-                </span>
-              </button>
+                  <Sparkles size={14} className="group-hover:rotate-12 transition-transform" />
+                  <span>Nouveau</span>
+                </button>
+
+                {/* Bouton Archives */}
+                <button
+                  onClick={() => setShowArchives(true)}
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl border font-bold text-xs uppercase tracking-wider transition-all hover:scale-105 active:scale-95"
+                  style={{
+                    background: 'rgba(0, 255, 136, 0.06)',
+                    borderColor: 'rgba(0, 255, 136, 0.25)',
+                    color: 'var(--emerald-light)',
+                  }}
+                >
+                  <Archive size={15} />
+                  <span>Archives</span>
+                  <span
+                    className="px-2 py-0.5 rounded-full text-[10px] font-black"
+                    style={{ background: 'rgba(201, 168, 76, 0.15)', color: 'var(--gold-light)' }}
+                  >
+                    {savedContracts.length}
+                  </span>
+                </button>
+              </div>
             </div>
           </div>
         </header>
 
         {/* ── MODE + JURIDICTION (Mini-Cards) ── */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 relative z-10">
           {/* Mode de Document */}
           <div className="eco-glass rounded-2xl p-5">
-            <label className="text-[10px] font-bold uppercase tracking-widest mb-3 block" style={{ color: 'var(--emerald-glow)' }}>
+            <label className="text-[10px] font-bold uppercase tracking-widest mb-3 flex items-center gap-1.5" style={{ color: 'var(--emerald-neon)' }}>
               Mode de Document
             </label>
             <div className="flex gap-3">
@@ -1428,7 +2119,7 @@ ${nonCompeteArticle}
                   style={{
                     background:
                       data.documentMode === mode
-                        ? 'linear-gradient(135deg, rgba(16,185,129,0.15), rgba(16,185,129,0.05))'
+                        ? 'linear-gradient(135deg, rgba(0,255,136,0.15), rgba(0,255,136,0.05))'
                         : 'rgba(0,0,0,0.25)',
                     borderColor:
                       data.documentMode === mode ? 'var(--emerald-glow)' : 'var(--border-dim)',
@@ -1456,8 +2147,8 @@ ${nonCompeteArticle}
 
           {/* Juridiction */}
           <div className="eco-glass rounded-2xl p-5">
-            <label className="text-[10px] font-bold uppercase tracking-widest mb-3 block" style={{ color: 'var(--emerald-glow)' }}>
-              Juridiction
+            <label className="text-[10px] font-bold uppercase tracking-widest mb-3 flex items-center gap-1.5" style={{ color: 'var(--emerald-neon)' }}>
+              <Globe size={10} /> Juridiction
             </label>
             <div className="flex gap-3">
               {(['SENEGAL', 'BURUNDI'] as const).map((country) => (
@@ -1470,7 +2161,7 @@ ${nonCompeteArticle}
                   style={{
                     background:
                       data.country === country
-                        ? 'linear-gradient(135deg, rgba(16,185,129,0.15), rgba(16,185,129,0.05))'
+                        ? 'linear-gradient(135deg, rgba(0,255,136,0.15), rgba(0,255,136,0.05))'
                         : 'rgba(0,0,0,0.25)',
                     borderColor: data.country === country ? 'var(--emerald-glow)' : 'var(--border-dim)',
                   }}
@@ -1493,8 +2184,8 @@ ${nonCompeteArticle}
         </div>
 
         {/* ── STEPPER — 3 étapes ── */}
-        <div className="mb-8">
-          <div className="eco-glass rounded-2xl p-5">
+        <div className="mb-8 relative z-10">
+          <div className="eco-glass rounded-2xl p-5 eco-section-card">
             {/* Steps Row */}
             <div className="flex items-center justify-between gap-2 mb-4">
               {STEPS.map((step, idx) => {
@@ -1510,37 +2201,40 @@ ${nonCompeteArticle}
                       className="flex items-center gap-3 px-3 py-2 rounded-xl transition-all hover:scale-105 active:scale-95"
                       style={{
                         background: isActive
-                          ? 'rgba(16, 185, 129, 0.12)'
+                          ? 'rgba(0, 255, 136, 0.08)'
                           : 'transparent',
                         border: isActive
-                          ? '1px solid rgba(16, 185, 129, 0.3)'
+                          ? '1px solid rgba(0, 255, 136, 0.3)'
                           : '1px solid transparent',
                       }}
                     >
                       <div
-                        className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-all"
+                        className={`hex-badge w-10 h-12 flex-shrink-0 transition-all`}
                         style={{
                           background: isComplete
-                            ? 'linear-gradient(135deg, var(--emerald-glow), var(--emerald-deep))'
+                            ? 'linear-gradient(135deg, var(--gold-light), var(--gold), var(--gold-deep))'
                             : isActive
-                            ? 'rgba(16, 185, 129, 0.2)'
+                            ? 'rgba(0, 255, 136, 0.15)'
                             : 'rgba(255,255,255,0.04)',
-                          boxShadow: isActive ? '0 0 20px rgba(16,185,129,0.15)' : 'none',
+                          boxShadow: isComplete
+                            ? '0 0 20px rgba(201,168,76,0.3)'
+                            : isActive ? '0 0 20px rgba(0,255,136,0.2)' : 'none',
+                          filter: isComplete ? 'drop-shadow(0 0 6px rgba(201,168,76,0.4))' : 'none',
                         }}
                       >
                         {isComplete ? (
-                          <CheckCircle size={18} style={{ color: '#fff' }} />
+                          <CheckCircle size={18} style={{ color: '#000' }} />
                         ) : (
                           <StepIcon
                             size={18}
-                            style={{ color: isActive ? 'var(--emerald-glow)' : 'rgba(255,255,255,0.3)' }}
+                            style={{ color: isActive ? 'var(--emerald-neon)' : 'rgba(255,255,255,0.3)' }}
                           />
                         )}
                       </div>
                       <div className="hidden sm:block text-left">
                         <p
                           className="text-xs font-bold uppercase"
-                          style={{ color: isActive ? 'var(--emerald-light)' : 'var(--text-secondary)' }}
+                          style={{ color: isActive ? 'var(--emerald-neon)' : 'var(--text-secondary)' }}
                         >
                           {step.label}
                         </p>
@@ -1565,12 +2259,12 @@ ${nonCompeteArticle}
                   className="h-full rounded-full transition-all duration-700"
                   style={{
                     width: `${totalProgress}%`,
-                    background: 'linear-gradient(90deg, var(--emerald-deep), var(--emerald-glow), var(--emerald-light))',
-                    boxShadow: '0 0 12px rgba(16,185,129,0.4)',
+                    background: 'linear-gradient(90deg, var(--emerald-deep), var(--emerald-neon), var(--gold), var(--gold-light))',
+                    boxShadow: '0 0 15px rgba(201,168,76,0.4), 0 0 30px rgba(0,255,136,0.2)',
                   }}
                 />
               </div>
-              <span className="text-sm font-black" style={{ color: 'var(--emerald-glow)' }}>
+              <span className="text-sm font-black" style={{ color: 'var(--gold-light)' }}>
                 {totalProgress}%
               </span>
             </div>
@@ -1608,20 +2302,21 @@ ${nonCompeteArticle}
               {/* SECTION ENTREPRISE                 */}
               {/* ═══════════════════════════════════ */}
               {currentStep === 'company' && (
-                <div className="eco-glass rounded-2xl p-6 shutter-enter">
+                <div className="eco-glass rounded-2xl p-6 shutter-enter eco-section-card">
                   {/* Section Header */}
-                  <div className="flex items-center gap-3 pb-5 mb-6" style={{ borderBottom: '1px solid var(--border-dim)' }}>
+                  <div className="flex items-center gap-3 pb-5 mb-6" style={{ borderBottom: '1px solid rgba(201,168,76,0.15)' }}>
                     <div
-                      className="w-11 h-11 rounded-xl flex items-center justify-center"
+                      className="hex-badge w-12 h-14 flex-shrink-0"
                       style={{
-                        background: 'linear-gradient(135deg, #10b981, #059669)',
-                        boxShadow: '0 4px 20px rgba(16,185,129,0.3)',
+                        background: 'linear-gradient(135deg, var(--gold-light), var(--gold-deep))',
+                        boxShadow: '0 4px 20px rgba(201,168,76,0.3)',
+                        filter: 'drop-shadow(0 0 8px rgba(201,168,76,0.3))',
                       }}
                     >
-                      <Building size={20} className="text-white" />
+                      <Building size={20} style={{ color: '#0a0a0a' }} />
                     </div>
                     <div>
-                      <h2 className="text-lg font-black uppercase" style={{ color: 'var(--emerald-light)' }}>
+                      <h2 className="text-lg font-black uppercase" style={{ color: 'var(--gold-light)' }}>
                         Entreprise
                       </h2>
                       <p className="text-[10px] font-semibold" style={{ color: 'var(--text-secondary)' }}>
@@ -1634,7 +2329,7 @@ ${nonCompeteArticle}
                     {/* Logo & Description */}
                     <div
                       className="rounded-xl p-5 border"
-                      style={{ background: 'rgba(16,185,129,0.03)', borderColor: 'rgba(16,185,129,0.12)' }}
+                      style={{ background: 'rgba(0,255,136,0.03)', borderColor: 'rgba(0,255,136,0.12)' }}
                     >
                       <p className="text-[10px] font-bold uppercase tracking-widest mb-4" style={{ color: 'var(--emerald-glow)' }}>
                         Identité Visuelle (Optionnel)
@@ -1659,7 +2354,7 @@ ${nonCompeteArticle}
                           ) : (
                             <label
                               className="flex flex-col items-center justify-center h-28 border-2 border-dashed rounded-xl cursor-pointer transition-all hover:border-opacity-60"
-                              style={{ borderColor: 'rgba(16,185,129,0.2)' }}
+                              style={{ borderColor: 'rgba(0,255,136,0.2)' }}
                             >
                               <Upload size={18} style={{ color: 'var(--emerald-glow)' }} className="mb-2" />
                               <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>
@@ -1725,15 +2420,8 @@ ${nonCompeteArticle}
                   </div>
 
                   {/* Step Nav */}
-                  <div className="flex justify-end mt-6 pt-5" style={{ borderTop: '1px solid var(--border-dim)' }}>
-                    <button
-                      onClick={goNextStep}
-                      className="flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm text-black transition-all hover:scale-105 active:scale-95"
-                      style={{
-                        background: 'linear-gradient(135deg, var(--emerald-glow), var(--emerald-deep))',
-                        boxShadow: '0 4px 20px rgba(16,185,129,0.3)',
-                      }}
-                    >
+                  <div className="flex justify-end mt-6 pt-5"><div className="glow-line flex-1 mr-4 self-center" />
+                    <button onClick={goNextStep} className="nav-btn-primary flex items-center gap-2 px-6 py-3 rounded-xl text-sm">
                       <span>Collaborateur</span>
                       <ChevronRight size={16} />
                     </button>
@@ -1745,19 +2433,20 @@ ${nonCompeteArticle}
               {/* SECTION COLLABORATEUR               */}
               {/* ═══════════════════════════════════ */}
               {currentStep === 'employee' && (
-                <div className="eco-glass rounded-2xl p-6 shutter-enter">
-                  <div className="flex items-center gap-3 pb-5 mb-6" style={{ borderBottom: '1px solid var(--border-dim)' }}>
+                <div className="eco-glass rounded-2xl p-6 shutter-enter eco-section-card">
+                  <div className="flex items-center gap-3 pb-5 mb-6" style={{ borderBottom: '1px solid rgba(201,168,76,0.15)' }}>
                     <div
-                      className="w-11 h-11 rounded-xl flex items-center justify-center"
+                      className="hex-badge w-12 h-14 flex-shrink-0"
                       style={{
-                        background: 'linear-gradient(135deg, #34d399, #06b6d4)',
-                        boxShadow: '0 4px 20px rgba(52,211,153,0.3)',
+                        background: 'linear-gradient(135deg, var(--gold-light), var(--gold-deep))',
+                        boxShadow: '0 4px 20px rgba(201,168,76,0.3)',
+                        filter: 'drop-shadow(0 0 8px rgba(201,168,76,0.3))',
                       }}
                     >
-                      <User size={20} className="text-white" />
+                      <User size={20} style={{ color: '#0a0a0a' }} />
                     </div>
                     <div>
-                      <h2 className="text-lg font-black uppercase" style={{ color: '#6ee7b7' }}>
+                      <h2 className="text-lg font-black uppercase" style={{ color: 'var(--gold-light)' }}>
                         Collaborateur
                       </h2>
                       <p className="text-[10px] font-semibold" style={{ color: 'var(--text-secondary)' }}>
@@ -1805,23 +2494,12 @@ ${nonCompeteArticle}
                     </div>
                   </div>
 
-                  <div className="flex justify-between mt-6 pt-5" style={{ borderTop: '1px solid var(--border-dim)' }}>
-                    <button
-                      onClick={goPrevStep}
-                      className="flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-xs border transition-all hover:scale-105 active:scale-95"
-                      style={{ borderColor: 'var(--border-dim)', color: 'var(--text-secondary)' }}
-                    >
+                  <div className="flex justify-between mt-6 pt-5"><div className="glow-line flex-1 mx-4 self-center" />
+                    <button onClick={goPrevStep} className="nav-btn-ghost flex items-center gap-2 px-5 py-3 rounded-xl text-xs">
                       <ChevronLeft size={16} />
                       <span>Entreprise</span>
                     </button>
-                    <button
-                      onClick={goNextStep}
-                      className="flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm text-black transition-all hover:scale-105 active:scale-95"
-                      style={{
-                        background: 'linear-gradient(135deg, var(--emerald-glow), var(--emerald-deep))',
-                        boxShadow: '0 4px 20px rgba(16,185,129,0.3)',
-                      }}
-                    >
+                    <button onClick={goNextStep} className="nav-btn-primary flex items-center gap-2 px-6 py-3 rounded-xl text-sm ml-3">
                       <span>Contrat</span>
                       <ChevronRight size={16} />
                     </button>
@@ -1833,19 +2511,20 @@ ${nonCompeteArticle}
               {/* SECTION CONTRAT                     */}
               {/* ═══════════════════════════════════ */}
               {currentStep === 'contract' && (
-                <div className="eco-glass rounded-2xl p-6 shutter-enter">
-                  <div className="flex items-center gap-3 pb-5 mb-6" style={{ borderBottom: '1px solid var(--border-dim)' }}>
+                <div className="eco-glass rounded-2xl p-6 shutter-enter eco-section-card">
+                  <div className="flex items-center gap-3 pb-5 mb-6" style={{ borderBottom: '1px solid rgba(201,168,76,0.15)' }}>
                     <div
-                      className="w-11 h-11 rounded-xl flex items-center justify-center"
+                      className="hex-badge w-12 h-14 flex-shrink-0"
                       style={{
-                        background: 'linear-gradient(135deg, #f59e0b, #10b981)',
-                        boxShadow: '0 4px 20px rgba(245,158,11,0.2)',
+                        background: 'linear-gradient(135deg, var(--gold-light), var(--gold-deep))',
+                        boxShadow: '0 4px 20px rgba(201,168,76,0.3)',
+                        filter: 'drop-shadow(0 0 8px rgba(201,168,76,0.3))',
                       }}
                     >
-                      <Briefcase size={20} className="text-white" />
+                      <Briefcase size={20} style={{ color: '#0a0a0a' }} />
                     </div>
                     <div>
-                      <h2 className="text-lg font-black uppercase" style={{ color: '#fbbf24' }}>
+                      <h2 className="text-lg font-black uppercase" style={{ color: 'var(--gold-light)' }}>
                         Contrat
                       </h2>
                       <p className="text-[10px] font-semibold" style={{ color: 'var(--text-secondary)' }}>
@@ -1871,7 +2550,7 @@ ${nonCompeteArticle}
                             style={{
                               background:
                                 data.jobType === jt
-                                  ? 'linear-gradient(135deg, rgba(16,185,129,0.15), rgba(16,185,129,0.05))'
+                                  ? 'linear-gradient(135deg, rgba(0,255,136,0.15), rgba(0,255,136,0.05))'
                                   : 'rgba(0,0,0,0.25)',
                               borderColor: data.jobType === jt ? 'var(--emerald-glow)' : 'var(--border-dim)',
                             }}
@@ -1891,6 +2570,8 @@ ${nonCompeteArticle}
                     </div>
 
                     <EcoInput label="Poste" value={data.jobTitle} onChange={(v) => updateData('jobTitle', v)} icon={<Briefcase size={12} />} required />
+
+                    <EcoInput label="Tâches Confiées" value={data.jobTasks} onChange={(v) => updateData('jobTasks', v)} icon={<FileText size={12} />} required multiline placeholder="Décrivez les principales missions et responsabilités confiées au salarié..." />
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <EcoInput label="Département" value={data.jobDept} onChange={(v) => updateData('jobDept', v)} icon={<Building size={12} />} required />
@@ -1923,7 +2604,7 @@ ${nonCompeteArticle}
                     {/* Non-concurrence */}
                     <div
                       className="rounded-xl p-5 border"
-                      style={{ background: 'rgba(16,185,129,0.03)', borderColor: 'rgba(16,185,129,0.12)' }}
+                      style={{ background: 'rgba(0,255,136,0.03)', borderColor: 'rgba(0,255,136,0.12)' }}
                     >
                       <label className="flex items-center gap-3 cursor-pointer">
                         <input
@@ -1944,23 +2625,11 @@ ${nonCompeteArticle}
                     </div>
                   </div>
 
-                  <div className="flex justify-between mt-6 pt-5" style={{ borderTop: '1px solid var(--border-dim)' }}>
-                    <button
-                      onClick={goPrevStep}
-                      className="flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-xs border transition-all hover:scale-105 active:scale-95"
-                      style={{ borderColor: 'var(--border-dim)', color: 'var(--text-secondary)' }}
-                    >
+                  <div className="flex justify-between mt-6 pt-5"><div className="glow-line flex-1 mx-4 self-center" />
+                    <button onClick={goPrevStep} className="nav-btn-ghost flex items-center gap-2 px-5 py-3 rounded-xl text-xs">
                       <ChevronLeft size={16} />
                       <span>Collaborateur</span>
                     </button>
-                    {/* Bouton Nouveau Contrat (Remplace Aperçu) */}
-    <button
-      onClick={handleNewContract}
-      className="flex items-center gap-2 px-6 py-3 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 rounded-xl transition-all border border-emerald-500/30 group"
-    >
-      <Sparkles size={20} className="group-hover:rotate-12 transition-transform" />
-      <span className="font-bold tracking-wide uppercase">Nouveau</span>
-    </button>
                   </div>
                 </div>
               )}
@@ -1971,11 +2640,11 @@ ${nonCompeteArticle}
           {/* RIGHT: ACTIONS PANEL                    */}
           {/* ═══════════════════════════════════════ */}
           <div className="lg:col-span-4">
-            <div className="eco-glass rounded-2xl p-5 lg:sticky lg:top-6 space-y-5">
+            <div className="eco-glass rounded-2xl p-5 lg:sticky lg:top-6 space-y-5 eco-section-card">
               {/* Signatures */}
               {data.documentMode === 'ELECTRONIC' && (
                 <div>
-                  <p className="text-[10px] font-bold uppercase tracking-widest mb-3 flex items-center gap-2" style={{ color: 'var(--emerald-glow)' }}>
+                  <p className="text-[10px] font-bold uppercase tracking-widest mb-3 flex items-center gap-2" style={{ color: 'var(--gold-light)' }}>
                     <PenTool size={12} />
                     Signatures
                   </p>
@@ -1989,7 +2658,7 @@ ${nonCompeteArticle}
                           className="w-full py-3 px-4 rounded-xl font-bold text-xs flex items-center justify-between transition-all hover:scale-[1.02] active:scale-[0.98]"
                           style={{
                             background: hasSig
-                              ? 'linear-gradient(135deg, rgba(16,185,129,0.15), rgba(16,185,129,0.05))'
+                              ? 'linear-gradient(135deg, rgba(0,255,136,0.15), rgba(0,255,136,0.05))'
                               : 'rgba(0,0,0,0.3)',
                             border: `1px solid ${hasSig ? 'var(--emerald-glow)' : 'var(--border-dim)'}`,
                             color: hasSig ? 'var(--emerald-light)' : 'var(--text-secondary)',
@@ -2014,8 +2683,8 @@ ${nonCompeteArticle}
                   disabled={isGenerating}
                   className="shimmer-btn w-full py-4 rounded-xl font-black uppercase text-sm flex items-center justify-center gap-2 transition-all hover:scale-105 active:scale-95 disabled:opacity-40 disabled:hover:scale-100"
                   style={{
-                    color: '#000',
-                    boxShadow: '0 4px 24px rgba(16,185,129,0.35)',
+                    color: '#0a0a0a',
+                    boxShadow: '0 4px 24px rgba(201,168,76,0.35)',
                   }}
                 >
                   {isGenerating ? (
@@ -2040,7 +2709,8 @@ ${nonCompeteArticle}
               {/* ── POST-SAVE ACTIONS ── */}
               {showPostSaveActions && (
                 <div className="space-y-2.5 shutter-enter">
-                  <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--emerald-glow)' }}>
+                  <p className="text-[10px] font-bold uppercase tracking-widest flex items-center gap-1.5" style={{ color: 'var(--gold-light)' }}>
+                    <Hexagon size={10} />
                     Actions Finales
                   </p>
 
@@ -2048,14 +2718,9 @@ ${nonCompeteArticle}
                   <button
                     onClick={generatePDF}
                     disabled={isGenerating}
-                    className="w-full py-3 px-4 rounded-xl font-bold text-xs flex items-center gap-3 transition-all hover:scale-[1.02] active:scale-[0.98] border"
-                    style={{
-                      background: 'rgba(0,0,0,0.3)',
-                      borderColor: 'var(--border-dim)',
-                      color: 'var(--text-primary)',
-                    }}
+                    className="eco-action-btn w-full py-3 px-4 font-bold text-xs flex items-center gap-3"
                   >
-                    <FileDown size={16} style={{ color: '#f87171' }} />
+                    <FileDown size={16} className="eco-action-icon" style={{ color: '#f87171' }} />
                     <span>Télécharger PDF</span>
                   </button>
 
@@ -2063,28 +2728,19 @@ ${nonCompeteArticle}
                   <button
                     onClick={generateWord}
                     disabled={isGenerating}
-                    className="w-full py-3 px-4 rounded-xl font-bold text-xs flex items-center gap-3 transition-all hover:scale-[1.02] active:scale-[0.98] border"
-                    style={{
-                      background: 'rgba(0,0,0,0.3)',
-                      borderColor: 'var(--border-dim)',
-                      color: 'var(--text-primary)',
-                    }}
+                    className="eco-action-btn w-full py-3 px-4 font-bold text-xs flex items-center gap-3"
                   >
-                    <FileText size={16} style={{ color: '#60a5fa' }} />
-                    <span>Télécharger Word</span>
+                    <FileText size={16} className="eco-action-icon" style={{ color: '#60a5fa' }} />
+                    <span>Télécharger Word (.docx)</span>
                   </button>
 
                   {/* Share */}
                   <button
                     onClick={shareContract}
-                    className="w-full py-3 px-4 rounded-xl font-bold text-xs flex items-center gap-3 transition-all hover:scale-[1.02] active:scale-[0.98] border"
-                    style={{
-                      background: 'rgba(16,185,129,0.06)',
-                      borderColor: 'rgba(16,185,129,0.2)',
-                      color: 'var(--emerald-light)',
-                    }}
+                    className="eco-action-btn w-full py-3 px-4 font-bold text-xs flex items-center gap-3"
+                    style={{ borderColor: 'rgba(0,255,136,0.25)' }}
                   >
-                    <Share2 size={16} />
+                    <Share2 size={16} className="eco-action-icon" style={{ color: 'var(--emerald-light)' }} />
                     <span>Partager</span>
                   </button>
                 </div>
@@ -2093,23 +2749,18 @@ ${nonCompeteArticle}
               {/* Aperçu toggle */}
               <button
                 onClick={() => setShowPreview(!showPreview)}
-                className="w-full py-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 border transition-all hover:scale-[1.02]"
-                style={{
-                  borderColor: 'var(--border-dim)',
-                  color: 'var(--text-secondary)',
-                  background: 'transparent',
-                }}
+                className="eco-action-btn w-full py-3 px-4 font-bold text-xs flex items-center justify-center gap-2"
               >
-                {showPreview ? <EyeOff size={14} /> : <Eye size={14} />}
+                {showPreview ? <EyeOff size={14} className="eco-action-icon" /> : <Eye size={14} className="eco-action-icon" />}
                 <span>{showPreview ? 'Fermer Aperçu' : 'Aperçu du Contrat'}</span>
               </button>
 
               {/* Récapitulatif */}
               <div
                 className="rounded-xl p-4 border"
-                style={{ background: 'rgba(16,185,129,0.03)', borderColor: 'rgba(16,185,129,0.12)' }}
+                style={{ background: 'rgba(201,168,76,0.03)', borderColor: 'rgba(201,168,76,0.15)' }}
               >
-                <div className="flex items-center gap-2 mb-3" style={{ color: 'var(--emerald-glow)' }}>
+                <div className="flex items-center gap-2 mb-3" style={{ color: 'var(--gold-light)' }}>
                   <Scale size={13} />
                   <span className="text-[10px] font-black uppercase">Récapitulatif</span>
                 </div>
@@ -2158,7 +2809,7 @@ ${nonCompeteArticle}
               </button>
             </div>
 
-            <p className="text-xs mb-4 px-3 py-2 rounded-xl" style={{ color: 'var(--text-secondary)', background: 'rgba(16,185,129,0.05)', border: '1px solid rgba(16,185,129,0.1)' }}>
+            <p className="text-xs mb-4 px-3 py-2 rounded-xl" style={{ color: 'var(--text-secondary)', background: 'rgba(0,255,136,0.05)', border: '1px solid rgba(0,255,136,0.1)' }}>
               Signez dans l'espace ci-dessous. Le canvas est verrouillé contre le défilement.
             </p>
 
@@ -2197,11 +2848,7 @@ ${nonCompeteArticle}
               </button>
               <button
                 onClick={saveSignature}
-                className="flex-1 py-3 rounded-xl font-bold text-xs text-black flex items-center justify-center gap-2 transition-all hover:scale-[1.02]"
-                style={{
-                  background: 'linear-gradient(135deg, var(--emerald-glow), var(--emerald-deep))',
-                  boxShadow: '0 4px 20px rgba(16,185,129,0.3)',
-                }}
+                className="nav-btn-primary flex-1 py-3 rounded-xl text-xs flex items-center justify-center gap-2"
               >
                 <Save size={14} />
                 Enregistrer
@@ -2238,7 +2885,7 @@ ${nonCompeteArticle}
 
               {savedContracts.length === 0 ? (
                 <div className="text-center py-20">
-                  <Archive size={50} className="mx-auto mb-4" style={{ color: 'rgba(16,185,129,0.2)' }} />
+                  <Archive size={50} className="mx-auto mb-4" style={{ color: 'rgba(0,255,136,0.2)' }} />
                   <p className="text-sm font-bold" style={{ color: 'var(--text-secondary)' }}>
                     Aucun contrat enregistré
                   </p>
@@ -2264,7 +2911,7 @@ ${nonCompeteArticle}
                           style={{
                             background:
                               contract.mode === 'ELECTRONIC'
-                                ? 'rgba(16,185,129,0.12)'
+                                ? 'rgba(0,255,136,0.12)'
                                 : 'rgba(245,158,11,0.12)',
                             color:
                               contract.mode === 'ELECTRONIC' ? 'var(--emerald-light)' : '#fbbf24',
@@ -2297,7 +2944,7 @@ ${nonCompeteArticle}
                         <button
                           onClick={() => loadContract(contract)}
                           className="flex-1 py-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 border transition-all hover:scale-[1.02]"
-                          style={{ borderColor: 'rgba(16,185,129,0.2)', color: 'var(--emerald-light)', background: 'rgba(16,185,129,0.06)' }}
+                          style={{ borderColor: 'rgba(0,255,136,0.2)', color: 'var(--emerald-light)', background: 'rgba(0,255,136,0.06)' }}
                         >
                           <Upload size={12} />
                           Charger
@@ -2314,6 +2961,77 @@ ${nonCompeteArticle}
                   ))}
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ═══════════════════════════════════════ */}
+      {/* MODAL RESET CONFIRMATION                */}
+      {/* ═══════════════════════════════════════ */}
+      {showResetConfirm && (
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
+          style={{ background: 'rgba(0,0,0,0.92)', backdropFilter: 'blur(12px)' }}
+        >
+          <div className="eco-glass rounded-2xl p-8 max-w-md w-full modal-fade-in eco-section-card">
+            {/* Gold decorative corner */}
+            <div className="absolute top-0 right-0 w-32 h-32 pointer-events-none" style={{
+              background: 'radial-gradient(circle at top right, rgba(201,168,76,0.12), transparent 60%)',
+            }} />
+
+            <div className="text-center mb-6 relative z-10">
+              <div
+                className="w-16 h-16 rounded-2xl mx-auto mb-4 flex items-center justify-center gold-pulse"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(201,168,76,0.2), rgba(201,168,76,0.05))',
+                  border: '1px solid rgba(201,168,76,0.3)',
+                }}
+              >
+                <AlertTriangle size={28} style={{ color: 'var(--gold-light)' }} />
+              </div>
+              <h3
+                className="text-xl font-black uppercase mb-2"
+                style={{ color: 'var(--gold-light)' }}
+              >
+                Nouveau Contrat
+              </h3>
+              <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+                Toutes les données du formulaire actuel seront effacées.
+                <br />
+                <span className="font-bold" style={{ color: 'var(--gold)' }}>
+                  Cette action est irréversible.
+                </span>
+              </p>
+            </div>
+
+            <div className="gold-line mb-6" />
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowResetConfirm(false)}
+                className="flex-1 py-3.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 border transition-all hover:scale-[1.02] active:scale-[0.98]"
+                style={{
+                  borderColor: 'var(--border-dim)',
+                  color: 'var(--text-secondary)',
+                  background: 'rgba(0,0,0,0.3)',
+                }}
+              >
+                <X size={16} />
+                Annuler
+              </button>
+              <button
+                onClick={confirmReset}
+                className="flex-1 py-3.5 rounded-xl font-black text-sm flex items-center justify-center gap-2 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                style={{
+                  background: 'linear-gradient(135deg, var(--gold-light), var(--gold), var(--gold-deep))',
+                  color: '#0a0a0a',
+                  boxShadow: '0 4px 20px rgba(201,168,76,0.3)',
+                }}
+              >
+                <Sparkles size={16} />
+                Confirmer
+              </button>
             </div>
           </div>
         </div>
@@ -2409,11 +3127,11 @@ function EcoInput({
         style={{ color: 'var(--text-secondary)' }}
       >
         {icon && (
-          <span style={{ color: 'var(--emerald-glow)' }}>{icon}</span>
+          <span style={{ color: 'var(--gold)' }}>{icon}</span>
         )}
         {label}
         {required && (
-          <span style={{ color: '#f87171' }}>*</span>
+          <span style={{ color: 'var(--gold-light)' }}>*</span>
         )}
       </label>
 
@@ -2461,7 +3179,7 @@ function SummaryRow({ label, value }: SummaryRowProps) {
   return (
     <div
       className="flex justify-between items-center pb-2"
-      style={{ borderBottom: '1px solid rgba(16, 185, 129, 0.08)' }}
+      style={{ borderBottom: '1px solid rgba(201, 168, 76, 0.08)' }}
     >
       <span
         className="text-[10px] font-bold uppercase"
@@ -2471,10 +3189,121 @@ function SummaryRow({ label, value }: SummaryRowProps) {
       </span>
       <span
         className="text-[11px] font-black text-right max-w-[60%] truncate"
-        style={{ color: 'var(--emerald-light)' }}
+        style={{ color: 'var(--gold-light)' }}
       >
         {value}
       </span>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════
+// COMPOSANT : ConstellationLoader — Animation de chargement
+// ═══════════════════════════════════════════════
+
+function ConstellationLoader({ message = 'Génération en cours...' }: { message?: string }) {
+  const points = React.useMemo(() => {
+    const pts: { cx: number; cy: number; delay: number; dur: number }[] = [];
+    for (let i = 0; i < 24; i++) {
+      pts.push({
+        cx: 20 + Math.random() * 260,
+        cy: 20 + Math.random() * 180,
+        delay: Math.random() * 3,
+        dur: 2 + Math.random() * 2,
+      });
+    }
+    return pts;
+  }, []);
+
+  const lines = React.useMemo(() => {
+    const l: { x1: number; y1: number; x2: number; y2: number; delay: number }[] = [];
+    for (let i = 0; i < points.length; i++) {
+      for (let j = i + 1; j < points.length; j++) {
+        const dx = points[i].cx - points[j].cx;
+        const dy = points[i].cy - points[j].cy;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < 90) {
+          l.push({
+            x1: points[i].cx, y1: points[i].cy,
+            x2: points[j].cx, y2: points[j].cy,
+            delay: Math.random() * 4,
+          });
+        }
+      }
+    }
+    return l;
+  }, [points]);
+
+  return (
+    <div
+      className="fixed inset-0 z-[99999] flex flex-col items-center justify-center"
+      style={{
+        background: 'rgba(3, 10, 6, 0.96)',
+        backdropFilter: 'blur(20px)',
+      }}
+    >
+      <div style={{ width: 300, height: 220, position: 'relative' }}>
+        <svg width="300" height="220" viewBox="0 0 300 220">
+          {/* Lines */}
+          {lines.map((l, i) => (
+            <line
+              key={`l-${i}`}
+              x1={l.x1} y1={l.y1} x2={l.x2} y2={l.y2}
+              stroke="url(#goldGrad)"
+              strokeWidth="0.6"
+              strokeDasharray="6 4"
+              style={{
+                animation: `constellationLine ${3 + Math.random() * 2}s ease-in-out ${l.delay}s infinite`,
+              }}
+            />
+          ))}
+          {/* Points */}
+          {points.map((p, i) => (
+            <circle
+              key={`p-${i}`}
+              cx={p.cx} cy={p.cy} r="2.5"
+              fill={i % 3 === 0 ? '#c9a84c' : i % 3 === 1 ? '#00ff88' : '#dab86c'}
+              style={{
+                animation: `constellationPulse ${p.dur}s ease-in-out ${p.delay}s infinite`,
+                filter: `drop-shadow(0 0 ${i % 2 === 0 ? 6 : 4}px ${i % 3 === 0 ? 'rgba(201,168,76,0.8)' : 'rgba(0,255,136,0.6)'})`,
+              }}
+            />
+          ))}
+          {/* Orbiting ring */}
+          <circle
+            cx="150" cy="110" r="70"
+            fill="none" stroke="url(#goldGrad)" strokeWidth="0.5"
+            strokeDasharray="4 8"
+            style={{ animation: 'constellationOrbit 12s linear infinite', transformOrigin: '150px 110px' }}
+          />
+          <circle
+            cx="150" cy="110" r="45"
+            fill="none" stroke="url(#emeraldGrad)" strokeWidth="0.4"
+            strokeDasharray="3 6"
+            style={{ animation: 'constellationOrbit 8s linear reverse infinite', transformOrigin: '150px 110px' }}
+          />
+          <defs>
+            <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#a08030" />
+              <stop offset="50%" stopColor="#dab86c" />
+              <stop offset="100%" stopColor="#c9a84c" />
+            </linearGradient>
+            <linearGradient id="emeraldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#059669" />
+              <stop offset="100%" stopColor="#00ff88" />
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+      <p
+        className="text-sm font-bold uppercase tracking-[0.2em] mt-4"
+        style={{ color: 'var(--gold-light)', animation: 'constellationTextPulse 2s ease-in-out infinite' }}
+      >
+        {message}
+      </p>
+      <p className="text-[10px] mt-2" style={{ color: 'var(--text-secondary)' }}>
+        Formatage professionnel du document...
+      </p>
     </div>
   );
 }
