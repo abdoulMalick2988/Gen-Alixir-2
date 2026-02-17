@@ -3,6 +3,7 @@
 import React, { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import EcoLoader from "@/components/EcoLoader";
 import {
   Search, ArrowLeft, UserPlus, ChevronLeft, ChevronRight,
   Fingerprint, Wallet, Banknote, Download, Building2,
@@ -68,6 +69,7 @@ export default function RegistrePersonnel() {
   const [payConfirm, setPayConfirm] = useState<{ id: string; name: string; current: PaymentStatus } | null>(null);
   const [showDeptDropdown, setShowDeptDropdown] = useState<boolean>(false);
   const [showStatusDropdown, setShowStatusDropdown] = useState<boolean>(false);
+  const [navigating, setNavigating] = useState<boolean>(false);
   const itemsPerPage = 10;
 
   // Fermer les menus au clic extérieur
@@ -138,11 +140,11 @@ export default function RegistrePersonnel() {
 
   function getInitialBg(n: string): string {
     const colors = [
-      "from-cyan-600 to-cyan-700",
+      "from-emerald-600 to-emerald-700",
       "from-emerald-600 to-emerald-700",
       "from-teal-600 to-teal-700",
-      "from-blue-600 to-blue-700",
-      "from-violet-600 to-violet-700",
+      "from-yellow-600 to-yellow-700",
+      "from-amber-600 to-amber-700",
       "from-amber-600 to-amber-700"
     ];
     return "bg-gradient-to-br " + colors[n.charCodeAt(0) % 6];
@@ -346,7 +348,7 @@ export default function RegistrePersonnel() {
         <img
           src={emp.photoUrl}
           alt={emp.name}
-          className={d + " object-cover flex-shrink-0 border-2 border-cyan-500/30 shadow-lg shadow-cyan-500/20"}
+          className={d + " object-cover flex-shrink-0 border-2 border-emerald-500/30 shadow-lg shadow-emerald-500/20"}
         />
       );
     }
@@ -365,64 +367,72 @@ export default function RegistrePersonnel() {
   }
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-slate-950">
-        <div className="absolute inset-0">
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-cyan-900/20 via-slate-950 to-slate-950" />
-          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl animate-pulse" />
-          <div
-            className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl animate-pulse"
-            style={{ animationDelay: "1s" }}
-          />
-        </div>
-        <div className="flex flex-col items-center gap-6 relative z-10">
-          <div className="relative w-16 h-16">
-            <div className="absolute inset-0 border-4 border-cyan-500/20 rounded-full" />
-            <div className="absolute inset-0 border-4 border-transparent border-t-cyan-400 rounded-full animate-spin" />
-            <div
-              className="absolute inset-2 border-4 border-transparent border-t-emerald-400 rounded-full animate-spin"
-              style={{ animationDirection: "reverse", animationDuration: "0.8s" }}
-            />
-          </div>
-          <div className="text-center">
-            <p className="text-sm font-bold text-cyan-400 tracking-widest uppercase mb-1">Initialisation</p>
-            <p className="text-xs text-cyan-600">Chargement du registre...</p>
-          </div>
-        </div>
-      </div>
-    );
+    return <EcoLoader message="Initialisation" subMessage="Chargement du registre..." />;
   }
 
   /* ═══ PARTIE 2 — Interface principale ═══ */
 
-  return (
-    <div className="min-h-screen relative overflow-hidden bg-slate-950">
+  // ── SVG Hexagonal Network Patterns ──
+  const hexLargeSvg = `<svg xmlns='http://www.w3.org/2000/svg' width='150' height='86.6'><line x1='50' y1='0' x2='100' y2='0' stroke='rgba(16,185,129,0.35)' stroke-width='0.8'/><line x1='50' y1='0' x2='25' y2='43.3' stroke='rgba(16,185,129,0.35)' stroke-width='0.8'/><line x1='100' y1='0' x2='125' y2='43.3' stroke='rgba(16,185,129,0.35)' stroke-width='0.8'/><line x1='0' y1='43.3' x2='25' y2='43.3' stroke='rgba(16,185,129,0.35)' stroke-width='0.8'/><line x1='125' y1='43.3' x2='150' y2='43.3' stroke='rgba(16,185,129,0.35)' stroke-width='0.8'/><line x1='25' y1='43.3' x2='50' y2='86.6' stroke='rgba(16,185,129,0.35)' stroke-width='0.8'/><line x1='125' y1='43.3' x2='100' y2='86.6' stroke='rgba(16,185,129,0.35)' stroke-width='0.8'/><line x1='50' y1='86.6' x2='100' y2='86.6' stroke='rgba(16,185,129,0.35)' stroke-width='0.8'/><circle cx='50' cy='0' r='2.5' fill='rgba(16,185,129,0.5)'/><circle cx='100' cy='0' r='2.5' fill='rgba(16,185,129,0.5)'/><circle cx='25' cy='43.3' r='2.5' fill='rgba(16,185,129,0.5)'/><circle cx='125' cy='43.3' r='2.5' fill='rgba(16,185,129,0.5)'/><circle cx='50' cy='86.6' r='2.5' fill='rgba(16,185,129,0.5)'/><circle cx='100' cy='86.6' r='2.5' fill='rgba(16,185,129,0.5)'/><circle cx='0' cy='43.3' r='2.5' fill='rgba(16,185,129,0.5)'/><circle cx='150' cy='43.3' r='2.5' fill='rgba(16,185,129,0.5)'/></svg>`;
+  const hexSmallSvg = `<svg xmlns='http://www.w3.org/2000/svg' width='75' height='43.3'><line x1='25' y1='0' x2='50' y2='0' stroke='rgba(16,185,129,0.2)' stroke-width='0.5'/><line x1='25' y1='0' x2='12.5' y2='21.65' stroke='rgba(16,185,129,0.2)' stroke-width='0.5'/><line x1='50' y1='0' x2='62.5' y2='21.65' stroke='rgba(16,185,129,0.2)' stroke-width='0.5'/><line x1='0' y1='21.65' x2='12.5' y2='21.65' stroke='rgba(16,185,129,0.2)' stroke-width='0.5'/><line x1='62.5' y1='21.65' x2='75' y2='21.65' stroke='rgba(16,185,129,0.2)' stroke-width='0.5'/><line x1='12.5' y1='21.65' x2='25' y2='43.3' stroke='rgba(16,185,129,0.2)' stroke-width='0.5'/><line x1='62.5' y1='21.65' x2='50' y2='43.3' stroke='rgba(16,185,129,0.2)' stroke-width='0.5'/><line x1='25' y1='43.3' x2='50' y2='43.3' stroke='rgba(16,185,129,0.2)' stroke-width='0.5'/><circle cx='25' cy='0' r='1.5' fill='rgba(16,185,129,0.3)'/><circle cx='50' cy='0' r='1.5' fill='rgba(16,185,129,0.3)'/><circle cx='12.5' cy='21.65' r='1.5' fill='rgba(16,185,129,0.3)'/><circle cx='62.5' cy='21.65' r='1.5' fill='rgba(16,185,129,0.3)'/><circle cx='25' cy='43.3' r='1.5' fill='rgba(16,185,129,0.3)'/><circle cx='50' cy='43.3' r='1.5' fill='rgba(16,185,129,0.3)'/></svg>`;
+  const hexLargeBg = `url("data:image/svg+xml,${encodeURIComponent(hexLargeSvg)}")`;
+  const hexSmallBg = `url("data:image/svg+xml,${encodeURIComponent(hexSmallSvg)}")`;
 
-      {/* ═══ FOND HOLOGRAPHIQUE ULTRA FUTURISTE ═══ */}
+  return (
+    <div className="min-h-screen relative overflow-hidden" style={{ background: '#020e07' }}>
+
+      {/* ═══ FOND RÉSEAU HEXAGONAL ÉMERAUDE ═══ */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-cyan-900/20 via-slate-950 to-slate-950" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-emerald-900/15 via-transparent to-transparent" />
-        
-        <div className="absolute top-1/4 -left-20 w-[500px] h-[500px] bg-gradient-to-r from-cyan-500/20 to-blue-500/20 rounded-full blur-3xl animate-float" />
-        <div className="absolute bottom-1/3 -right-20 w-[600px] h-[600px] bg-gradient-to-l from-emerald-500/15 to-teal-500/15 rounded-full blur-3xl animate-float-delayed" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-gradient-to-br from-violet-500/10 to-purple-500/10 rounded-full blur-3xl animate-pulse-slow" />
-        
-        <div className="absolute inset-0 opacity-[0.03]" style={{ 
-          backgroundImage: "linear-gradient(rgba(6, 182, 212, 0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(6, 182, 212, 0.5) 1px, transparent 1px)",
-          backgroundSize: "50px 50px",
-          maskImage: "radial-gradient(ellipse at center, black 40%, transparent 70%)"
+
+        {/* Couche 1 : Gradient de profondeur central */}
+        <div className="absolute inset-0" style={{
+          background: 'radial-gradient(ellipse at 50% 40%, rgba(16,185,129,0.07) 0%, rgba(5,150,105,0.04) 30%, rgba(2,14,7,0) 65%)'
         }} />
-        
-        <div className="absolute inset-0 opacity-[0.02]" style={{
-          backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(6, 182, 212, 0.3) 2px, rgba(6, 182, 212, 0.3) 4px)"
+
+        {/* Couche 2 : Grand réseau hexagonal (premier plan) */}
+        <div className="absolute inset-0" style={{
+          backgroundImage: hexLargeBg,
+          backgroundSize: '150px 86.6px',
+          opacity: 0.6
         }} />
-        
-        <div className="absolute top-1/4 left-1/4 w-1 h-1 bg-cyan-400 rounded-full animate-ping opacity-75" />
-        <div className="absolute top-2/3 right-1/3 w-1 h-1 bg-emerald-400 rounded-full animate-ping opacity-75" style={{ animationDelay: "1s" }} />
-        <div className="absolute bottom-1/4 left-2/3 w-1 h-1 bg-violet-400 rounded-full animate-ping opacity-75" style={{ animationDelay: "2s" }} />
-        
-        <div className="absolute top-0 left-1/4 w-px h-full bg-gradient-to-b from-transparent via-cyan-500/20 to-transparent" />
-        <div className="absolute top-0 right-1/3 w-px h-full bg-gradient-to-b from-transparent via-emerald-500/15 to-transparent" />
+
+        {/* Couche 3 : Halo lumineux du réseau hexagonal */}
+        <div className="absolute inset-0" style={{
+          backgroundImage: hexLargeBg,
+          backgroundSize: '150px 86.6px',
+          filter: 'blur(6px)',
+          opacity: 0.25
+        }} />
+
+        {/* Couche 4 : Petit réseau hexagonal (profondeur) */}
+        <div className="absolute inset-0" style={{
+          backgroundImage: hexSmallBg,
+          backgroundSize: '75px 43.3px',
+          opacity: 0.35
+        }} />
+
+        {/* Couche 5 : Orbes volumétriques émeraude */}
+        <div className="absolute top-[15%] left-[10%] w-[700px] h-[700px] rounded-full blur-[150px] animate-float" style={{ background: 'rgba(16,185,129,0.08)' }} />
+        <div className="absolute bottom-[10%] right-[5%] w-[600px] h-[600px] rounded-full blur-[130px] animate-float-delayed" style={{ background: 'rgba(5,150,105,0.06)' }} />
+        <div className="absolute top-[50%] left-[50%] -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full blur-[120px] animate-pulse-slow" style={{ background: 'rgba(16,185,129,0.05)' }} />
+
+        {/* Couche 6 : Nœuds lumineux animés */}
+        <div className="absolute top-[20%] left-[30%] w-2 h-2 bg-emerald-400 rounded-full animate-ping opacity-60" />
+        <div className="absolute top-[60%] right-[25%] w-2 h-2 bg-emerald-400 rounded-full animate-ping opacity-50" style={{ animationDelay: '1.5s' }} />
+        <div className="absolute bottom-[30%] left-[60%] w-1.5 h-1.5 bg-emerald-300 rounded-full animate-ping opacity-40" style={{ animationDelay: '3s' }} />
+        <div className="absolute top-[40%] left-[15%] w-1.5 h-1.5 bg-emerald-500 rounded-full animate-ping opacity-50" style={{ animationDelay: '2s' }} />
+        <div className="absolute top-[75%] right-[40%] w-2 h-2 bg-emerald-400 rounded-full animate-ping opacity-45" style={{ animationDelay: '4s' }} />
+        <div className="absolute top-[10%] right-[15%] w-1.5 h-1.5 bg-emerald-300 rounded-full animate-ping opacity-35" style={{ animationDelay: '2.5s' }} />
+
+        {/* Couche 7 : Lignes de connexion subtiles */}
+        <div className="absolute top-0 left-[20%] w-px h-full" style={{ background: 'linear-gradient(to bottom, transparent, rgba(16,185,129,0.12) 30%, rgba(16,185,129,0.12) 70%, transparent)' }} />
+        <div className="absolute top-0 right-[25%] w-px h-full" style={{ background: 'linear-gradient(to bottom, transparent, rgba(16,185,129,0.08) 40%, rgba(16,185,129,0.08) 60%, transparent)' }} />
+        <div className="absolute left-0 top-[35%] h-px w-full" style={{ background: 'linear-gradient(to right, transparent, rgba(16,185,129,0.08) 30%, rgba(16,185,129,0.08) 70%, transparent)' }} />
+
+        {/* Couche 8 : Vignette de profondeur */}
+        <div className="absolute inset-0" style={{
+          background: 'radial-gradient(ellipse at center, transparent 25%, rgba(2,14,7,0.4) 60%, rgba(2,14,7,0.85) 100%)'
+        }} />
       </div>
 
       {/* ═══ INTERFACE PRINCIPALE SCROLLABLE ═══ */}
@@ -443,17 +453,17 @@ export default function RegistrePersonnel() {
                   </button>
                   <div className="ml-2">
                     <div className="flex items-center gap-2 mb-1">
-                      <Shield size={18} className="text-cyan-400" />
-                      <h1 className="text-lg md:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-emerald-400 to-cyan-400 tracking-tight">
+                      <Shield size={18} className="text-emerald-400" />
+                      <h1 className="text-lg md:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 via-emerald-400 to-yellow-400 tracking-tight">
                         REGISTRE DU PERSONNEL
                       </h1>
                     </div>
-                    <div className="flex items-center gap-3 text-[11px] text-cyan-500/60">
+                    <div className="flex items-center gap-3 text-[11px] text-emerald-500/60">
                       <span className="flex items-center gap-1.5">
                         <Activity size={12} className="animate-pulse" />
                         {stats.total} collaborateurs
                       </span>
-                      <span className="w-1 h-1 rounded-full bg-cyan-500/40" />
+                      <span className="w-1 h-1 rounded-full bg-emerald-500/40" />
                       <span className="flex items-center gap-1.5">
                         <Zap size={12} />
                         Système en ligne
@@ -470,10 +480,14 @@ export default function RegistrePersonnel() {
                     <Banknote size={15} />
                     <span>Livre de Paie</span>
                   </button>
-                  <button 
-                    onClick={() => router.push("/rh/registre/contrat")} 
-                    type="button" 
+                  <button
+                    onClick={() => {
+                      setNavigating(true);
+                      setTimeout(() => router.push("/rh/registre/contrat"), 1800);
+                    }}
+                    type="button"
                     className="neon-btn"
+                    disabled={navigating}
                   >
                     <UserPlus size={15} />
                     <span>Nouveau Collaborateur</span>
@@ -484,17 +498,17 @@ export default function RegistrePersonnel() {
               {/* ── KPI HOLOGRAPHIQUES ── */}
               <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
                 <div className="holo-card group">
-                  <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/10 to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                  <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                   <div className="relative flex items-center gap-3">
-                    <div className="holo-icon bg-cyan-500/20 border-cyan-500/30">
-                      <Users size={18} className="text-cyan-400" />
+                    <div className="holo-icon bg-emerald-500/20 border-emerald-500/30">
+                      <Users size={18} className="text-emerald-400" />
                     </div>
                     <div>
                       <p className="holo-label">Effectif Total</p>
                       <p className="holo-value">{stats.total}</p>
                       <div className="flex items-center gap-1 mt-0.5">
-                        <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
-                        <span className="text-[9px] text-cyan-500/70">Actif</span>
+                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                        <span className="text-[9px] text-emerald-500/70">Actif</span>
                       </div>
                     </div>
                   </div>
@@ -535,19 +549,19 @@ export default function RegistrePersonnel() {
                 </div>
 
                 <div className="holo-card group">
-                  <div className="absolute inset-0 bg-gradient-to-br from-violet-500/10 to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                  <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/10 to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                   <div className="relative flex items-center gap-3">
-                    <div className="holo-icon bg-violet-500/20 border-violet-500/30">
-                      <CreditCard size={18} className="text-violet-400" />
+                    <div className="holo-icon bg-yellow-500/20 border-yellow-500/30">
+                      <CreditCard size={18} className="text-yellow-400" />
                     </div>
                     <div>
                       <p className="holo-label">Paiements</p>
-                      <p className="holo-value text-violet-400">
-                        {stats.paidCount}<span className="text-[10px] text-violet-500/50 font-normal ml-1">/{stats.total}</span>
+                      <p className="holo-value text-yellow-400">
+                        {stats.paidCount}<span className="text-[10px] text-yellow-500/50 font-normal ml-1">/{stats.total}</span>
                       </p>
                       <div className="w-full h-1 bg-white/5 rounded-full mt-1.5 overflow-hidden">
                         <div 
-                          className="h-full bg-gradient-to-r from-violet-500 to-violet-400 rounded-full transition-all duration-1000"
+                          className="h-full bg-gradient-to-r from-yellow-500 to-yellow-400 rounded-full transition-all duration-1000"
                           style={{ width: stats.total > 0 ? `${(stats.paidCount / stats.total) * 100}%` : "0%" }}
                         />
                       </div>
@@ -556,10 +570,10 @@ export default function RegistrePersonnel() {
                 </div>
 
                 <div className="holo-card-premium group">
-                  <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/20 via-emerald-500/10 to-violet-500/10 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                  <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/20 via-yellow-500/10 to-emerald-500/10 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                   <div className="relative flex items-center gap-3">
                     <div className="holo-icon-premium">
-                      <TrendingUp size={18} className="text-cyan-400" />
+                      <TrendingUp size={18} className="text-emerald-400" />
                     </div>
                     <div>
                       <p className="holo-label">Masse Salariale</p>
@@ -580,26 +594,26 @@ export default function RegistrePersonnel() {
                 <section className="payroll-holo animate-slideDown">
                   <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500/20 to-emerald-500/20 border border-cyan-500/30 flex items-center justify-center">
-                        <Wallet size={18} className="text-cyan-400" />
+                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500/20 to-emerald-500/20 border border-emerald-500/30 flex items-center justify-center">
+                        <Wallet size={18} className="text-emerald-400" />
                       </div>
                       <div>
                         <h2 className="text-base font-bold text-white">Livre de Paie par Département</h2>
-                        <p className="text-[10px] text-cyan-500/60">Répartition financière en temps réel</p>
+                        <p className="text-[10px] text-emerald-500/60">Répartition financière en temps réel</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2.5 flex-wrap">
                       <div className="stat-chip">
                         <p className="stat-label">Salaires</p>
-                        <p className="stat-value">{stats.masseSalariale.toLocaleString()} <span className="text-cyan-400 text-[9px]">F</span></p>
+                        <p className="stat-value">{stats.masseSalariale.toLocaleString()} <span className="text-emerald-400 text-[9px]">F</span></p>
                       </div>
                       <div className="stat-chip-premium">
                         <p className="stat-label text-emerald-400">Primes</p>
                         <p className="stat-value text-emerald-400">{stats.totalPrimes.toLocaleString()} F</p>
                       </div>
                       <div className="stat-chip">
-                        <p className="stat-label text-violet-400">Payé</p>
-                        <p className="stat-value text-violet-400">{stats.totalPaid.toLocaleString()} F</p>
+                        <p className="stat-label text-yellow-400">Payé</p>
+                        <p className="stat-value text-yellow-400">{stats.totalPaid.toLocaleString()} F</p>
                       </div>
                       <div className="stat-chip">
                         <p className="stat-label text-amber-400">En attente</p>
@@ -610,7 +624,7 @@ export default function RegistrePersonnel() {
 
                   {/* Filtres livre de paie */}
                   <div className="flex items-center gap-2 mb-4 flex-wrap">
-                    <Filter size={14} className="text-cyan-500" />
+                    <Filter size={14} className="text-emerald-500" />
                     <button
                       onClick={() => setPayrollFilter("Tous")}
                       className={payrollFilter === "Tous" ? "filter-btn-active" : "filter-btn"}
@@ -649,17 +663,17 @@ export default function RegistrePersonnel() {
                         type="button"
                         className="dept-holo group cursor-pointer hover:scale-105 transition-transform duration-300 text-left"
                       >
-                        <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-transparent rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                        <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                         <div className="relative">
                           <div className="flex items-center justify-between mb-2.5">
-                            <Building2 size={13} className="text-cyan-500/60" />
-                            <span className="px-2 py-0.5 bg-cyan-500/10 border border-cyan-500/20 rounded-md text-[9px] font-bold text-cyan-400">
+                            <Building2 size={13} className="text-emerald-500/60" />
+                            <span className="px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/20 rounded-md text-[9px] font-bold text-emerald-400">
                               {dept.count}
                             </span>
                           </div>
-                          <p className="text-[10px] font-bold text-cyan-400/80 uppercase tracking-wider mb-1">{dept.name}</p>
+                          <p className="text-[10px] font-bold text-emerald-400/80 uppercase tracking-wider mb-1">{dept.name}</p>
                           <p className="text-base font-black text-white mb-0.5">
-                            {dept.total.toLocaleString()} <span className="text-[10px] text-cyan-400 font-semibold">F</span>
+                            {dept.total.toLocaleString()} <span className="text-[10px] text-emerald-400 font-semibold">F</span>
                           </p>
                           {dept.totalPrimes > 0 && (
                             <p className="text-[11px] font-bold text-emerald-400">
@@ -668,7 +682,7 @@ export default function RegistrePersonnel() {
                           )}
                           <div className="mt-3 h-1.5 bg-white/5 rounded-full overflow-hidden border border-white/10">
                             <div
-                              className="h-full bg-gradient-to-r from-cyan-500 to-emerald-500 rounded-full transition-all duration-1000"
+                              className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-full transition-all duration-1000"
                               style={{ width: dept.count > 0 ? `${(dept.paid / dept.count) * 100}%` : "0%" }}
                             />
                           </div>
@@ -686,8 +700,8 @@ export default function RegistrePersonnel() {
                           </div>
                           
                           {/* Indicateur de clic */}
-                          <div className="mt-2 pt-2 border-t border-cyan-500/20 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <p className="text-[9px] text-cyan-400 text-center flex items-center justify-center gap-1">
+                          <div className="mt-2 pt-2 border-t border-emerald-500/20 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <p className="text-[9px] text-emerald-400 text-center flex items-center justify-center gap-1">
                               <Eye size={9} />
                               Cliquer pour filtrer
                             </p>
@@ -702,9 +716,9 @@ export default function RegistrePersonnel() {
               {/* ── BARRE DE RECHERCHE + DROPDOWNS (ESPACEMENT CORRIGÉ) ── */}
               <div className="flex flex-col lg:flex-row gap-3">
                 <div className="relative flex-1">
-                  <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 to-emerald-500/10 rounded-xl blur-sm" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 to-emerald-500/10 rounded-xl blur-sm" />
                   <div className="relative flex items-center">
-                    <Search className="absolute left-4 text-cyan-500/60 pointer-events-none" size={16} />
+                    <Search className="absolute left-4 text-emerald-500/60 pointer-events-none" size={16} />
                     <input
                       type="text"
                       placeholder="Chercher un collaborateur..."
@@ -716,7 +730,7 @@ export default function RegistrePersonnel() {
                       <button
                         onClick={() => setSearch("")}
                         type="button"
-                        className="absolute right-3.5 text-cyan-500/60 hover:text-cyan-400 transition-colors"
+                        className="absolute right-3.5 text-emerald-500/60 hover:text-emerald-400 transition-colors"
                       >
                         <X size={16} />
                       </button>
@@ -731,9 +745,9 @@ export default function RegistrePersonnel() {
                     type="button"
                     className="custom-select-holo w-full"
                   >
-                    <Building2 size={14} className="text-cyan-400" />
+                    <Building2 size={14} className="text-emerald-400" />
                     <span className="flex-1 text-left truncate">{activeDept === "Tous" ? "Tous les départements" : activeDept}</span>
-                    <ChevronDown size={16} className={`text-cyan-500 transition-transform ${showDeptDropdown ? "rotate-180" : ""}`} />
+                    <ChevronDown size={16} className={`text-emerald-500 transition-transform ${showDeptDropdown ? "rotate-180" : ""}`} />
                   </button>
                   {showDeptDropdown && (
                     <div className="custom-dropdown-holo">
@@ -746,7 +760,7 @@ export default function RegistrePersonnel() {
                       >
                         <Building2 size={13} />
                         <span className="flex-1 text-left">Tous les départements</span>
-                        {activeDept === "Tous" && <Check size={14} className="text-cyan-400" />}
+                        {activeDept === "Tous" && <Check size={14} className="text-emerald-400" />}
                       </button>
                       {stats.depts.map((d: string) => (
                         <button
@@ -759,7 +773,7 @@ export default function RegistrePersonnel() {
                         >
                           <Building2 size={13} />
                           <span className="flex-1 text-left">{d}</span>
-                          {activeDept === d && <Check size={14} className="text-cyan-400" />}
+                          {activeDept === d && <Check size={14} className="text-emerald-400" />}
                         </button>
                       ))}
                     </div>
@@ -773,9 +787,9 @@ export default function RegistrePersonnel() {
                     type="button"
                     className="custom-select-holo w-full"
                   >
-                    <Activity size={14} className="text-cyan-400" />
+                    <Activity size={14} className="text-emerald-400" />
                     <span className="flex-1 text-left truncate">{activeStatus === "Tous" ? "Tous les statuts" : activeStatus}</span>
-                    <ChevronDown size={16} className={`text-cyan-500 transition-transform ${showStatusDropdown ? "rotate-180" : ""}`} />
+                    <ChevronDown size={16} className={`text-emerald-500 transition-transform ${showStatusDropdown ? "rotate-180" : ""}`} />
                   </button>
                   {showStatusDropdown && (
                     <div className="custom-dropdown-holo">
@@ -788,7 +802,7 @@ export default function RegistrePersonnel() {
                       >
                         <Activity size={13} />
                         <span className="flex-1 text-left">Tous les statuts</span>
-                        {activeStatus === "Tous" && <Check size={14} className="text-cyan-400" />}
+                        {activeStatus === "Tous" && <Check size={14} className="text-emerald-400" />}
                       </button>
                       <button
                         onClick={() => {
@@ -799,7 +813,7 @@ export default function RegistrePersonnel() {
                       >
                         <CheckCircle2 size={13} className="text-emerald-400" />
                         <span className="flex-1 text-left">Actif</span>
-                        {activeStatus === "Actif" && <Check size={14} className="text-cyan-400" />}
+                        {activeStatus === "Actif" && <Check size={14} className="text-emerald-400" />}
                       </button>
                       <button
                         onClick={() => {
@@ -810,7 +824,7 @@ export default function RegistrePersonnel() {
                       >
                         <Calendar size={13} className="text-amber-400" />
                         <span className="flex-1 text-left">En Congé</span>
-                        {activeStatus === "Congé" && <Check size={14} className="text-cyan-400" />}
+                        {activeStatus === "Congé" && <Check size={14} className="text-emerald-400" />}
                       </button>
                       <button
                         onClick={() => {
@@ -821,7 +835,7 @@ export default function RegistrePersonnel() {
                       >
                         <Clock size={13} className="text-slate-400" />
                         <span className="flex-1 text-left">En Pause</span>
-                        {activeStatus === "En pause" && <Check size={14} className="text-cyan-400" />}
+                        {activeStatus === "En pause" && <Check size={14} className="text-emerald-400" />}
                       </button>
                     </div>
                   )}
@@ -829,7 +843,7 @@ export default function RegistrePersonnel() {
 
                 <button onClick={handleExport} type="button" className="cyber-btn-alt min-w-[130px]">
                   {isExporting ? (
-                    <div className="w-4 h-4 border-2 border-cyan-500 border-t-transparent animate-spin rounded-full" />
+                    <div className="w-4 h-4 border-2 border-emerald-500 border-t-transparent animate-spin rounded-full" />
                   ) : (
                     <Download size={15} />
                   )}
@@ -841,11 +855,11 @@ export default function RegistrePersonnel() {
               <section className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Activity size={14} className="text-cyan-500 animate-pulse" />
-                    <p className="text-xs text-cyan-400 font-semibold">
+                    <Activity size={14} className="text-emerald-500 animate-pulse" />
+                    <p className="text-xs text-emerald-400 font-semibold">
                       <span className="text-white font-bold">{filteredData.length}</span> résultat{filteredData.length > 1 ? "s" : ""}
                       {(search || activeDept !== "Tous" || activeStatus !== "Tous") && (
-                        <span className="ml-2 px-2 py-0.5 bg-cyan-500/10 border border-cyan-500/20 rounded-md text-cyan-400 text-[10px]">Filtré</span>
+                        <span className="ml-2 px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/20 rounded-md text-emerald-400 text-[10px]">Filtré</span>
                       )}
                     </p>
                   </div>
@@ -853,8 +867,8 @@ export default function RegistrePersonnel() {
 
                 {paginatedData.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-20">
-                    <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-500/20 to-slate-800/50 border border-cyan-500/30 flex items-center justify-center mb-4">
-                      <Search size={28} className="text-cyan-500/50" />
+                    <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-slate-800/50 border border-emerald-500/30 flex items-center justify-center mb-4">
+                      <Search size={28} className="text-emerald-500/50" />
                     </div>
                     <p className="text-sm font-bold text-slate-400 mb-1">Aucun résultat trouvé</p>
                     <p className="text-xs text-slate-600">Essayez de modifier vos critères de recherche</p>
@@ -863,7 +877,7 @@ export default function RegistrePersonnel() {
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {paginatedData.map((emp: Employee) => (
                       <div key={emp.id} className="employee-card-holo group">
-                        <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                        <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                         <div className="relative p-4">
                           <div className="flex items-start gap-3 mb-4">
                             <div
@@ -879,11 +893,11 @@ export default function RegistrePersonnel() {
                               <button
                                 onClick={() => setSelectedEmployee(emp)}
                                 type="button"
-                                className="text-sm font-bold text-cyan-300 hover:text-cyan-400 transition-colors text-left w-full truncate mb-1"
+                                className="text-sm font-bold text-emerald-300 hover:text-emerald-400 transition-colors text-left w-full truncate mb-1"
                               >
                                 {emp.name}
                               </button>
-                              <p className="text-[10px] text-cyan-500/50 font-mono flex items-center gap-1">
+                              <p className="text-[10px] text-emerald-500/50 font-mono flex items-center gap-1">
                                 <Fingerprint size={9} />
                                 {emp.id}
                               </p>
@@ -910,7 +924,7 @@ export default function RegistrePersonnel() {
                                     <Clock size={13} />
                                     <span>En Pause</span>
                                   </button>
-                                  <div className="h-px bg-gradient-to-r from-transparent via-cyan-500/30 to-transparent my-1" />
+                                  <div className="h-px bg-gradient-to-r from-transparent via-emerald-500/30 to-transparent my-1" />
                                   <button onClick={() => terminateContract(emp.id)} type="button" className="dropdown-item-holo text-rose-400">
                                     <AlertCircle size={13} />
                                     <span>Fin de Contrat</span>
@@ -922,7 +936,7 @@ export default function RegistrePersonnel() {
 
                           <div className="space-y-2.5">
                             <div className="flex items-center justify-between text-[11px]">
-                              <span className="text-cyan-500/60 flex items-center gap-1.5">
+                              <span className="text-emerald-500/60 flex items-center gap-1.5">
                                 <Building2 size={10} />
                                 {emp.dept}
                               </span>
@@ -936,11 +950,11 @@ export default function RegistrePersonnel() {
                               {emp.post}
                             </div>
 
-                            <div className="flex items-center justify-between pt-2 border-t border-cyan-500/10">
+                            <div className="flex items-center justify-between pt-2 border-t border-emerald-500/10">
                               <div>
-                                <p className="text-[10px] text-cyan-500/60 mb-0.5">Salaire</p>
+                                <p className="text-[10px] text-emerald-500/60 mb-0.5">Salaire</p>
                                 <p className="text-sm font-black text-white">
-                                  {emp.salary.toLocaleString()} <span className="text-[9px] text-cyan-400">F</span>
+                                  {emp.salary.toLocaleString()} <span className="text-[9px] text-emerald-400">F</span>
                                 </p>
                               </div>
                               {emp.prime > 0 && (
@@ -979,7 +993,7 @@ export default function RegistrePersonnel() {
                   <div className="pagination-holo">
                     <div className="flex items-center gap-2 flex-wrap">
                       <p className="pagination-info-holo">
-                        Page <span className="text-cyan-400 font-bold">{currentPage}</span>/<span className="text-slate-500">{totalPages}</span>
+                        Page <span className="text-emerald-400 font-bold">{currentPage}</span>/<span className="text-slate-500">{totalPages}</span>
                       </p>
                     </div>
                     <div className="flex items-center gap-2 flex-wrap">
@@ -1095,11 +1109,11 @@ export default function RegistrePersonnel() {
       {selectedEmployee && (
         <div className="modal-overlay-holo animate-fadeIn" onClick={() => setSelectedEmployee(null)}>
           <div className="modal-container-xl-holo animate-scaleIn" onClick={(e) => e.stopPropagation()}>
-            <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/10 via-emerald-500/5 to-violet-500/10 rounded-3xl blur-2xl" />
+            <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 via-yellow-500/5 to-emerald-500/10 rounded-3xl blur-2xl" />
             
             <div className="relative max-h-[85vh] overflow-y-auto custom-scroll">
               {/* Header */}
-              <div className="flex items-start justify-between mb-6 pb-6 border-b border-cyan-500/20">
+              <div className="flex items-start justify-between mb-6 pb-6 border-b border-emerald-500/20">
                 <div className="flex items-start gap-5">
                   <div className="relative group">
                     {renderAvatar(selectedEmployee, "lg")}
@@ -1166,7 +1180,7 @@ export default function RegistrePersonnel() {
                 <div className="info-card-holo">
                   <div className="info-header-holo mb-4">
                     <div className="info-icon-holo">
-                      <Fingerprint size={16} className="text-cyan-400" />
+                      <Fingerprint size={16} className="text-emerald-400" />
                     </div>
                     <h4 className="info-title-holo">Identification</h4>
                   </div>
@@ -1232,7 +1246,7 @@ export default function RegistrePersonnel() {
                     <div className="info-row-holo">
                       <span className="info-label-holo">Salaire mensuel</span>
                       <span className="salary-holo">
-                        {selectedEmployee.salary.toLocaleString()} <span className="text-[10px] text-cyan-400">FCFA</span>
+                        {selectedEmployee.salary.toLocaleString()} <span className="text-[10px] text-emerald-400">FCFA</span>
                       </span>
                     </div>
                     {selectedEmployee.prime > 0 && (
@@ -1251,10 +1265,10 @@ export default function RegistrePersonnel() {
                         )}
                       </>
                     )}
-                    <div className="pt-3 border-t border-cyan-500/20">
+                    <div className="pt-3 border-t border-emerald-500/20">
                       <div className="info-row-holo">
-                        <span className="info-label-holo font-bold text-cyan-300">Total mensuel</span>
-                        <span className="text-lg font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-emerald-400 tabular-nums">
+                        <span className="info-label-holo font-bold text-emerald-300">Total mensuel</span>
+                        <span className="text-lg font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-yellow-400 tabular-nums">
                           {(selectedEmployee.salary + selectedEmployee.prime).toLocaleString()}{" "}
                           <span className="text-[11px]">FCFA</span>
                         </span>
@@ -1267,7 +1281,7 @@ export default function RegistrePersonnel() {
                 <div className="info-card-holo">
                   <div className="info-header-holo mb-4">
                     <div className="info-icon-holo">
-                      <Award size={16} className="text-violet-400" />
+                      <Award size={16} className="text-yellow-400" />
                     </div>
                     <h4 className="info-title-holo">Poste & Performance</h4>
                   </div>
@@ -1289,7 +1303,7 @@ export default function RegistrePersonnel() {
               </div>
 
               {/* Footer Actions */}
-              <div className="flex gap-3 pt-4 border-t border-cyan-500/20">
+              <div className="flex gap-3 pt-4 border-t border-emerald-500/20">
                 <button onClick={() => setSelectedEmployee(null)} type="button" className="modal-btn-secondary-holo flex-1">
                   <ArrowLeft size={15} />
                   <span>Retour</span>
@@ -1309,6 +1323,9 @@ export default function RegistrePersonnel() {
           </div>
         </div>
       )}
+
+      {/* ═══ ANIMATION CHARGEMENT eCo ═══ */}
+      {navigating && <EcoLoader message="Préparation" subMessage="Ouverture du module contrat..." />}
 
       {/* ═══ STYLES HOLOGRAPHIQUES ULTRA FUTURISTES COMPLETS ═══ */}
       <style jsx>{`
@@ -1356,29 +1373,28 @@ export default function RegistrePersonnel() {
           border-radius: 10px;
         }
         .custom-scroll::-webkit-scrollbar-thumb {
-          background: linear-gradient(180deg, rgba(6, 182, 212, 0.5), rgba(16, 185, 129, 0.5));
+          background: linear-gradient(180deg, rgba(16, 185, 129, 0.5), rgba(212, 175, 55, 0.4));
           border-radius: 10px;
           border: 2px solid rgba(0, 0, 0, 0.3);
         }
         .custom-scroll::-webkit-scrollbar-thumb:hover {
-          background: linear-gradient(180deg, rgba(6, 182, 212, 0.8), rgba(16, 185, 129, 0.8));
+          background: linear-gradient(180deg, rgba(16, 185, 129, 0.8), rgba(212, 175, 55, 0.7));
         }
 
         /* ════════════════════════════════════════════════════
            CONTAINER HOLOGRAPHIQUE
         ════════════════════════════════════════════════════ */
         .holo-container {
-          background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(15, 23, 42, 0.98) 100%);
-          border: 1px solid transparent;
-          border-image: linear-gradient(135deg, rgba(6, 182, 212, 0.5), rgba(16, 185, 129, 0.3), rgba(139, 92, 246, 0.3)) 1;
-          border-radius: 2rem;
-          box-shadow: 
-            0 0 0 1px rgba(6, 182, 212, 0.1),
-            0 0 40px rgba(6, 182, 212, 0.2),
-            0 40px 100px rgba(0, 0, 0, 0.7),
-            inset 0 1px 0 rgba(255, 255, 255, 0.05),
-            inset 0 0 100px rgba(6, 182, 212, 0.03);
-          backdrop-filter: blur(30px);
+          background: rgba(2, 14, 7, 0.12);
+          border: 1px solid rgba(16, 185, 129, 0.18);
+          border-radius: 2.5rem;
+          box-shadow:
+            0 0 0 1px rgba(16, 185, 129, 0.04),
+            0 0 40px rgba(16, 185, 129, 0.06),
+            inset 0 1px 0 rgba(255, 255, 255, 0.04),
+            inset 0 -1px 0 rgba(16, 185, 129, 0.04);
+          backdrop-filter: blur(2px);
+          -webkit-backdrop-filter: blur(2px);
           overflow: hidden;
           position: relative;
         }
@@ -1389,11 +1405,21 @@ export default function RegistrePersonnel() {
           left: -2px;
           right: -2px;
           bottom: -2px;
-          background: linear-gradient(135deg, rgba(6, 182, 212, 0.3), transparent, rgba(16, 185, 129, 0.2));
-          border-radius: 2rem;
+          background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), transparent, rgba(16, 185, 129, 0.06));
+          border-radius: 2.5rem;
           z-index: -1;
-          opacity: 0.5;
-          filter: blur(10px);
+          opacity: 0.4;
+          filter: blur(15px);
+        }
+        .holo-container::after {
+          content: "";
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          height: 1px;
+          background: linear-gradient(90deg, transparent 15%, rgba(16, 185, 129, 0.15) 35%, rgba(16, 185, 129, 0.1) 50%, rgba(16, 185, 129, 0.15) 65%, transparent 85%);
+          border-radius: 2.5rem 2.5rem 0 0;
         }
 
         /* ════════════════════════════════════════════════════
@@ -1401,10 +1427,10 @@ export default function RegistrePersonnel() {
         ════════════════════════════════════════════════════ */
         .cyber-btn {
           padding: 0.625rem;
-          background: rgba(6, 182, 212, 0.1);
-          border: 1px solid rgba(6, 182, 212, 0.3);
+          background: rgba(16, 185, 129, 0.1);
+          border: 1px solid rgba(16, 185, 129, 0.3);
           border-radius: 0.75rem;
-          color: rgba(6, 182, 212, 0.9);
+          color: rgba(16, 185, 129, 0.9);
           transition: all 0.3s ease;
           display: flex;
           align-items: center;
@@ -1420,7 +1446,7 @@ export default function RegistrePersonnel() {
           width: 0;
           height: 0;
           border-radius: 50%;
-          background: rgba(6, 182, 212, 0.3);
+          background: rgba(16, 185, 129, 0.3);
           transform: translate(-50%, -50%);
           transition: width 0.5s, height 0.5s;
         }
@@ -1429,18 +1455,18 @@ export default function RegistrePersonnel() {
           height: 200%;
         }
         .cyber-btn:hover {
-          background: rgba(6, 182, 212, 0.2);
-          border-color: rgba(6, 182, 212, 0.6);
-          box-shadow: 0 0 20px rgba(6, 182, 212, 0.3);
+          background: rgba(16, 185, 129, 0.2);
+          border-color: rgba(16, 185, 129, 0.6);
+          box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
           transform: translateY(-2px);
         }
 
         .cyber-btn-alt {
           padding: 0.625rem 1.125rem;
-          background: rgba(6, 182, 212, 0.08);
-          border: 1px solid rgba(6, 182, 212, 0.25);
+          background: rgba(16, 185, 129, 0.08);
+          border: 1px solid rgba(16, 185, 129, 0.25);
           border-radius: 0.75rem;
-          color: rgba(6, 182, 212, 0.95);
+          color: rgba(16, 185, 129, 0.95);
           font-size: 0.75rem;
           font-weight: 600;
           display: flex;
@@ -1451,50 +1477,50 @@ export default function RegistrePersonnel() {
           overflow: hidden;
         }
         .cyber-btn-alt:hover {
-          background: rgba(6, 182, 212, 0.15);
-          border-color: rgba(6, 182, 212, 0.5);
-          box-shadow: 0 0 20px rgba(6, 182, 212, 0.25);
+          background: rgba(16, 185, 129, 0.15);
+          border-color: rgba(16, 185, 129, 0.5);
+          box-shadow: 0 0 20px rgba(16, 185, 129, 0.25);
           transform: translateY(-2px);
         }
 
         .cyber-btn-active {
           padding: 0.625rem 1.125rem;
-          background: linear-gradient(135deg, rgba(6, 182, 212, 0.25), rgba(16, 185, 129, 0.2));
-          border: 1px solid rgba(6, 182, 212, 0.5);
+          background: linear-gradient(135deg, rgba(16, 185, 129, 0.25), rgba(16, 185, 129, 0.2));
+          border: 1px solid rgba(16, 185, 129, 0.5);
           border-radius: 0.75rem;
-          color: rgb(6, 182, 212);
+          color: rgb(16, 185, 129);
           font-size: 0.75rem;
           font-weight: 700;
           display: flex;
           align-items: center;
           gap: 0.5rem;
-          box-shadow: 0 0 25px rgba(6, 182, 212, 0.3), inset 0 0 20px rgba(6, 182, 212, 0.1);
+          box-shadow: 0 0 25px rgba(16, 185, 129, 0.3), inset 0 0 20px rgba(16, 185, 129, 0.1);
         }
 
         .neon-btn {
           padding: 0.625rem 1.25rem;
-          background: linear-gradient(135deg, rgba(6, 182, 212, 0.9), rgba(16, 185, 129, 0.8));
-          border: 1px solid rgba(6, 182, 212, 0.8);
-          border-radius: 0.75rem;
+          background: linear-gradient(135deg, rgba(16, 185, 129, 0.9), rgba(212, 175, 55, 0.85));
+          border: 1px solid rgba(212, 175, 55, 0.6);
+          border-radius: 1rem;
           color: rgb(15, 23, 42);
           font-size: 0.75rem;
           font-weight: 800;
           display: flex;
           align-items: center;
           gap: 0.5rem;
-          box-shadow: 
-            0 0 30px rgba(6, 182, 212, 0.5),
-            0 0 60px rgba(6, 182, 212, 0.3),
+          box-shadow:
+            0 0 30px rgba(16, 185, 129, 0.4),
+            0 0 60px rgba(212, 175, 55, 0.2),
             inset 0 1px 0 rgba(255, 255, 255, 0.3);
           transition: all 0.3s ease;
           text-transform: uppercase;
           letter-spacing: 0.05em;
         }
         .neon-btn:hover {
-          background: linear-gradient(135deg, rgba(6, 182, 212, 1), rgba(16, 185, 129, 0.95));
-          box-shadow: 
-            0 0 40px rgba(6, 182, 212, 0.7),
-            0 0 80px rgba(6, 182, 212, 0.4),
+          background: linear-gradient(135deg, rgba(16, 185, 129, 1), rgba(212, 175, 55, 0.95));
+          box-shadow:
+            0 0 40px rgba(16, 185, 129, 0.6),
+            0 0 80px rgba(212, 175, 55, 0.35),
             inset 0 1px 0 rgba(255, 255, 255, 0.4);
           transform: translateY(-3px);
         }
@@ -1506,31 +1532,31 @@ export default function RegistrePersonnel() {
           width: 100%;
           padding: 0.875rem 1rem;
           background: rgba(0, 0, 0, 0.4);
-          border: 1px solid rgba(6, 182, 212, 0.3);
+          border: 1px solid rgba(16, 185, 129, 0.3);
           border-radius: 0.75rem;
-          color: rgba(6, 182, 212, 0.95);
+          color: rgba(16, 185, 129, 0.95);
           font-size: 0.75rem;
           transition: all 0.3s ease;
         }
         .cyber-input:focus {
           outline: none;
           background: rgba(0, 0, 0, 0.5);
-          border-color: rgba(6, 182, 212, 0.6);
+          border-color: rgba(16, 185, 129, 0.6);
           box-shadow: 
-            0 0 0 3px rgba(6, 182, 212, 0.15),
-            0 0 20px rgba(6, 182, 212, 0.2),
-            inset 0 0 20px rgba(6, 182, 212, 0.05);
+            0 0 0 3px rgba(16, 185, 129, 0.15),
+            0 0 20px rgba(16, 185, 129, 0.2),
+            inset 0 0 20px rgba(16, 185, 129, 0.05);
         }
         .cyber-input::placeholder {
-          color: rgba(6, 182, 212, 0.4);
+          color: rgba(16, 185, 129, 0.4);
         }
 
         .custom-select-holo {
           padding: 0.875rem 1rem;
           background: linear-gradient(135deg, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.4));
-          border: 1px solid rgba(6, 182, 212, 0.3);
+          border: 1px solid rgba(16, 185, 129, 0.3);
           border-radius: 0.75rem;
-          color: rgba(6, 182, 212, 0.95);
+          color: rgba(16, 185, 129, 0.95);
           font-size: 0.75rem;
           font-weight: 600;
           display: flex;
@@ -1540,8 +1566,8 @@ export default function RegistrePersonnel() {
           cursor: pointer;
         }
         .custom-select-holo:hover {
-          border-color: rgba(6, 182, 212, 0.5);
-          box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.1), 0 0 20px rgba(6, 182, 212, 0.15);
+          border-color: rgba(16, 185, 129, 0.5);
+          box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1), 0 0 20px rgba(16, 185, 129, 0.15);
           background: rgba(0, 0, 0, 0.6);
         }
 
@@ -1551,11 +1577,11 @@ export default function RegistrePersonnel() {
           left: 0;
           right: 0;
           background: linear-gradient(135deg, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.95));
-          border: 1px solid rgba(6, 182, 212, 0.4);
+          border: 1px solid rgba(16, 185, 129, 0.4);
           border-radius: 1rem;
           padding: 0.5rem;
           box-shadow: 
-            0 0 40px rgba(6, 182, 212, 0.3),
+            0 0 40px rgba(16, 185, 129, 0.3),
             0 20px 60px rgba(0, 0, 0, 0.7);
           backdrop-filter: blur(20px);
           z-index: 50;
@@ -1573,12 +1599,12 @@ export default function RegistrePersonnel() {
           font-size: 0.6875rem;
           font-weight: 600;
           transition: all 0.2s ease;
-          color: rgba(6, 182, 212, 0.8);
+          color: rgba(16, 185, 129, 0.8);
           text-align: left;
         }
         .dropdown-option-holo:hover {
-          background: rgba(6, 182, 212, 0.1);
-          color: rgba(6, 182, 212, 1);
+          background: rgba(16, 185, 129, 0.1);
+          color: rgba(16, 185, 129, 1);
         }
 
         .dropdown-option-holo-active {
@@ -1590,9 +1616,9 @@ export default function RegistrePersonnel() {
           border-radius: 0.625rem;
           font-size: 0.6875rem;
           font-weight: 700;
-          background: linear-gradient(135deg, rgba(6, 182, 212, 0.2), rgba(16, 185, 129, 0.15));
-          color: rgb(6, 182, 212);
-          box-shadow: 0 0 15px rgba(6, 182, 212, 0.2);
+          background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(16, 185, 129, 0.15));
+          color: rgb(16, 185, 129);
+          box-shadow: 0 0 15px rgba(16, 185, 129, 0.2);
           text-align: left;
         }
 
@@ -1601,30 +1627,30 @@ export default function RegistrePersonnel() {
         ════════════════════════════════════════════════════ */
         .filter-btn {
           padding: 0.5rem 1rem;
-          background: rgba(6, 182, 212, 0.08);
-          border: 1px solid rgba(6, 182, 212, 0.2);
+          background: rgba(16, 185, 129, 0.08);
+          border: 1px solid rgba(16, 185, 129, 0.2);
           border-radius: 0.625rem;
-          color: rgba(6, 182, 212, 0.8);
+          color: rgba(16, 185, 129, 0.8);
           font-size: 0.6875rem;
           font-weight: 600;
           transition: all 0.2s ease;
           cursor: pointer;
         }
         .filter-btn:hover {
-          background: rgba(6, 182, 212, 0.15);
-          border-color: rgba(6, 182, 212, 0.4);
-          color: rgba(6, 182, 212, 1);
+          background: rgba(16, 185, 129, 0.15);
+          border-color: rgba(16, 185, 129, 0.4);
+          color: rgba(16, 185, 129, 1);
         }
 
         .filter-btn-active {
           padding: 0.5rem 1rem;
-          background: linear-gradient(135deg, rgba(6, 182, 212, 0.25), rgba(16, 185, 129, 0.2));
-          border: 1px solid rgba(6, 182, 212, 0.5);
+          background: linear-gradient(135deg, rgba(16, 185, 129, 0.25), rgba(16, 185, 129, 0.2));
+          border: 1px solid rgba(16, 185, 129, 0.5);
           border-radius: 0.625rem;
-          color: rgb(6, 182, 212);
+          color: rgb(16, 185, 129);
           font-size: 0.6875rem;
           font-weight: 700;
-          box-shadow: 0 0 15px rgba(6, 182, 212, 0.25);
+          box-shadow: 0 0 15px rgba(16, 185, 129, 0.25);
         }
 
         /* ════════════════════════════════════════════════════
@@ -1632,7 +1658,7 @@ export default function RegistrePersonnel() {
         ════════════════════════════════════════════════════ */
         .holo-card {
           background: linear-gradient(135deg, rgba(15, 23, 42, 0.8), rgba(15, 23, 42, 0.6));
-          border: 1px solid rgba(6, 182, 212, 0.2);
+          border: 1px solid rgba(16, 185, 129, 0.2);
           border-radius: 1.25rem;
           padding: 1.25rem;
           transition: all 0.4s ease;
@@ -1649,7 +1675,7 @@ export default function RegistrePersonnel() {
           background: linear-gradient(
             45deg,
             transparent 30%,
-            rgba(6, 182, 212, 0.1) 50%,
+            rgba(16, 185, 129, 0.1) 50%,
             transparent 70%
           );
           transform: rotate(45deg);
@@ -1659,28 +1685,29 @@ export default function RegistrePersonnel() {
           left: 100%;
         }
         .holo-card:hover {
-          border-color: rgba(6, 182, 212, 0.4);
+          border-color: rgba(16, 185, 129, 0.4);
           box-shadow: 
-            0 0 30px rgba(6, 182, 212, 0.2),
-            inset 0 0 30px rgba(6, 182, 212, 0.05);
+            0 0 30px rgba(16, 185, 129, 0.2),
+            inset 0 0 30px rgba(16, 185, 129, 0.05);
           transform: translateY(-4px);
         }
 
         .holo-card-premium {
-          background: linear-gradient(135deg, rgba(6, 182, 212, 0.15), rgba(16, 185, 129, 0.1));
-          border: 1px solid rgba(6, 182, 212, 0.4);
+          background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(212, 175, 55, 0.08));
+          border: 1px solid rgba(212, 175, 55, 0.35);
           border-radius: 1.25rem;
           padding: 1.25rem;
           transition: all 0.4s ease;
           position: relative;
           overflow: hidden;
-          box-shadow: 0 0 30px rgba(6, 182, 212, 0.15);
+          box-shadow: 0 0 30px rgba(212, 175, 55, 0.12);
         }
         .holo-card-premium:hover {
-          border-color: rgba(6, 182, 212, 0.6);
-          box-shadow: 
-            0 0 40px rgba(6, 182, 212, 0.3),
-            inset 0 0 30px rgba(6, 182, 212, 0.1);
+          border-color: rgba(212, 175, 55, 0.6);
+          box-shadow:
+            0 0 40px rgba(212, 175, 55, 0.25),
+            0 0 20px rgba(16, 185, 129, 0.15),
+            inset 0 0 30px rgba(212, 175, 55, 0.08);
           transform: translateY(-4px);
         }
 
@@ -1707,19 +1734,19 @@ export default function RegistrePersonnel() {
         .holo-icon-premium {
           width: 2.75rem;
           height: 2.75rem;
-          background: linear-gradient(135deg, rgba(6, 182, 212, 0.3), rgba(16, 185, 129, 0.25));
-          border: 1px solid rgba(6, 182, 212, 0.5);
+          background: linear-gradient(135deg, rgba(212, 175, 55, 0.3), rgba(16, 185, 129, 0.25));
+          border: 1px solid rgba(212, 175, 55, 0.5);
           border-radius: 0.875rem;
           display: flex;
           align-items: center;
           justify-content: center;
           flex-shrink: 0;
-          box-shadow: 0 0 20px rgba(6, 182, 212, 0.3);
+          box-shadow: 0 0 20px rgba(212, 175, 55, 0.25);
         }
 
         .holo-label {
           font-size: 0.625rem;
-          color: rgba(6, 182, 212, 0.7);
+          color: rgba(16, 185, 129, 0.7);
           text-transform: uppercase;
           letter-spacing: 0.08em;
           font-weight: 700;
@@ -1730,17 +1757,17 @@ export default function RegistrePersonnel() {
           font-size: 1.375rem;
           font-weight: 900;
           color: #fff;
-          text-shadow: 0 0 20px rgba(6, 182, 212, 0.5);
+          text-shadow: 0 0 20px rgba(16, 185, 129, 0.5);
         }
 
         .holo-value-premium {
           font-size: 1.5rem;
           font-weight: 900;
-          background: linear-gradient(135deg, rgb(6, 182, 212), rgb(16, 185, 129));
+          background: linear-gradient(135deg, rgb(16, 185, 129), rgb(212, 175, 55));
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
           background-clip: text;
-          filter: drop-shadow(0 0 20px rgba(6, 182, 212, 0.5));
+          filter: drop-shadow(0 0 20px rgba(212, 175, 55, 0.4));
         }
 
         /* ════════════════════════════════════════════════════
@@ -1748,7 +1775,7 @@ export default function RegistrePersonnel() {
         ════════════════════════════════════════════════════ */
         .payroll-holo {
           background: linear-gradient(135deg, rgba(15, 23, 42, 0.7), rgba(15, 23, 42, 0.5));
-          border: 1px solid rgba(6, 182, 212, 0.25);
+          border: 1px solid rgba(16, 185, 129, 0.25);
           border-radius: 1.5rem;
           padding: 1.75rem;
           position: relative;
@@ -1758,7 +1785,7 @@ export default function RegistrePersonnel() {
           content: "";
           position: absolute;
           inset: -2px;
-          background: linear-gradient(135deg, rgba(6, 182, 212, 0.2), transparent, rgba(16, 185, 129, 0.15));
+          background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), transparent, rgba(16, 185, 129, 0.15));
           border-radius: 1.5rem;
           z-index: -1;
           opacity: 0.5;
@@ -1768,12 +1795,12 @@ export default function RegistrePersonnel() {
         .stat-chip {
           padding: 0.75rem 1.125rem;
           background: rgba(0, 0, 0, 0.5);
-          border: 1px solid rgba(6, 182, 212, 0.25);
+          border: 1px solid rgba(16, 185, 129, 0.25);
           border-radius: 0.75rem;
         }
         .stat-chip-premium {
           padding: 0.75rem 1.125rem;
-          background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(6, 182, 212, 0.1));
+          background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(212, 175, 55, 0.08));
           border: 1px solid rgba(16, 185, 129, 0.4);
           border-radius: 0.75rem;
           box-shadow: 0 0 20px rgba(16, 185, 129, 0.2);
@@ -1783,7 +1810,7 @@ export default function RegistrePersonnel() {
           font-size: 0.625rem;
           text-transform: uppercase;
           font-weight: 700;
-          color: rgba(6, 182, 212, 0.7);
+          color: rgba(16, 185, 129, 0.7);
           margin-bottom: 0.25rem;
           letter-spacing: 0.05em;
         }
@@ -1795,7 +1822,7 @@ export default function RegistrePersonnel() {
 
         .dept-holo {
           background: linear-gradient(135deg, rgba(15, 23, 42, 0.8), rgba(15, 23, 42, 0.6));
-          border: 1px solid rgba(6, 182, 212, 0.2);
+          border: 1px solid rgba(16, 185, 129, 0.2);
           border-radius: 1rem;
           padding: 1.125rem;
           transition: all 0.3s ease;
@@ -1803,8 +1830,8 @@ export default function RegistrePersonnel() {
           overflow: hidden;
         }
         .dept-holo:hover {
-          border-color: rgba(6, 182, 212, 0.4);
-          box-shadow: 0 0 25px rgba(6, 182, 212, 0.2);
+          border-color: rgba(16, 185, 129, 0.4);
+          box-shadow: 0 0 25px rgba(16, 185, 129, 0.2);
           transform: translateY(-3px);
         }
 
@@ -1813,26 +1840,26 @@ export default function RegistrePersonnel() {
         ════════════════════════════════════════════════════ */
         .employee-card-holo {
           background: linear-gradient(135deg, rgba(15, 23, 42, 0.8), rgba(15, 23, 42, 0.6));
-          border: 1px solid rgba(6, 182, 212, 0.2);
+          border: 1px solid rgba(16, 185, 129, 0.2);
           border-radius: 1.25rem;
           transition: all 0.3s ease;
           position: relative;
           overflow: hidden;
         }
         .employee-card-holo:hover {
-          border-color: rgba(6, 182, 212, 0.4);
-          box-shadow: 0 0 30px rgba(6, 182, 212, 0.2);
+          border-color: rgba(16, 185, 129, 0.4);
+          box-shadow: 0 0 30px rgba(16, 185, 129, 0.2);
           transform: translateY(-3px);
         }
 
         .contract-badge-holo {
           padding: 0.4375rem 0.75rem;
-          background: rgba(6, 182, 212, 0.1);
-          border: 1px solid rgba(6, 182, 212, 0.25);
+          background: rgba(16, 185, 129, 0.1);
+          border: 1px solid rgba(16, 185, 129, 0.25);
           border-radius: 0.5rem;
           font-size: 0.625rem;
           font-weight: 700;
-          color: rgba(6, 182, 212, 0.9);
+          color: rgba(16, 185, 129, 0.9);
           display: inline-flex;
           align-items: center;
           gap: 0.375rem;
@@ -1901,10 +1928,10 @@ export default function RegistrePersonnel() {
           align-items: center;
           gap: 0.375rem;
           padding: 0.5rem 0.875rem;
-          background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(139, 92, 246, 0.15));
-          border: 1px solid rgba(139, 92, 246, 0.4);
+          background: linear-gradient(135deg, rgba(212, 175, 55, 0.2), rgba(212, 175, 55, 0.15));
+          border: 1px solid rgba(212, 175, 55, 0.4);
           border-radius: 0.625rem;
-          color: rgb(139, 92, 246);
+          color: rgb(212, 175, 55);
           font-size: 0.625rem;
           font-weight: 700;
           cursor: pointer;
@@ -1912,8 +1939,8 @@ export default function RegistrePersonnel() {
           text-transform: uppercase;
         }
         .payment-badge-paid-holo:hover {
-          background: linear-gradient(135deg, rgba(139, 92, 246, 0.3), rgba(139, 92, 246, 0.25));
-          box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
+          background: linear-gradient(135deg, rgba(212, 175, 55, 0.3), rgba(212, 175, 55, 0.25));
+          box-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
           transform: scale(1.05);
         }
 
@@ -1943,10 +1970,10 @@ export default function RegistrePersonnel() {
           align-items: center;
           gap: 0.375rem;
           padding: 0.5rem 0.875rem;
-          background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(139, 92, 246, 0.15));
-          border: 1px solid rgba(139, 92, 246, 0.4);
+          background: linear-gradient(135deg, rgba(212, 175, 55, 0.2), rgba(212, 175, 55, 0.15));
+          border: 1px solid rgba(212, 175, 55, 0.4);
           border-radius: 0.625rem;
-          color: rgb(139, 92, 246);
+          color: rgb(212, 175, 55);
           font-size: 0.625rem;
           font-weight: 700;
           cursor: pointer;
@@ -1954,8 +1981,8 @@ export default function RegistrePersonnel() {
           text-transform: uppercase;
         }
         .payment-badge-paid-holo-clickable:hover {
-          background: linear-gradient(135deg, rgba(139, 92, 246, 0.35), rgba(139, 92, 246, 0.3));
-          box-shadow: 0 0 25px rgba(139, 92, 246, 0.4);
+          background: linear-gradient(135deg, rgba(212, 175, 55, 0.35), rgba(212, 175, 55, 0.3));
+          box-shadow: 0 0 25px rgba(212, 175, 55, 0.4);
           transform: scale(1.05);
         }
 
@@ -1982,25 +2009,25 @@ export default function RegistrePersonnel() {
 
         .action-btn-holo {
           padding: 0.5rem;
-          background: rgba(6, 182, 212, 0.1);
-          border: 1px solid rgba(6, 182, 212, 0.25);
+          background: rgba(16, 185, 129, 0.1);
+          border: 1px solid rgba(16, 185, 129, 0.25);
           border-radius: 0.625rem;
-          color: rgba(6, 182, 212, 0.9);
+          color: rgba(16, 185, 129, 0.9);
           transition: all 0.2s ease;
         }
         .action-btn-holo:hover {
-          background: rgba(6, 182, 212, 0.2);
-          border-color: rgba(6, 182, 212, 0.5);
-          box-shadow: 0 0 15px rgba(6, 182, 212, 0.3);
+          background: rgba(16, 185, 129, 0.2);
+          border-color: rgba(16, 185, 129, 0.5);
+          box-shadow: 0 0 15px rgba(16, 185, 129, 0.3);
         }
 
         .action-btn-holo-active {
           padding: 0.5rem;
-          background: rgba(6, 182, 212, 0.25);
-          border: 1px solid rgba(6, 182, 212, 0.5);
+          background: rgba(16, 185, 129, 0.25);
+          border: 1px solid rgba(16, 185, 129, 0.5);
           border-radius: 0.625rem;
-          color: rgb(6, 182, 212);
-          box-shadow: 0 0 20px rgba(6, 182, 212, 0.3);
+          color: rgb(16, 185, 129);
+          box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
         }
 
         .dropdown-holo {
@@ -2010,11 +2037,11 @@ export default function RegistrePersonnel() {
           margin-top: 0.5rem;
           width: 12rem;
           background: linear-gradient(135deg, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.95));
-          border: 1px solid rgba(6, 182, 212, 0.4);
+          border: 1px solid rgba(16, 185, 129, 0.4);
           border-radius: 1rem;
           padding: 0.5rem;
           box-shadow: 
-            0 0 40px rgba(6, 182, 212, 0.3),
+            0 0 40px rgba(16, 185, 129, 0.3),
             0 20px 60px rgba(0, 0, 0, 0.7);
           backdrop-filter: blur(20px);
           z-index: 50;
@@ -2034,7 +2061,7 @@ export default function RegistrePersonnel() {
           letter-spacing: 0.03em;
         }
         .dropdown-item-holo:hover {
-          background: rgba(6, 182, 212, 0.1);
+          background: rgba(16, 185, 129, 0.1);
         }
 
         /* ════════════════════════════════════════════════════
@@ -2042,8 +2069,8 @@ export default function RegistrePersonnel() {
         ════════════════════════════════════════════════════ */
         .pagination-holo {
           padding: 1.25rem 1.5rem;
-          background: linear-gradient(135deg, rgba(6, 182, 212, 0.05), rgba(16, 185, 129, 0.03));
-          border: 1px solid rgba(6, 182, 212, 0.2);
+          background: linear-gradient(135deg, rgba(16, 185, 129, 0.05), rgba(16, 185, 129, 0.03));
+          border: 1px solid rgba(16, 185, 129, 0.2);
           border-radius: 1rem;
           display: flex;
           flex-direction: column;
@@ -2059,7 +2086,7 @@ export default function RegistrePersonnel() {
 
         .pagination-info-holo {
           font-size: 0.6875rem;
-          color: rgba(6, 182, 212, 0.8);
+          color: rgba(16, 185, 129, 0.8);
           font-weight: 600;
           display: flex;
           align-items: center;
@@ -2069,16 +2096,16 @@ export default function RegistrePersonnel() {
 
         .pagination-btn-holo {
           padding: 0.625rem;
-          background: rgba(6, 182, 212, 0.1);
-          border: 1px solid rgba(6, 182, 212, 0.25);
+          background: rgba(16, 185, 129, 0.1);
+          border: 1px solid rgba(16, 185, 129, 0.25);
           border-radius: 0.625rem;
-          color: rgba(6, 182, 212, 0.9);
+          color: rgba(16, 185, 129, 0.9);
           transition: all 0.2s ease;
         }
         .pagination-btn-holo:hover:not(:disabled) {
-          background: rgba(6, 182, 212, 0.2);
-          border-color: rgba(6, 182, 212, 0.5);
-          box-shadow: 0 0 15px rgba(6, 182, 212, 0.3);
+          background: rgba(16, 185, 129, 0.2);
+          border-color: rgba(16, 185, 129, 0.5);
+          box-shadow: 0 0 15px rgba(16, 185, 129, 0.3);
         }
         .pagination-btn-holo:disabled {
           opacity: 0.3;
@@ -2091,18 +2118,18 @@ export default function RegistrePersonnel() {
           display: flex;
           align-items: center;
           justify-content: center;
-          background: rgba(6, 182, 212, 0.08);
-          border: 1px solid rgba(6, 182, 212, 0.2);
+          background: rgba(16, 185, 129, 0.08);
+          border: 1px solid rgba(16, 185, 129, 0.2);
           border-radius: 0.625rem;
-          color: rgba(6, 182, 212, 0.9);
+          color: rgba(16, 185, 129, 0.9);
           font-size: 0.6875rem;
           font-weight: 700;
           transition: all 0.2s ease;
         }
         .pagination-number-holo:hover {
-          background: rgba(6, 182, 212, 0.15);
-          border-color: rgba(6, 182, 212, 0.4);
-          box-shadow: 0 0 15px rgba(6, 182, 212, 0.2);
+          background: rgba(16, 185, 129, 0.15);
+          border-color: rgba(16, 185, 129, 0.4);
+          box-shadow: 0 0 15px rgba(16, 185, 129, 0.2);
         }
 
         .pagination-number-holo-active {
@@ -2111,13 +2138,13 @@ export default function RegistrePersonnel() {
           display: flex;
           align-items: center;
           justify-content: center;
-          background: linear-gradient(135deg, rgba(6, 182, 212, 0.3), rgba(16, 185, 129, 0.25));
-          border: 1px solid rgba(6, 182, 212, 0.6);
+          background: linear-gradient(135deg, rgba(16, 185, 129, 0.3), rgba(16, 185, 129, 0.25));
+          border: 1px solid rgba(16, 185, 129, 0.6);
           border-radius: 0.625rem;
-          color: rgb(6, 182, 212);
+          color: rgb(16, 185, 129);
           font-size: 0.6875rem;
           font-weight: 900;
-          box-shadow: 0 0 25px rgba(6, 182, 212, 0.4);
+          box-shadow: 0 0 25px rgba(16, 185, 129, 0.4);
         }
 
         /* ════════════════════════════════════════════════════
@@ -2139,11 +2166,11 @@ export default function RegistrePersonnel() {
           width: 100%;
           max-width: 32rem;
           background: linear-gradient(135deg, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.95));
-          border: 1px solid rgba(6, 182, 212, 0.4);
+          border: 1px solid rgba(16, 185, 129, 0.4);
           border-radius: 1.5rem;
           padding: 2rem;
           box-shadow: 
-            0 0 60px rgba(6, 182, 212, 0.3),
+            0 0 60px rgba(16, 185, 129, 0.3),
             0 30px 80px rgba(0, 0, 0, 0.8);
           position: relative;
         }
@@ -2152,11 +2179,11 @@ export default function RegistrePersonnel() {
           width: 100%;
           max-width: 70rem;
           background: linear-gradient(135deg, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.95));
-          border: 1px solid rgba(6, 182, 212, 0.4);
+          border: 1px solid rgba(16, 185, 129, 0.4);
           border-radius: 1.5rem;
           padding: 2rem;
           box-shadow: 
-            0 0 60px rgba(6, 182, 212, 0.3),
+            0 0 60px rgba(16, 185, 129, 0.3),
             0 30px 80px rgba(0, 0, 0, 0.8);
           position: relative;
         }
@@ -2193,22 +2220,22 @@ export default function RegistrePersonnel() {
           font-size: 1.125rem;
           font-weight: 800;
           color: #fff;
-          text-shadow: 0 0 20px rgba(6, 182, 212, 0.3);
+          text-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
         }
 
         .modal-description-holo {
           font-size: 0.8125rem;
-          color: rgba(6, 182, 212, 0.8);
+          color: rgba(16, 185, 129, 0.8);
           line-height: 1.6;
         }
 
         .modal-btn-secondary-holo {
           flex: 1;
           padding: 0.875rem 1.25rem;
-          background: rgba(6, 182, 212, 0.08);
-          border: 1px solid rgba(6, 182, 212, 0.25);
+          background: rgba(16, 185, 129, 0.08);
+          border: 1px solid rgba(16, 185, 129, 0.25);
           border-radius: 0.875rem;
-          color: rgba(6, 182, 212, 0.95);
+          color: rgba(16, 185, 129, 0.95);
           font-size: 0.75rem;
           font-weight: 700;
           transition: all 0.2s ease;
@@ -2219,8 +2246,8 @@ export default function RegistrePersonnel() {
           text-transform: uppercase;
         }
         .modal-btn-secondary-holo:hover {
-          background: rgba(6, 182, 212, 0.15);
-          border-color: rgba(6, 182, 212, 0.4);
+          background: rgba(16, 185, 129, 0.15);
+          border-color: rgba(16, 185, 129, 0.4);
         }
 
         .modal-btn-green-holo {
@@ -2273,12 +2300,12 @@ export default function RegistrePersonnel() {
           font-size: 1.5rem;
           font-weight: 900;
           color: #fff;
-          text-shadow: 0 0 30px rgba(6, 182, 212, 0.4);
+          text-shadow: 0 0 30px rgba(16, 185, 129, 0.4);
         }
 
         .employee-profile-role-holo {
           font-size: 0.8125rem;
-          color: rgba(6, 182, 212, 0.7);
+          color: rgba(16, 185, 129, 0.7);
           font-weight: 600;
         }
 
@@ -2288,7 +2315,7 @@ export default function RegistrePersonnel() {
           right: -0.375rem;
           width: 2.125rem;
           height: 2.125rem;
-          background: linear-gradient(135deg, rgba(6, 182, 212, 0.95), rgba(16, 185, 129, 0.9));
+          background: linear-gradient(135deg, rgba(16, 185, 129, 0.95), rgba(212, 175, 55, 0.9));
           border: 2px solid rgba(15, 23, 42, 0.8);
           border-radius: 0.75rem;
           display: flex;
@@ -2296,12 +2323,12 @@ export default function RegistrePersonnel() {
           justify-content: center;
           color: rgb(15, 23, 42);
           transition: all 0.3s ease;
-          box-shadow: 0 0 20px rgba(6, 182, 212, 0.5);
+          box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
           cursor: pointer;
         }
         .photo-btn-holo:hover:not(:disabled) {
-          background: linear-gradient(135deg, rgba(6, 182, 212, 1), rgba(16, 185, 129, 1));
-          box-shadow: 0 0 30px rgba(6, 182, 212, 0.7);
+          background: linear-gradient(135deg, rgba(16, 185, 129, 1), rgba(212, 175, 55, 1));
+          box-shadow: 0 0 30px rgba(212, 175, 55, 0.5);
           transform: scale(1.1);
         }
         .photo-btn-holo:disabled {
@@ -2311,27 +2338,27 @@ export default function RegistrePersonnel() {
 
         .info-card-holo {
           background: linear-gradient(135deg, rgba(15, 23, 42, 0.6), rgba(15, 23, 42, 0.4));
-          border: 1px solid rgba(6, 182, 212, 0.2);
+          border: 1px solid rgba(16, 185, 129, 0.2);
           border-radius: 1.125rem;
           padding: 1.375rem;
           transition: all 0.3s ease;
         }
         .info-card-holo:hover {
-          border-color: rgba(6, 182, 212, 0.4);
-          box-shadow: 0 0 25px rgba(6, 182, 212, 0.15);
+          border-color: rgba(16, 185, 129, 0.4);
+          box-shadow: 0 0 25px rgba(16, 185, 129, 0.15);
         }
 
         .info-card-holo-premium {
-          background: linear-gradient(135deg, rgba(6, 182, 212, 0.12), rgba(16, 185, 129, 0.08));
-          border: 1px solid rgba(6, 182, 212, 0.35);
+          background: linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(212, 175, 55, 0.06));
+          border: 1px solid rgba(212, 175, 55, 0.3);
           border-radius: 1.125rem;
           padding: 1.375rem;
-          box-shadow: 0 0 25px rgba(6, 182, 212, 0.2);
+          box-shadow: 0 0 25px rgba(212, 175, 55, 0.12);
           transition: all 0.3s ease;
         }
         .info-card-holo-premium:hover {
-          border-color: rgba(6, 182, 212, 0.5);
-          box-shadow: 0 0 35px rgba(6, 182, 212, 0.3);
+          border-color: rgba(212, 175, 55, 0.5);
+          box-shadow: 0 0 35px rgba(212, 175, 55, 0.2);
         }
 
         .info-header-holo {
@@ -2343,8 +2370,8 @@ export default function RegistrePersonnel() {
         .info-icon-holo {
           width: 2.25rem;
           height: 2.25rem;
-          background: rgba(6, 182, 212, 0.15);
-          border: 1px solid rgba(6, 182, 212, 0.3);
+          background: rgba(16, 185, 129, 0.15);
+          border: 1px solid rgba(16, 185, 129, 0.3);
           border-radius: 0.75rem;
           display: flex;
           align-items: center;
@@ -2354,7 +2381,7 @@ export default function RegistrePersonnel() {
         .info-icon-holo-premium {
           width: 2.25rem;
           height: 2.25rem;
-          background: linear-gradient(135deg, rgba(16, 185, 129, 0.25), rgba(6, 182, 212, 0.2));
+          background: linear-gradient(135deg, rgba(16, 185, 129, 0.25), rgba(16, 185, 129, 0.2));
           border: 1px solid rgba(16, 185, 129, 0.4);
           border-radius: 0.75rem;
           display: flex;
@@ -2368,7 +2395,7 @@ export default function RegistrePersonnel() {
           font-weight: 800;
           text-transform: uppercase;
           letter-spacing: 0.08em;
-          color: rgba(6, 182, 212, 0.9);
+          color: rgba(16, 185, 129, 0.9);
         }
 
         .info-row-holo {
@@ -2380,7 +2407,7 @@ export default function RegistrePersonnel() {
 
         .info-label-holo {
           font-size: 0.6875rem;
-          color: rgba(6, 182, 212, 0.6);
+          color: rgba(16, 185, 129, 0.6);
           font-weight: 600;
         }
 

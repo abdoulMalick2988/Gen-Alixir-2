@@ -52,7 +52,7 @@ import {
   Scale,
   Hexagon,
 } from 'lucide-react';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '@/lib/supabase';
 import {
   Document,
   Packer,
@@ -72,20 +72,6 @@ import {
 import { saveAs } from 'file-saver';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
-
-// ─────────────────────────────────────────────
-// Supabase Client (lazy — avoids crash during SSR prerender)
-// ─────────────────────────────────────────────
-let _supabase: ReturnType<typeof createClient> | null = null;
-function getSupabase() {
-  if (!_supabase) {
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-    if (!url || !key) throw new Error('Supabase env vars not set');
-    _supabase = createClient(url, key);
-  }
-  return _supabase;
-}
 
 // ─────────────────────────────────────────────
 // Interfaces TypeScript (strict, no `any`)
@@ -741,7 +727,7 @@ export default function ContractArchitectPage() {
   useEffect(() => {
     const loadContracts = async () => {
       try {
-        const { data: contracts, error } = await getSupabase()
+        const { data: contracts, error } = await supabase
           .from('contracts')
           .select('*')
           .order('created_at', { ascending: false });
@@ -1109,7 +1095,7 @@ export default function ContractArchitectPage() {
       // Tentative Supabase
       try {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { error } = await (getSupabase().from('contracts') as any).insert([
+        const { error } = await (supabase.from('contracts') as any).insert([
           {
             id: contract.id,
             employee_name: contract.employeeName,
@@ -1919,7 +1905,7 @@ ${nonCompeteArticle}
   const deleteContract = useCallback(
     async (id: string) => {
       try {
-        const { error } = await getSupabase().from('contracts').delete().eq('id', id);
+        const { error } = await supabase.from('contracts').delete().eq('id', id);
         if (error) throw error;
       } catch {
         console.warn('Suppression Supabase échouée, nettoyage local');
