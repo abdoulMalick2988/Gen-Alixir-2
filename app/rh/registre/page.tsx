@@ -372,34 +372,67 @@ export default function RegistrePersonnel() {
 
   /* ═══ PARTIE 2 — Interface principale ═══ */
 
-  return (
-    <div className="min-h-screen relative overflow-hidden bg-slate-950">
+  // ── SVG Hexagonal Network Patterns ──
+  const hexLargeSvg = `<svg xmlns='http://www.w3.org/2000/svg' width='150' height='86.6'><line x1='50' y1='0' x2='100' y2='0' stroke='rgba(16,185,129,0.35)' stroke-width='0.8'/><line x1='50' y1='0' x2='25' y2='43.3' stroke='rgba(16,185,129,0.35)' stroke-width='0.8'/><line x1='100' y1='0' x2='125' y2='43.3' stroke='rgba(16,185,129,0.35)' stroke-width='0.8'/><line x1='0' y1='43.3' x2='25' y2='43.3' stroke='rgba(16,185,129,0.35)' stroke-width='0.8'/><line x1='125' y1='43.3' x2='150' y2='43.3' stroke='rgba(16,185,129,0.35)' stroke-width='0.8'/><line x1='25' y1='43.3' x2='50' y2='86.6' stroke='rgba(16,185,129,0.35)' stroke-width='0.8'/><line x1='125' y1='43.3' x2='100' y2='86.6' stroke='rgba(16,185,129,0.35)' stroke-width='0.8'/><line x1='50' y1='86.6' x2='100' y2='86.6' stroke='rgba(16,185,129,0.35)' stroke-width='0.8'/><circle cx='50' cy='0' r='2.5' fill='rgba(16,185,129,0.5)'/><circle cx='100' cy='0' r='2.5' fill='rgba(16,185,129,0.5)'/><circle cx='25' cy='43.3' r='2.5' fill='rgba(16,185,129,0.5)'/><circle cx='125' cy='43.3' r='2.5' fill='rgba(16,185,129,0.5)'/><circle cx='50' cy='86.6' r='2.5' fill='rgba(16,185,129,0.5)'/><circle cx='100' cy='86.6' r='2.5' fill='rgba(16,185,129,0.5)'/><circle cx='0' cy='43.3' r='2.5' fill='rgba(16,185,129,0.5)'/><circle cx='150' cy='43.3' r='2.5' fill='rgba(16,185,129,0.5)'/></svg>`;
+  const hexSmallSvg = `<svg xmlns='http://www.w3.org/2000/svg' width='75' height='43.3'><line x1='25' y1='0' x2='50' y2='0' stroke='rgba(16,185,129,0.2)' stroke-width='0.5'/><line x1='25' y1='0' x2='12.5' y2='21.65' stroke='rgba(16,185,129,0.2)' stroke-width='0.5'/><line x1='50' y1='0' x2='62.5' y2='21.65' stroke='rgba(16,185,129,0.2)' stroke-width='0.5'/><line x1='0' y1='21.65' x2='12.5' y2='21.65' stroke='rgba(16,185,129,0.2)' stroke-width='0.5'/><line x1='62.5' y1='21.65' x2='75' y2='21.65' stroke='rgba(16,185,129,0.2)' stroke-width='0.5'/><line x1='12.5' y1='21.65' x2='25' y2='43.3' stroke='rgba(16,185,129,0.2)' stroke-width='0.5'/><line x1='62.5' y1='21.65' x2='50' y2='43.3' stroke='rgba(16,185,129,0.2)' stroke-width='0.5'/><line x1='25' y1='43.3' x2='50' y2='43.3' stroke='rgba(16,185,129,0.2)' stroke-width='0.5'/><circle cx='25' cy='0' r='1.5' fill='rgba(16,185,129,0.3)'/><circle cx='50' cy='0' r='1.5' fill='rgba(16,185,129,0.3)'/><circle cx='12.5' cy='21.65' r='1.5' fill='rgba(16,185,129,0.3)'/><circle cx='62.5' cy='21.65' r='1.5' fill='rgba(16,185,129,0.3)'/><circle cx='25' cy='43.3' r='1.5' fill='rgba(16,185,129,0.3)'/><circle cx='50' cy='43.3' r='1.5' fill='rgba(16,185,129,0.3)'/></svg>`;
+  const hexLargeBg = `url("data:image/svg+xml,${encodeURIComponent(hexLargeSvg)}")`;
+  const hexSmallBg = `url("data:image/svg+xml,${encodeURIComponent(hexSmallSvg)}")`;
 
-      {/* ═══ FOND HOLOGRAPHIQUE ULTRA FUTURISTE ═══ */}
+  return (
+    <div className="min-h-screen relative overflow-hidden" style={{ background: '#020e07' }}>
+
+      {/* ═══ FOND RÉSEAU HEXAGONAL ÉMERAUDE ═══ */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-emerald-900/20 via-slate-950 to-slate-950" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-emerald-900/15 via-transparent to-transparent" />
-        
-        <div className="absolute top-1/4 -left-20 w-[500px] h-[500px] bg-gradient-to-r from-emerald-500/20 to-emerald-600/20 rounded-full blur-3xl animate-float" />
-        <div className="absolute bottom-1/3 -right-20 w-[600px] h-[600px] bg-gradient-to-l from-emerald-500/15 to-teal-500/15 rounded-full blur-3xl animate-float-delayed" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-gradient-to-br from-yellow-500/10 to-amber-500/10 rounded-full blur-3xl animate-pulse-slow" />
-        
-        <div className="absolute inset-0 opacity-[0.03]" style={{ 
-          backgroundImage: "linear-gradient(rgba(16, 185, 129, 0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(16, 185, 129, 0.5) 1px, transparent 1px)",
-          backgroundSize: "50px 50px",
-          maskImage: "radial-gradient(ellipse at center, black 40%, transparent 70%)"
+
+        {/* Couche 1 : Gradient de profondeur central */}
+        <div className="absolute inset-0" style={{
+          background: 'radial-gradient(ellipse at 50% 40%, rgba(16,185,129,0.07) 0%, rgba(5,150,105,0.04) 30%, rgba(2,14,7,0) 65%)'
         }} />
-        
-        <div className="absolute inset-0 opacity-[0.02]" style={{
-          backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(16, 185, 129, 0.3) 2px, rgba(16, 185, 129, 0.3) 4px)"
+
+        {/* Couche 2 : Grand réseau hexagonal (premier plan) */}
+        <div className="absolute inset-0" style={{
+          backgroundImage: hexLargeBg,
+          backgroundSize: '150px 86.6px',
+          opacity: 0.6
         }} />
-        
-        <div className="absolute top-1/4 left-1/4 w-1 h-1 bg-emerald-400 rounded-full animate-ping opacity-75" />
-        <div className="absolute top-2/3 right-1/3 w-1 h-1 bg-emerald-400 rounded-full animate-ping opacity-75" style={{ animationDelay: "1s" }} />
-        <div className="absolute bottom-1/4 left-2/3 w-1 h-1 bg-yellow-400 rounded-full animate-ping opacity-75" style={{ animationDelay: "2s" }} />
-        
-        <div className="absolute top-0 left-1/4 w-px h-full bg-gradient-to-b from-transparent via-emerald-500/20 to-transparent" />
-        <div className="absolute top-0 right-1/3 w-px h-full bg-gradient-to-b from-transparent via-yellow-500/15 to-transparent" />
+
+        {/* Couche 3 : Halo lumineux du réseau hexagonal */}
+        <div className="absolute inset-0" style={{
+          backgroundImage: hexLargeBg,
+          backgroundSize: '150px 86.6px',
+          filter: 'blur(6px)',
+          opacity: 0.25
+        }} />
+
+        {/* Couche 4 : Petit réseau hexagonal (profondeur) */}
+        <div className="absolute inset-0" style={{
+          backgroundImage: hexSmallBg,
+          backgroundSize: '75px 43.3px',
+          opacity: 0.35
+        }} />
+
+        {/* Couche 5 : Orbes volumétriques émeraude */}
+        <div className="absolute top-[15%] left-[10%] w-[700px] h-[700px] rounded-full blur-[150px] animate-float" style={{ background: 'rgba(16,185,129,0.08)' }} />
+        <div className="absolute bottom-[10%] right-[5%] w-[600px] h-[600px] rounded-full blur-[130px] animate-float-delayed" style={{ background: 'rgba(5,150,105,0.06)' }} />
+        <div className="absolute top-[50%] left-[50%] -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full blur-[120px] animate-pulse-slow" style={{ background: 'rgba(16,185,129,0.05)' }} />
+
+        {/* Couche 6 : Nœuds lumineux animés */}
+        <div className="absolute top-[20%] left-[30%] w-2 h-2 bg-emerald-400 rounded-full animate-ping opacity-60" />
+        <div className="absolute top-[60%] right-[25%] w-2 h-2 bg-emerald-400 rounded-full animate-ping opacity-50" style={{ animationDelay: '1.5s' }} />
+        <div className="absolute bottom-[30%] left-[60%] w-1.5 h-1.5 bg-emerald-300 rounded-full animate-ping opacity-40" style={{ animationDelay: '3s' }} />
+        <div className="absolute top-[40%] left-[15%] w-1.5 h-1.5 bg-emerald-500 rounded-full animate-ping opacity-50" style={{ animationDelay: '2s' }} />
+        <div className="absolute top-[75%] right-[40%] w-2 h-2 bg-emerald-400 rounded-full animate-ping opacity-45" style={{ animationDelay: '4s' }} />
+        <div className="absolute top-[10%] right-[15%] w-1.5 h-1.5 bg-emerald-300 rounded-full animate-ping opacity-35" style={{ animationDelay: '2.5s' }} />
+
+        {/* Couche 7 : Lignes de connexion subtiles */}
+        <div className="absolute top-0 left-[20%] w-px h-full" style={{ background: 'linear-gradient(to bottom, transparent, rgba(16,185,129,0.12) 30%, rgba(16,185,129,0.12) 70%, transparent)' }} />
+        <div className="absolute top-0 right-[25%] w-px h-full" style={{ background: 'linear-gradient(to bottom, transparent, rgba(16,185,129,0.08) 40%, rgba(16,185,129,0.08) 60%, transparent)' }} />
+        <div className="absolute left-0 top-[35%] h-px w-full" style={{ background: 'linear-gradient(to right, transparent, rgba(16,185,129,0.08) 30%, rgba(16,185,129,0.08) 70%, transparent)' }} />
+
+        {/* Couche 8 : Vignette de profondeur */}
+        <div className="absolute inset-0" style={{
+          background: 'radial-gradient(ellipse at center, transparent 25%, rgba(2,14,7,0.4) 60%, rgba(2,14,7,0.85) 100%)'
+        }} />
       </div>
 
       {/* ═══ INTERFACE PRINCIPALE SCROLLABLE ═══ */}
@@ -1352,19 +1385,19 @@ export default function RegistrePersonnel() {
            CONTAINER HOLOGRAPHIQUE
         ════════════════════════════════════════════════════ */
         .holo-container {
-          background: linear-gradient(135deg, rgba(6, 40, 30, 0.75) 0%, rgba(10, 30, 22, 0.65) 50%, rgba(6, 40, 30, 0.70) 100%);
-          border: 1.5px solid rgba(16, 185, 129, 0.35);
+          background: linear-gradient(135deg, rgba(6, 40, 30, 0.50) 0%, rgba(10, 30, 22, 0.38) 50%, rgba(6, 40, 30, 0.45) 100%);
+          border: 1.5px solid rgba(16, 185, 129, 0.30);
           border-radius: 2.5rem;
           box-shadow:
-            0 0 0 1px rgba(16, 185, 129, 0.08),
-            0 0 60px rgba(16, 185, 129, 0.15),
-            0 0 120px rgba(16, 185, 129, 0.08),
-            0 40px 100px rgba(0, 0, 0, 0.5),
-            inset 0 1px 0 rgba(255, 255, 255, 0.08),
-            inset 0 -1px 0 rgba(16, 185, 129, 0.1),
-            inset 0 0 80px rgba(16, 185, 129, 0.04);
-          backdrop-filter: blur(40px) saturate(1.2);
-          -webkit-backdrop-filter: blur(40px) saturate(1.2);
+            0 0 0 1px rgba(16, 185, 129, 0.06),
+            0 0 60px rgba(16, 185, 129, 0.12),
+            0 0 120px rgba(16, 185, 129, 0.06),
+            0 40px 100px rgba(0, 0, 0, 0.4),
+            inset 0 1px 0 rgba(255, 255, 255, 0.06),
+            inset 0 -1px 0 rgba(16, 185, 129, 0.08),
+            inset 0 0 80px rgba(16, 185, 129, 0.03);
+          backdrop-filter: blur(18px) saturate(1.3);
+          -webkit-backdrop-filter: blur(18px) saturate(1.3);
           overflow: hidden;
           position: relative;
         }
