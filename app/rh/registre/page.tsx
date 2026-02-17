@@ -1385,19 +1385,16 @@ export default function RegistrePersonnel() {
            CONTAINER HOLOGRAPHIQUE
         ════════════════════════════════════════════════════ */
         .holo-container {
-          background: linear-gradient(135deg, rgba(6, 40, 30, 0.50) 0%, rgba(10, 30, 22, 0.38) 50%, rgba(6, 40, 30, 0.45) 100%);
-          border: 1.5px solid rgba(16, 185, 129, 0.30);
+          background: rgba(2, 14, 7, 0.12);
+          border: 1px solid rgba(16, 185, 129, 0.18);
           border-radius: 2.5rem;
           box-shadow:
-            0 0 0 1px rgba(16, 185, 129, 0.06),
-            0 0 60px rgba(16, 185, 129, 0.12),
-            0 0 120px rgba(16, 185, 129, 0.06),
-            0 40px 100px rgba(0, 0, 0, 0.4),
-            inset 0 1px 0 rgba(255, 255, 255, 0.06),
-            inset 0 -1px 0 rgba(16, 185, 129, 0.08),
-            inset 0 0 80px rgba(16, 185, 129, 0.03);
-          backdrop-filter: blur(18px) saturate(1.3);
-          -webkit-backdrop-filter: blur(18px) saturate(1.3);
+            0 0 0 1px rgba(16, 185, 129, 0.04),
+            0 0 40px rgba(16, 185, 129, 0.06),
+            inset 0 1px 0 rgba(255, 255, 255, 0.04),
+            inset 0 -1px 0 rgba(16, 185, 129, 0.04);
+          backdrop-filter: blur(2px);
+          -webkit-backdrop-filter: blur(2px);
           overflow: hidden;
           position: relative;
         }
@@ -1408,10 +1405,10 @@ export default function RegistrePersonnel() {
           left: -2px;
           right: -2px;
           bottom: -2px;
-          background: linear-gradient(135deg, rgba(16, 185, 129, 0.25), rgba(212, 175, 55, 0.1), rgba(16, 185, 129, 0.15));
+          background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), transparent, rgba(16, 185, 129, 0.06));
           border-radius: 2.5rem;
           z-index: -1;
-          opacity: 0.6;
+          opacity: 0.4;
           filter: blur(15px);
         }
         .holo-container::after {
@@ -1421,7 +1418,7 @@ export default function RegistrePersonnel() {
           left: 0;
           right: 0;
           height: 1px;
-          background: linear-gradient(90deg, transparent 10%, rgba(255, 255, 255, 0.15) 30%, rgba(212, 175, 55, 0.2) 50%, rgba(255, 255, 255, 0.15) 70%, transparent 90%);
+          background: linear-gradient(90deg, transparent 15%, rgba(16, 185, 129, 0.15) 35%, rgba(16, 185, 129, 0.1) 50%, rgba(16, 185, 129, 0.15) 65%, transparent 85%);
           border-radius: 2.5rem 2.5rem 0 0;
         }
 
